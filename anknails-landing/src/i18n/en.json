@@ -1,9 +1,37 @@
 {
-  "title": "ANKNAILS — Professional Nail Course",
-  "subtitle": "Master manicure from zero to pro in 3 modules",
-  "modules": ["Beginner Basics", "Salon Architecture", "Advanced Nail Art"],
+  "title": "Lower Forms Nail Extension Course",
+  "subtitle": "A complete practical guide to working with lower forms — from preparation to perfect architecture and filing",
   "preorder": "Preorder Now",
   "thanks": "Thank you! Launching soon.",
-  "language": "Language"
+  "modules_full": [
+    {
+      "title": "MODULE 1",
+      "lessons": [
+        "Introductory Lesson",
+        "Materials – Types of Gels",
+        "How to Choose and Order Lower Forms",
+        "Preparing the Nail Plate",
+        "Steps of Square Form Extension",
+        "Filing Scheme and Coating"
+      ]
+    },
+    {
+      "title": "MODULE 2",
+      "lessons": [
+        "Understanding Architecture",
+        "Form Preparation and Base Layer",
+        "Gel Application and Filing",
+        "3D Nail Design"
+      ]
+    },
+    {
+      "title": "MODULE 3",
+      "lessons": [
+        "Contraindications for Long Extensions",
+        "Form Preparation – Architecture and Base",
+        "Gel Application and Filing of Stiletto Shape",
+        "3D Nail Design"
+      ]
+    }
+  ]
 }
-
