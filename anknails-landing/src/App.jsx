@@ -5,6 +5,7 @@ import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
 import ForWhomSection from "./components/ForWhomSection";
+import StudentsWorksCarousel from "./components/StudentsWorksCarousel";
 import TariffsSection from "./components/TariffsSection";
 import PreEnrollPopup from "./components/PreEnrollPopup";
 import FaqSection from "./components/FaqSection";
@@ -55,6 +56,7 @@ export default function App() {
           <PreEnrollButtonSection />
           <CourseIntro />
           <ModulesList />
+          <StudentsWorksCarousel />
           <ForWhomSection />
           <TariffsSection />
           <PreEnrollPopup/>
