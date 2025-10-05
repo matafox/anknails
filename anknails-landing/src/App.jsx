@@ -17,15 +17,23 @@ import { useState, useEffect } from "react";
 export default function App() {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
+  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 200);
     return () => clearTimeout(timer);
   }, []);
 
-  const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: "smooth" });
-  };
+  // Показ кнопки при скролі
+  useEffect(() => {
+    const handleScroll = () => {
+      setShowScrollTop(window.scrollY > 400); // показуємо після 400px прокрутки
+    };
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
   return (
     <div className="relative min-h-screen flex flex-col justify-between items-center overflow-hidden bg-gradient-to-b from-[#ffe6eb] via-[#fff] to-[#fff5f7] dark:from-[#1a1a1a] dark:via-[#232323] dark:to-[#1a1a1a] text-center">
@@ -66,19 +74,21 @@ export default function App() {
 
       <Footer />
 
-      {/* Кнопка "наверх" — завжди поверх усього */}
-      <button
-        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
-        className="fixed bottom-6 right-6 z-[9999]
-                   bg-gradient-to-r from-pink-500 to-rose-500 
-                   text-white p-3 rounded-full shadow-lg
-                   hover:scale-110 hover:shadow-pink-400/50
-                   transition-all duration-300 border border-white/30
-                   backdrop-blur-md animate-glow"
-        aria-label="Прокрутити догори"
-      >
-        <ChevronUp className="w-6 h-6" />
-      </button>
+      {/* Кнопка "наверх" */}
+      {showScrollTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-6 right-6 z-[9999]
+                     bg-gradient-to-r from-pink-500 to-rose-500 
+                     text-white p-3 rounded-full shadow-lg
+                     hover:scale-110 hover:shadow-pink-400/50
+                     transition-all duration-300 border border-white/30
+                     backdrop-blur-md animate-glow"
+          aria-label="Прокрутити догори"
+        >
+          <ChevronUp className="w-6 h-6" />
+        </button>
+      )}
 
       <style>{`
         @keyframes glow {
@@ -88,25 +98,6 @@ export default function App() {
         .animate-glow {
           animation: glow 3s ease-in-out infinite;
         }
-      `}</style>
-
-      <style>{`
-        @keyframes fade-in {
-          0% { opacity: 0; transform: translateY(10px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes fade-up {
-          0% { opacity: 0; transform: translateY(30px); }
-          100% { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes pulse-slow {
-          0%, 100% { opacity: 0.6; transform: scale(1); }
-          50% { opacity: 0.9; transform: scale(1.05); }
-        }
-        .animate-fade-in { animation: fade-in 0.5s ease-out; }
-        .animate-fade-up { animation: fade-up 0.9s ease-out both; }
-        .animate-pulse-slow { animation: pulse-slow 8s ease-in-out infinite; }
-        .animate-bg-move { animation: gradient-move 6s ease infinite; }
       `}</style>
     </div>
   );
