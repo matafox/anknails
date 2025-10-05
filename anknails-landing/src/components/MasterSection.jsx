@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Instagram, Send } from "lucide-react";
+import { Instagram, Send, Music } from "lucide-react"; // 👈 додано іконку TikTok через Music (стильний аналог)
 
 export default function MasterSection() {
   const { t } = useTranslation();
@@ -36,8 +36,9 @@ export default function MasterSection() {
           {t("follow_me") || "Слідкуйте за мною:"}
         </h3>
 
-        {/* іконки */}
+        {/* соц. іконки */}
         <div className="flex gap-5">
+          {/* Instagram */}
           <a
             href="https://www.instagram.com/ank.a_studio/"
             target="_blank"
@@ -47,6 +48,7 @@ export default function MasterSection() {
             <Instagram className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
           </a>
 
+          {/* Telegram */}
           <a
             href="https://t.me/+nMaxkDtzIm45N2Iy"
             target="_blank"
@@ -55,10 +57,20 @@ export default function MasterSection() {
           >
             <Send className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
           </a>
+
+          {/* TikTok */}
+          <a
+            href="https://www.tiktok.com/@ank.studio_?_t=ZN-90IPzkUw7vS&_r=1"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 hover:bg-pink-200/50 transition-transform"
+          >
+            <Music className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
+          </a>
         </div>
       </div>
 
-      {/* Instagram вікно */}
+      {/* Instagram embed */}
       <div className="hidden lg:block flex-shrink-0 w-[340px] h-[460px] rounded-2xl overflow-hidden border border-pink-200/50 dark:border-neutral-700 shadow-lg bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md">
         <iframe
           src="https://www.instagram.com/ank.a_studio/embed"
@@ -70,7 +82,7 @@ export default function MasterSection() {
         />
       </div>
 
-      {/* на мобільних — Instagram блок нижче */}
+      {/* мобільна версія */}
       <div className="lg:hidden w-full max-w-[340px] mx-auto h-[460px] rounded-2xl overflow-hidden border border-pink-200/50 dark:border-neutral-700 shadow-lg bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md mt-8">
         <iframe
           src="https://www.instagram.com/ank.a_studio/embed"
