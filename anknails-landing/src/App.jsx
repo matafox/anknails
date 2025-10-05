@@ -4,6 +4,7 @@ import MasterSection from "./components/MasterSection";
 import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
+import ForWhomSection from "./components/ForWhomSection";
 import TariffsSection from "./components/TariffsSection";
 import PreEnrollPopup from "./components/PreEnrollPopup";
 import CourseStart from "./components/CourseStart";
@@ -53,6 +54,7 @@ export default function App() {
           <PreEnrollButtonSection />
           <CourseIntro />
           <ModulesList />
+          <ForWhomSection />
           <TariffsSection />
           <PreEnrollPopup/>
           <CourseStart />
