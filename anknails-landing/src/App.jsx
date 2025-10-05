@@ -27,6 +27,7 @@ export default function App() {
         </p>
 
         <MasterSection /> 
+        <PortfolioSection />
         <ModulesList />
 
         <button
