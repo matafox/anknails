@@ -79,15 +79,20 @@ export default function App() {
         </div>
 
         {/* Інші секції */}
-        <div className="space-y-20 sm:space-y-24 mt-20 sm:mt-28 animate-fade-up delay-500">
-          <ModulesList />
-          <StudentsWorksCarousel />
-          <ForWhomSection />
-          <CourseStart />
-          <TariffsSection />
-          <PreEnrollPopup />
-          <FaqSection />   
-        </div>
+<div className="space-y-20 sm:space-y-24 mt-20 sm:mt-28 animate-fade-up delay-500">
+  <ModulesList />
+  <StudentsWorksCarousel />
+  <ForWhomSection />
+
+  {/* зменшуємо проміжок */}
+  <div className="-mt-10 sm:-mt-12">
+    <CourseStart />
+  </div>
+
+  <TariffsSection />
+  <PreEnrollPopup />
+  <FaqSection />
+</div>
       </main>
 
       <Footer />
