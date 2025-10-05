@@ -8,13 +8,13 @@ export default function PreEnrollPopup({ isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in-fast"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-black/60 backdrop-blur-sm animate-fade-in-fast"
       onClick={onClose}
     >
       <div
-        className="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl 
+        className="relative mt-[5vh] bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl 
                    w-full max-w-3xl mx-4 overflow-hidden border border-pink-100 dark:border-neutral-700 
-                   animate-scale-in"
+                   animate-slide-down"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Заголовок */}
@@ -52,14 +52,14 @@ export default function PreEnrollPopup({ isOpen, onClose }) {
           100% { opacity: 1; }
         }
 
-        @keyframes scale-in {
+        @keyframes slide-down {
           0% {
             opacity: 0;
-            transform: scale(0.9);
+            transform: translateY(-30px);
           }
           100% {
             opacity: 1;
-            transform: scale(1);
+            transform: translateY(0);
           }
         }
 
@@ -67,8 +67,8 @@ export default function PreEnrollPopup({ isOpen, onClose }) {
           animation: fade-in-fast 0.25s ease-out;
         }
 
-        .animate-scale-in {
-          animation: scale-in 0.25s ease-out;
+        .animate-slide-down {
+          animation: slide-down 0.35s ease-out;
         }
       `}</style>
     </div>
