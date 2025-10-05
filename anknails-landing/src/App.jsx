@@ -58,10 +58,12 @@ export default function App() {
         </p>
 
         {/* Контент */}
+        <div className="space-y-8">
+  <MasterSection />
+  <PreEnrollButtonSection />
+  <CourseIntro />
+</div>
         <div className="space-y-20 animate-fade-up delay-300">
-          <MasterSection />
-          <PreEnrollButtonSection />
-          <CourseIntro />
           <ModulesList />
           <StudentsWorksCarousel />
           <ForWhomSection />
