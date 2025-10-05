@@ -43,9 +43,9 @@ export default function MasterSection() {
             href="https://www.instagram.com/ank.a_studio/"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 hover:bg-pink-200/50 transition-transform"
+            className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 transition-transform relative overflow-hidden"
           >
-            <Instagram className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
+            <Instagram className="w-5 h-5 text-pink-600 dark:text-pink-400 transition-all duration-500 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-tr group-hover:from-yellow-400 group-hover:via-pink-500 group-hover:to-purple-600" />
           </a>
 
           {/* Telegram */}
@@ -53,9 +53,9 @@ export default function MasterSection() {
             href="https://t.me/+nMaxkDtzIm45N2Iy"
             target="_blank"
             rel="noopener noreferrer"
-            className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 hover:bg-pink-200/50 transition-transform"
+            className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 transition-transform"
           >
-            <Send className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
+            <Send className="w-5 h-5 text-pink-600 dark:text-pink-400 transition-colors duration-300 group-hover:text-[#0088cc]" />
           </a>
 
           {/* TikTok */}
@@ -98,7 +98,7 @@ export default function MasterSection() {
         />
       </div>
 
-      {/* фільтр для рожевого кольору TikTok */}
+      {/* фільтр для рожевого TikTok */}
       <style>{`
         .filter-pink {
           filter: brightness(0) saturate(100%) invert(52%) sepia(44%) saturate(2450%) hue-rotate(310deg) brightness(100%) contrast(95%);
