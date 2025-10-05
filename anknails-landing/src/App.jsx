@@ -18,7 +18,7 @@ export default function App() {
     <div className="relative min-h-screen flex flex-col justify-between items-center overflow-hidden bg-gradient-to-b from-[#ffe6eb] via-[#fff] to-[#fff5f7] dark:from-[#1a1a1a] dark:via-[#232323] dark:to-[#1a1a1a] text-center">
       <Header />
 
-      <main className="flex-grow w-full flex flex-col items-center justify-center px-4 z-10">
+      <main className="flex-grow w-full flex flex-col items-center justify-center px-4 z-10 pt-24 sm:pt-28">
         <h1 className="text-5xl sm:text-6xl font-bold mb-4 text-gray-900 dark:text-white drop-shadow-sm">
           {t("title")}
         </h1>
