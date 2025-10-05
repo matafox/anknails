@@ -5,7 +5,7 @@ export default function MasterSection() {
   const { t } = useTranslation();
 
   return (
-    <section className="relative w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center lg:items-center justify-center lg:justify-between gap-10 px-6 py-16 text-center lg:text-left">
+    <section className="relative w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-10 px-6 py-16 text-center lg:text-left">
       {/* background glow */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-[-20%] left-[-10%] w-[400px] h-[400px] bg-pink-300/30 rounded-full blur-[120px]" />
@@ -45,7 +45,7 @@ export default function MasterSection() {
             rel="noopener noreferrer"
             className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 transition-transform relative overflow-hidden"
           >
-            <Instagram className="w-5 h-5 text-pink-600 dark:text-pink-400 transition-all duration-500 group-hover:text-transparent group-hover:bg-clip-text group-hover:bg-gradient-to-tr group-hover:from-yellow-400 group-hover:via-pink-500 group-hover:to-purple-600" />
+            <Instagram className="w-5 h-5 text-pink-600 dark:text-pink-400 transition-all duration-500 group-hover:insta-gradient" />
           </a>
 
           {/* Telegram */}
@@ -98,12 +98,50 @@ export default function MasterSection() {
         />
       </div>
 
-      {/* фільтр для рожевого TikTok */}
       <style>{`
+        /* TikTok рожевий */
         .filter-pink {
           filter: brightness(0) saturate(100%) invert(52%) sepia(44%) saturate(2450%) hue-rotate(310deg) brightness(100%) contrast(95%);
         }
+
+        /* Instagram градієнт на stroke */
+        .insta-gradient {
+          stroke: url(#instaGradient);
+        }
+        svg defs linearGradient#instaGradient {
+          stop-color: #f09433;
+        }
+
+        /* додаємо градієнт у сам SVG через CSS injection */
+        svg.lucide.instagram path {
+          transition: all 0.4s ease;
+        }
+        .group:hover svg.lucide.instagram path {
+          stroke: url(#gradient-instagram);
+        }
+
+        svg.lucide.instagram defs {
+          display: block;
+        }
+
+        /* додаємо сам градієнт */
+        svg.lucide.instagram::before {
+          content: '';
+        }
       `}</style>
+
+      {/* градієнт визначення */}
+      <svg width="0" height="0">
+        <defs>
+          <linearGradient id="gradient-instagram" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f09433" />
+            <stop offset="25%" stopColor="#e6683c" />
+            <stop offset="50%" stopColor="#dc2743" />
+            <stop offset="75%" stopColor="#cc2366" />
+            <stop offset="100%" stopColor="#bc1888" />
+          </linearGradient>
+        </defs>
+      </svg>
     </section>
   );
 }
