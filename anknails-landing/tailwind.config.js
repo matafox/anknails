@@ -6,15 +6,7 @@ export default {
     "./src/**/*.{js,jsx,ts,tsx}",
   ],
   theme: {
-    extend: {
-      colors: {
-        blush: "#fbe0e6",
-        rose: "#f6b6c5",
-      },
-      fontFamily: {
-        sans: ["Inter", "sans-serif"],
-      },
-    },
+    extend: {},
   },
   plugins: [],
 };
