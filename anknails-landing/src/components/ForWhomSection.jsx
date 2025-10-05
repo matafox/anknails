@@ -5,20 +5,24 @@ export default function ForWhomSection() {
   const { t } = useTranslation();
 
   const beginners = [
-    "Розібратись у матеріалах та інструментах",
-    "Навчитись працювати з нижніми формами без страху",
-    "Опанувати правильну архітектуру нігтя",
-    "Створювати міцні й акуратні форми",
-    "Розвинути впевненість у своїй роботі",
-    "Почати приймати клієнтів і заробляти",
+    "Навчитися працювати з нижніми формами",
+    "Зрозуміти, як створювати ідеальну архітектуру та апекс",
+    "Освоїти екстрадовжину та навчитися контролювати матеріал",
+    "Не боятися складних нігтів і проблемних клієнтів",
+    "Покращити якість і швидкість роботи",
+    "Підвищити якість носіння та впевненість у своїх навичках",
+    "Освоїти прості 3D-дизайни",
+    "Навчитися красиво фотографувати свої роботи",
+    "Залучити нових клієнтів і зробити їх постійними",
+    "Підвищити чек і збільшити свій дохід",
   ];
 
   const experienced = [
     "Довести техніку нарощування на нижні форми до ідеалу",
     "Працювати з екстрадовжиною легко і без стресу",
     "Прискорити процес і скоротити час роботи",
-    "Удосконалити архітектуру й форму нігтів",
-    "Робити міцне й при цьому естетичне нарощування",
+    "Удосконалити архітектуру та форму нігтів",
+    "Робити міцне й водночас естетичне нарощування",
     "Освоїти трендові 3D-дизайни",
     "Робити ефектні фото своїх робіт, які продають",
     "Підвищити чек і впевненість у собі",
@@ -27,18 +31,18 @@ export default function ForWhomSection() {
   ];
 
   const learning = [
-    "Курс розміщений на платформі",
-    "Уроки в записі — можна дивитись у зручному темпі та будь-коли",
-    "Короткі уроки від 6 до 20 хвилин, без води — тільки головне",
+    "Курс розміщений на навчальній платформі",
+    "Уроки у записі — зможеш переглядати у своєму темпі та в будь-який час",
+    "Короткі уроки від 6 до 20 хвилин, без води — лише найголовніше",
     "Усе чітко структуровано та розкладено по поличках",
   ];
 
   return (
     <section className="w-full max-w-6xl px-6 py-16 grid grid-cols-1 md:grid-cols-2 gap-8">
-      {/* Початківці */}
+      {/* Майстри з невеликим досвідом */}
       <div className="bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md border border-pink-100 dark:border-neutral-700 rounded-2xl p-8 shadow-md hover:shadow-pink-200/40 transition-all">
-        <h2 className="text-2xl font-bold mb-6 text-pink-600 dark:text-pink-400">
-          {t("for_beginners_title", "ДЛЯ ПОЧАТКІВЦІВ")}
+        <h2 className="text-2xl font-bold mb-6 text-pink-600 dark:text-pink-400 uppercase">
+          {t("for_beginners_title", "ДЛЯ МАЙСТРІВ З НЕВЕЛИКИМ ДОСВІДОМ (ДО 1 РОКУ)")}
         </h2>
         <ul className="space-y-3 text-left text-gray-700 dark:text-gray-300">
           {beginners.map((item, i) => (
@@ -50,9 +54,9 @@ export default function ForWhomSection() {
         </ul>
       </div>
 
-      {/* Досвідчені */}
+      {/* Досвідчені майстри */}
       <div className="bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md border border-pink-100 dark:border-neutral-700 rounded-2xl p-8 shadow-md hover:shadow-pink-200/40 transition-all">
-        <h2 className="text-2xl font-bold mb-6 text-pink-600 dark:text-pink-400">
+        <h2 className="text-2xl font-bold mb-6 text-pink-600 dark:text-pink-400 uppercase">
           {t("for_experienced_title", "ДЛЯ ДОСВІДЧЕНИХ МАЙСТРІВ")}
         </h2>
         <ul className="space-y-3 text-left text-gray-700 dark:text-gray-300">
@@ -67,7 +71,7 @@ export default function ForWhomSection() {
 
       {/* Як проходить навчання */}
       <div className="md:col-span-2 bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md border border-pink-100 dark:border-neutral-700 rounded-2xl p-8 shadow-md hover:shadow-pink-200/40 transition-all">
-        <h2 className="text-2xl font-bold mb-6 text-pink-600 dark:text-pink-400">
+        <h2 className="text-2xl font-bold mb-6 text-pink-600 dark:text-pink-400 uppercase">
           {t("how_learning_title", "ЯК БУДЕ ПРОХОДИТИ НАВЧАННЯ")}
         </h2>
         <ul className="space-y-3 text-left text-gray-700 dark:text-gray-300">
