@@ -26,7 +26,7 @@ export default function ModulesList() {
                 key={idx}
                 className="flex items-center justify-between border-b border-pink-100/30 pb-1"
               >
-                <span>– {lesson.name}</span>
+                <span>•&nbsp;{lesson.name}</span>
                 <span
                   className={`${badgeClass(
                     lesson.type
