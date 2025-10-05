@@ -26,7 +26,7 @@ export default function App() {
           {t("subtitle")}
         </p>
 
-        {/* блоки модулів */}
+        <MasterSection /> 
         <ModulesList />
 
         <button
