@@ -1,9 +1,11 @@
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import MasterSection from "./components/MasterSection";
+import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
 import TariffsSection from "./components/TariffsSection";
+import PreEnrollFormSection from "./components/PreEnrollFormSection";
 import CourseStart from "./components/CourseStart";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
@@ -48,9 +50,11 @@ export default function App() {
         {/* Контент */}
         <div className="space-y-20 animate-fade-up delay-300">
           <MasterSection />
+          <PreEnrollButtonSection />
           <CourseIntro />
           <ModulesList />
           <TariffsSection />
+          <PreEnrollFormSection />
           <CourseStart />
         </div>
       </main>
