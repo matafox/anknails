@@ -5,7 +5,7 @@ export default function MasterSection() {
   const { t } = useTranslation();
 
   return (
-    <section className="relative w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-10 px-6 py-16">
+    <section className="relative w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center lg:items-center justify-center lg:justify-between gap-10 px-6 py-16 text-center lg:text-left">
       {/* background glow */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-[-20%] left-[-10%] w-[400px] h-[400px] bg-pink-300/30 rounded-full blur-[120px]" />
@@ -13,12 +13,14 @@ export default function MasterSection() {
       </div>
 
       {/* photo */}
-      <div className="flex-shrink-0 w-[260px] h-[260px] rounded-full overflow-hidden shadow-xl border-4 border-white/60 dark:border-white/10">
-        <img
-          src="/master.jpg"
-          alt="Майстер"
-          className="w-full h-full object-cover"
-        />
+      <div className="flex justify-center w-full lg:w-auto">
+        <div className="w-[260px] h-[260px] rounded-full overflow-hidden shadow-xl border-4 border-white/60 dark:border-white/10">
+          <img
+            src="/master.jpg"
+            alt="Майстер"
+            className="w-full h-full object-cover"
+          />
+        </div>
       </div>
 
       {/* text + соцмережі */}
@@ -56,7 +58,7 @@ export default function MasterSection() {
         </div>
       </div>
 
-      {/* маленьке Instagram вікно праворуч */}
+      {/* Instagram вікно */}
       <div className="hidden lg:block flex-shrink-0 w-[340px] h-[460px] rounded-2xl overflow-hidden border border-pink-200/50 dark:border-neutral-700 shadow-lg bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md">
         <iframe
           src="https://www.instagram.com/ank.a_studio/embed"
@@ -69,7 +71,7 @@ export default function MasterSection() {
       </div>
 
       {/* на мобільних — Instagram блок нижче */}
-      <div className="lg:hidden w-full max-w-[340px] mx-auto h-[460px] rounded-2xl overflow-hidden border border-pink-200/50 dark:border-neutral-700 shadow-lg bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md">
+      <div className="lg:hidden w-full max-w-[340px] mx-auto h-[460px] rounded-2xl overflow-hidden border border-pink-200/50 dark:border-neutral-700 shadow-lg bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md mt-8">
         <iframe
           src="https://www.instagram.com/ank.a_studio/embed"
           title="Instagram"
