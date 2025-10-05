@@ -11,11 +11,12 @@ export default function TariffsSection() {
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
-        { label: t("feature_homework").replace(" з перевіркою", ""), included: true },
-        { label: t("feature_certificate"), included: true },
+        { label: "Перевірка домашніх завдань", included: false },
         { label: t("feature_feedback_chat"), included: false },
         { label: t("feature_zoom"), included: false },
+        { label: t("feature_certificate"), included: true },
       ],
+      highlight: false,
     },
     {
       title: t("tariff_pro"),
@@ -23,11 +24,12 @@ export default function TariffsSection() {
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
-        { label: t("feature_homework"), included: true },
-        { label: t("feature_certificate"), included: true },
+        { label: "Перевірка домашніх завдань", included: true },
         { label: t("feature_feedback_chat"), included: true },
         { label: t("feature_zoom"), included: true },
+        { label: t("feature_certificate"), included: true },
       ],
+      highlight: true,
     },
   ];
 
@@ -39,23 +41,35 @@ export default function TariffsSection() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
         {tariffs.map((plan, i) => {
-          // Розділяємо “включені” і “не включені” фічі
           const included = plan.features.filter((f) => f.included);
           const excluded = plan.features.filter((f) => !f.included);
 
           return (
             <div
               key={i}
-              className="relative rounded-3xl p-8 shadow-lg bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md border border-pink-100 dark:border-neutral-700 hover:shadow-pink-200 dark:hover:shadow-pink-900 transition-all"
+              className={`relative rounded-3xl p-8 shadow-lg backdrop-blur-md border transition-all duration-500 ${
+                plan.highlight
+                  ? "bg-gradient-to-br from-pink-400/40 to-rose-300/30 dark:from-pink-500/20 dark:to-rose-400/10 border-pink-400/60 shadow-pink-300/40 hover:shadow-pink-400/70"
+                  : "bg-white/70 dark:bg-neutral-900/50 border-pink-100 dark:border-neutral-700 hover:shadow-pink-200 dark:hover:shadow-pink-900"
+              }`}
             >
-              <h3 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+              {/* Назва тарифу */}
+              <h3
+                className={`text-2xl font-semibold mb-2 ${
+                  plan.highlight
+                    ? "text-pink-700 dark:text-pink-300"
+                    : "text-gray-900 dark:text-white"
+                }`}
+              >
                 {plan.title}
               </h3>
+
+              {/* Опис */}
               <p className="text-gray-600 dark:text-gray-300 mb-6">
                 {plan.desc}
               </p>
 
-              {/* включені */}
+              {/* включено */}
               <ul className="space-y-3 text-left mb-6">
                 {included.map((f, idx) => (
                   <li
@@ -78,7 +92,7 @@ export default function TariffsSection() {
                 ))}
               </ul>
 
-              {/* не включені */}
+              {/* не включено */}
               <ul className="space-y-3 text-left opacity-70">
                 {excluded.map((f, idx) => (
                   <li
