@@ -66,14 +66,29 @@ export default function App() {
 
       <Footer />
 
-      {/* Кнопка "наверх" — завжди доступна */}
+      {/* Кнопка "наверх" — завжди поверх усього */}
       <button
-        onClick={scrollToTop}
-        className="fixed bottom-6 right-6 bg-pink-500 text-white p-3 rounded-full shadow-lg hover:bg-pink-600 transition-all duration-300 hover:scale-110 backdrop-blur-md border border-white/20"
+        onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
+        className="fixed bottom-6 right-6 z-[9999]
+                   bg-gradient-to-r from-pink-500 to-rose-500 
+                   text-white p-3 rounded-full shadow-lg
+                   hover:scale-110 hover:shadow-pink-400/50
+                   transition-all duration-300 border border-white/30
+                   backdrop-blur-md animate-glow"
         aria-label="Прокрутити догори"
       >
         <ChevronUp className="w-6 h-6" />
       </button>
+
+      <style>{`
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 15px rgba(236,72,153,0.4); }
+          50% { box-shadow: 0 0 25px rgba(244,63,94,0.6); }
+        }
+        .animate-glow {
+          animation: glow 3s ease-in-out infinite;
+        }
+      `}</style>
 
       <style>{`
         @keyframes fade-in {
