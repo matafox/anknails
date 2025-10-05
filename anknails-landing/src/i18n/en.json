@@ -1,36 +1,36 @@
 {
   "title": "Lower Forms Nail Extension Course",
-  "subtitle": "A complete practical guide to working with lower forms — from preparation to perfect architecture and filing",
+  "subtitle": "A complete practical guide to working with lower forms - from preparation to perfect architecture and filing",
   "preorder": "Preorder Now",
   "thanks": "Thank you! Launching soon.",
   "modules_full": [
     {
       "title": "MODULE 1",
       "lessons": [
-        "Introductory Lesson",
-        "Materials – Types of Gels",
-        "How to Choose and Order Lower Forms",
-        "Preparing the Nail Plate",
-        "Steps of Square Form Extension",
-        "Filing Scheme and Coating"
+        { "name": "Introductory lesson", "type": "Theory" },
+        { "name": "Materials - types of gels", "type": "Theory" },
+        { "name": "How to choose and order lower forms", "type": "Theory" },
+        { "name": "Preparing the nail plate", "type": "Practice" },
+        { "name": "Steps of square form extension", "type": "Practice" },
+        { "name": "Filing scheme and coating", "type": "Practice" }
       ]
     },
     {
       "title": "MODULE 2",
       "lessons": [
-        "Understanding Architecture",
-        "Form Preparation and Base Layer",
-        "Gel Application and Filing",
-        "3D Nail Design"
+        { "name": "What is architecture and how it should be", "type": "Theory" },
+        { "name": "Form preparation and base", "type": "Practice" },
+        { "name": "Gel application and filing", "type": "Practice" },
+        { "name": "3D nail design", "type": "Practice" }
       ]
     },
     {
       "title": "MODULE 3",
       "lessons": [
-        "Contraindications for Long Extensions",
-        "Form Preparation – Architecture and Base",
-        "Gel Application and Filing of Stiletto Shape",
-        "3D Nail Design"
+        { "name": "Contraindications for long extensions", "type": "Theory" },
+        { "name": "Form preparation - architecture and base", "type": "Practice" },
+        { "name": "Gel application and filing of stiletto shape", "type": "Practice" },
+        { "name": "3D nail design", "type": "Practice" }
       ]
     }
   ]
