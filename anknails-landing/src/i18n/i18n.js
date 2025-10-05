@@ -5,27 +5,24 @@ import pl from "./pl.json";
 import ru from "./ru.json";
 import uk from "./uk.json";
 
-// === Завантажуємо мову з localStorage або визначаємо автоматично ===
-const savedLang = localStorage.getItem("lang");
-const browserLang = navigator.language.split("-")[0];
+// зчитуємо мову з URL або localStorage
+const urlParams = new URLSearchParams(window.location.search);
+const langFromUrl = urlParams.get("lang");
+const langFromStorage = localStorage.getItem("preferredLang");
+const defaultLang = langFromUrl || langFromStorage || "ru";
 
-const defaultLang = savedLang || (["en", "pl", "ru", "uk"].includes(browserLang) ? browserLang : "ru");
+i18n
+  .use(initReactI18next)
+  .init({
+    resources: { en: { translation: en }, pl: { translation: pl }, ru: { translation: ru }, uk: { translation: uk } },
+    lng: defaultLang,
+    fallbackLng: "ru",
+    interpolation: { escapeValue: false },
+  });
 
-i18n.use(initReactI18next).init({
-  resources: {
-    en: { translation: en },
-    pl: { translation: pl },
-    ru: { translation: ru },
-    uk: { translation: uk },
-  },
-  lng: defaultLang,
-  fallbackLng: "ru",
-  interpolation: { escapeValue: false },
-});
-
-// === Зберігати мову при зміні ===
+// зберігати поточну мову при зміні
 i18n.on("languageChanged", (lng) => {
-  localStorage.setItem("lang", lng);
+  localStorage.setItem("preferredLang", lng);
 });
 
 export default i18n;
