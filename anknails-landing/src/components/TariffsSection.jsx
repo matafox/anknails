@@ -49,8 +49,10 @@ export default function TariffsSection() {
               key={i}
               className={`relative rounded-3xl p-8 shadow-lg backdrop-blur-md border transition-all duration-500 ${
                 plan.highlight
-                  ? "bg-gradient-to-br from-rose-500/40 to-pink-400/30 dark:from-rose-600/20 dark:to-pink-500/10 border-rose-300/60 shadow-pink-400/40 hover:shadow-pink-500/60"
-                  : "bg-white/70 dark:bg-neutral-900/50 border-pink-100 dark:border-neutral-700 hover:shadow-pink-200 dark:hover:shadow-pink-900"
+                  ? // PRO — яскравий рожево-червоний
+                    "bg-gradient-to-br from-rose-500/40 to-pink-400/30 dark:from-rose-600/20 dark:to-pink-500/10 border-rose-300/60 shadow-pink-400/40 hover:shadow-pink-500/60"
+                  : // BASIC — лагідний сірий із рожевим відтінком
+                    "bg-gradient-to-br from-gray-100/70 to-pink-50/50 dark:from-neutral-800/60 dark:to-neutral-900/40 border-gray-200/70 dark:border-neutral-700 hover:shadow-pink-100/40"
               }`}
             >
               {/* бейдж PRO */}
@@ -68,7 +70,7 @@ export default function TariffsSection() {
                 className={`text-2xl font-semibold mb-2 ${
                   plan.highlight
                     ? "text-rose-700 dark:text-pink-300"
-                    : "text-gray-900 dark:text-white"
+                    : "text-gray-800 dark:text-gray-100"
                 }`}
               >
                 {plan.title}
