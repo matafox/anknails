@@ -3,6 +3,7 @@ import Footer from "./components/Footer";
 import MasterSection from "./components/MasterSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
+import CourseStart from "./components/CourseStart";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
@@ -30,6 +31,7 @@ export default function App() {
         <MasterSection /> 
         <CourseIntro />
         <ModulesList />
+        <CourseStart />
 
         <button
           onClick={handlePreorder}
