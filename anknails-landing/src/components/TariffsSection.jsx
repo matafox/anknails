@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Check, X, FileText } from "lucide-react";
+import { Check, X, FileText, Sparkles } from "lucide-react";
 
 export default function TariffsSection() {
   const { t } = useTranslation();
@@ -49,15 +49,25 @@ export default function TariffsSection() {
               key={i}
               className={`relative rounded-3xl p-8 shadow-lg backdrop-blur-md border transition-all duration-500 ${
                 plan.highlight
-                  ? "bg-gradient-to-br from-pink-400/40 to-rose-300/30 dark:from-pink-500/20 dark:to-rose-400/10 border-pink-400/60 shadow-pink-300/40 hover:shadow-pink-400/70"
+                  ? "bg-gradient-to-br from-rose-500/40 to-pink-400/30 dark:from-rose-600/20 dark:to-pink-500/10 border-rose-400/70 shadow-pink-400/40 hover:shadow-pink-500/60"
                   : "bg-white/70 dark:bg-neutral-900/50 border-pink-100 dark:border-neutral-700 hover:shadow-pink-200 dark:hover:shadow-pink-900"
               }`}
             >
+              {/* бейдж для PRO */}
+              {plan.highlight && (
+                <div className="absolute -top-4 right-6">
+                  <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold text-rose-600 dark:text-rose-300 bg-white/80 dark:bg-white/10 backdrop-blur-md border border-white/60 shadow-md animate-pulse">
+                    <Sparkles className="w-4 h-4" />
+                    <span>Рекомендовано</span>
+                  </div>
+                </div>
+              )}
+
               {/* Назва тарифу */}
               <h3
                 className={`text-2xl font-semibold mb-2 ${
                   plan.highlight
-                    ? "text-pink-700 dark:text-pink-300"
+                    ? "text-rose-700 dark:text-pink-300"
                     : "text-gray-900 dark:text-white"
                 }`}
               >
