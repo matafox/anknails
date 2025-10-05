@@ -6,17 +6,25 @@ export default function Header() {
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
     localStorage.setItem("preferredLang", lng);
+
+    // синхронізація між доменами
+    const event = new CustomEvent("langChange", { detail: lng });
+    window.dispatchEvent(event);
   };
 
-  // визначаємо, чи зараз на сторінці about
   const isAboutPage = window.location.hostname.startsWith("about.");
+
+  // якщо ми переходимо на інший домен — додаємо ?lang=ru або ?lang=uk
+  const currentLang = i18n.language || localStorage.getItem("preferredLang") || "ru";
+  const aboutUrl = `https://about.ankstudio.online/?lang=${currentLang}`;
+  const mainUrl = `https://ankstudio.online/?lang=${currentLang}`;
 
   return (
     <header className="absolute top-6 right-6 z-20 flex flex-wrap justify-end gap-2 sm:gap-3">
       {/* Кнопка "Про мене" або "Назад" */}
       {!isAboutPage ? (
         <a
-          href="https://about.ankstudio.online"
+          href={aboutUrl}
           className="px-4 py-1.5 text-sm font-semibold rounded-md backdrop-blur-sm border border-pink-200/60 
                      bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md
                      hover:scale-105 hover:shadow-pink-400/40 transition-all duration-300"
@@ -25,7 +33,7 @@ export default function Header() {
         </a>
       ) : (
         <button
-          onClick={() => (window.location.href = "https://ankstudio.online")}
+          onClick={() => (window.location.href = mainUrl)}
           className="px-4 py-1.5 text-sm font-semibold rounded-md backdrop-blur-sm border border-pink-200/60 
                      bg-gradient-to-r from-gray-700 to-gray-900 text-white shadow-md
                      hover:scale-105 hover:shadow-gray-400/40 transition-all duration-300"
