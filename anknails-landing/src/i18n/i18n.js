@@ -12,8 +12,12 @@ i18n.use(initReactI18next).init({
     ru: { translation: ru },
     uk: { translation: uk },
   },
-  lng: navigator.language.split("-")[0] || "en",
-  fallbackLng: "en",
+  lng:
+    localStorage.getItem("i18nextLng") || // якщо вже вибрано раніше
+    (navigator.language.split("-")[0] === "ru"
+      ? "ru"
+      : "ru"), // 🟢 за замовчуванням — російська
+  fallbackLng: "ru", // 🟢 якщо перекладу нема — теж російська
   interpolation: { escapeValue: false },
 });
 
