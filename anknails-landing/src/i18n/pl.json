@@ -1,9 +1,37 @@
 {
-  "title": "ANKNAILS — Profesjonalny kurs manicure",
-  "subtitle": "Opanuj manicure od zera do profesjonalisty w 3 modułach",
-  "modules": ["Podstawy", "Architektura salonowa", "Zaawansowany nail art"],
+  "title": "Kurs przedłużania paznokci na dolnych formach",
+  "subtitle": "Kompletny przewodnik praktyczny po pracy na dolnych formach — od przygotowania po architekturę i idealne piłowanie",
   "preorder": "Zrób przedzamówienie",
   "thanks": "Dziękujemy! Start już wkrótce.",
-  "language": "Język"
+  "modules_full": [
+    {
+      "title": "MODUŁ 1",
+      "lessons": [
+        "Lekcja wprowadzająca",
+        "Materiały – rodzaje żeli",
+        "Jak wybrać i zamówić dolne formy",
+        "Przygotowanie płytki paznokcia",
+        "Etapy przedłużania w kształcie kwadratu",
+        "Schemat piłowania i nakładanie topu"
+      ]
+    },
+    {
+      "title": "MODUŁ 2",
+      "lessons": [
+        "Czym jest architektura i jaka powinna być",
+        "Przygotowanie formy i baza",
+        "Aplikacja żelu i piłowanie",
+        "3D design paznokci"
+      ]
+    },
+    {
+      "title": "MODUŁ 3",
+      "lessons": [
+        "Przeciwwskazania do długich przedłużeń",
+        "Przygotowanie formy – architektura i baza",
+        "Aplikacja żelu i piłowanie kształtu stiletto",
+        "3D design paznokci"
+      ]
+    }
+  ]
 }
-
