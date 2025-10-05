@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { Instagram, Send, Music } from "lucide-react"; // 👈 додано іконку TikTok через Music (стильний аналог)
+import { Instagram, Send } from "lucide-react";
 
 export default function MasterSection() {
   const { t } = useTranslation();
@@ -58,14 +58,18 @@ export default function MasterSection() {
             <Send className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
           </a>
 
-          {/* TikTok */}
+          {/* TikTok (SVG із public) */}
           <a
             href="https://www.tiktok.com/@ank.studio_?_t=ZN-90IPzkUw7vS&_r=1"
             target="_blank"
             rel="noopener noreferrer"
             className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 hover:bg-pink-200/50 transition-transform"
           >
-            <Music className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
+            <img
+              src="/tiktok.svg"
+              alt="TikTok"
+              className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity"
+            />
           </a>
         </div>
       </div>
