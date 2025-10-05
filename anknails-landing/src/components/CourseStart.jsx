@@ -5,17 +5,24 @@ export default function CourseStart() {
   const { t } = useTranslation();
 
   return (
-    <section className="relative w-full py-20 flex flex-col items-center justify-center overflow-hidden">
-      {/* ==== Фон з м’яким розмитим сяйвом ==== */}
+    <section className="relative w-full py-24 flex flex-col items-center justify-center overflow-hidden">
+      {/* ==== Фонове розмите сяйво ==== */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-[-100px] left-[-150px] w-[450px] h-[450px] bg-pink-300/30 blur-[140px] rounded-full animate-float-slow"></div>
-        <div className="absolute bottom-[-150px] right-[-150px] w-[500px] h-[500px] bg-rose-400/30 blur-[160px] rounded-full animate-float-fast"></div>
-        <div className="absolute top-[200px] right-[100px] w-[250px] h-[250px] bg-fuchsia-400/25 blur-[100px] rounded-full animate-float-mid"></div>
+        <div className="absolute top-[-150px] left-[-150px] w-[400px] h-[400px] bg-pink-400/20 blur-[180px] rounded-full animate-float-slow"></div>
+        <div className="absolute bottom-[-200px] right-[-100px] w-[500px] h-[500px] bg-purple-600/25 blur-[200px] rounded-full animate-float-mid"></div>
+        <div className="absolute top-[150px] right-[200px] w-[300px] h-[300px] bg-fuchsia-500/20 blur-[160px] rounded-full animate-float-fast"></div>
       </div>
 
-      {/* ==== Основний текстовий блок ==== */}
-      <div className="rounded-3xl border border-pink-200/50 dark:border-neutral-700 bg-white/50 dark:bg-neutral-900/40 backdrop-blur-2xl shadow-lg p-10 px-8 max-w-4xl text-center animate-fade-up">
-        <p className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-white leading-snug tracking-wide">
+      {/* ==== Фіолетовий блок без рамки ==== */}
+      <div className="relative p-10 sm:p-14 text-center 
+                      rounded-[40px] 
+                      backdrop-blur-3xl 
+                      bg-gradient-to-br from-fuchsia-600/60 via-purple-700/50 to-pink-600/60 
+                      shadow-[0_0_60px_rgba(168,85,247,0.4)]
+                      animate-fade-up">
+        <div className="absolute inset-0 bg-gradient-to-r from-pink-400/30 via-fuchsia-400/30 to-purple-400/30 blur-[60px] rounded-[40px] -z-10"></div>
+
+        <p className="text-2xl sm:text-3xl font-bold text-white leading-snug tracking-wide drop-shadow-[0_0_10px_rgba(255,255,255,0.3)]">
           {t("course_starts", "Старт нового потоку вже зовсім скоро!")}
         </p>
       </div>
@@ -41,7 +48,7 @@ export default function CourseStart() {
           0% { opacity: 0; transform: translateY(20px); }
           100% { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-up { animation: fade-up 0.8s ease-out both; }
+        .animate-fade-up { animation: fade-up 0.9s ease-out both; }
         .animate-float-slow { animation: float-slow 12s ease-in-out infinite; }
         .animate-float-mid { animation: float-mid 10s ease-in-out infinite; }
         .animate-float-fast { animation: float-fast 8s ease-in-out infinite; }
