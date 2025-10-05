@@ -1,7 +1,9 @@
 import { useTranslation } from "react-i18next";
+import { useState } from "react";
 
 export default function PortfolioSection() {
   const { t } = useTranslation();
+  const [sliderValue, setSliderValue] = useState(50);
 
   const images = [
     "/portfolio1.jpg",
@@ -15,7 +17,8 @@ export default function PortfolioSection() {
         {t("portfolio_title")}
       </h2>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {/* GRID із трьох фото */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-16">
         {images.map((src, i) => (
           <div
             key={i}
@@ -28,6 +31,42 @@ export default function PortfolioSection() {
             />
           </div>
         ))}
+      </div>
+
+      {/* ДО / ПІСЛЯ блок */}
+      <div className="relative w-full max-w-4xl mx-auto aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl border border-pink-100 dark:border-neutral-700 bg-white/60 dark:bg-white/10 backdrop-blur-md">
+        <div className="absolute inset-0 overflow-hidden">
+          <img
+            src="/before.jpg"
+            alt="before"
+            className="absolute inset-0 w-full h-full object-cover"
+          />
+          <div
+            className="absolute inset-0 overflow-hidden"
+            style={{
+              clipPath: `inset(0 ${100 - sliderValue}% 0 0)`
+            }}
+          >
+            <img
+              src="/after.jpg"
+              alt="after"
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          </div>
+        </div>
+
+        {/* центральний повзунок */}
+        <input
+          type="range"
+          min="0"
+          max="100"
+          value={sliderValue}
+          onChange={(e) => setSliderValue(Number(e.target.value))}
+          className="absolute top-1/2 left-0 -translate-y-1/2 w-full accent-pink-500 cursor-pointer"
+          style={{
+            background: `linear-gradient(to right, #ec4899 ${sliderValue}%, #e5e7eb ${sliderValue}%)`
+          }}
+        />
       </div>
     </section>
   );
