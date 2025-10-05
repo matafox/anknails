@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { useState } from "react";
 
 export default function App() {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const [toast, setToast] = useState(false);
 
   const handlePreorder = () => {
@@ -15,27 +15,22 @@ export default function App() {
 
   return (
     <div className="relative min-h-screen flex flex-col justify-between items-center overflow-hidden bg-gradient-to-b from-[#ffe6eb] via-[#fff] to-[#fff5f7] dark:from-[#1a1a1a] dark:via-[#232323] dark:to-[#1a1a1a] text-center">
-      
-      {/* Header */}
       <Header />
 
-      {/* Main content */}
       <main className="flex-grow w-full flex flex-col items-center justify-center px-4 z-10">
-        <h1 className="text-4xl sm:text-5xl font-bold mb-6 text-gray-900 dark:text-white drop-shadow-sm">
-          ANKNAILS — {t("title")}
+        <h1 className="text-5xl sm:text-6xl font-bold mb-4 text-gray-900 dark:text-white drop-shadow-sm">
+          {t("title")}
         </h1>
         <p className="text-lg sm:text-xl text-gray-600 dark:text-gray-300 mb-10 max-w-xl">
           {t("subtitle")}
         </p>
 
-        {/* тут вставляється твій модуль-список */}
-        <div className="w-full max-w-4xl mb-10">
-          <ModulesList />
-        </div>
+        {/* блоки модулів */}
+        <ModulesList />
 
         <button
           onClick={handlePreorder}
-          className="relative px-10 py-4 rounded-full text-white font-medium text-lg bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg hover:shadow-pink-300 hover:scale-105 transition-transform"
+          className="mt-12 relative px-10 py-4 rounded-full text-white font-medium text-lg bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg hover:shadow-pink-300 hover:scale-105 transition-transform"
         >
           {t("preorder")}
           <span className="absolute inset-0 rounded-full bg-pink-400 blur-md opacity-30"></span>
@@ -48,7 +43,6 @@ export default function App() {
         )}
       </main>
 
-      {/* Footer */}
       <Footer />
 
       <style>{`
