@@ -35,6 +35,7 @@ export default function PortfolioSection() {
 
       {/* ДО / ПІСЛЯ блок */}
       <div className="relative w-full max-w-4xl mx-auto aspect-[16/9] rounded-2xl overflow-hidden shadow-2xl border border-pink-100 dark:border-neutral-700 bg-white/60 dark:bg-white/10 backdrop-blur-md">
+        {/* before / after images */}
         <div className="absolute inset-0 overflow-hidden">
           <img
             src="/before.jpg"
@@ -55,14 +56,23 @@ export default function PortfolioSection() {
           </div>
         </div>
 
-        {/* центральний повзунок */}
+        {/* вертикальна лінія межі */}
+        <div
+          className="absolute top-0 bottom-0 w-[2px] bg-pink-400/80 shadow-[0_0_8px_#ec4899] transition-all duration-100"
+          style={{
+            left: `${sliderValue}%`,
+            transform: "translateX(-50%)"
+          }}
+        />
+
+        {/* повзунок */}
         <input
           type="range"
           min="0"
           max="100"
           value={sliderValue}
           onChange={(e) => setSliderValue(Number(e.target.value))}
-          className="absolute top-1/2 left-0 -translate-y-1/2 w-full accent-pink-500 cursor-pointer"
+          className="absolute top-1/2 left-0 -translate-y-1/2 w-full accent-pink-500 cursor-pointer opacity-70 hover:opacity-100 transition-opacity"
           style={{
             background: `linear-gradient(to right, #ec4899 ${sliderValue}%, #e5e7eb ${sliderValue}%)`
           }}
