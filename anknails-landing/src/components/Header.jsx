@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 
 export default function Header() {
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
   const [fade, setFade] = useState(false);
 
   const changeLanguage = (lng) => {
@@ -15,7 +15,7 @@ export default function Header() {
     }, 200);
   };
 
-  // 🔄 синхронізація мови між вкладками
+  // 🔄 синхронізація між вкладками
   useEffect(() => {
     const syncLang = (e) => {
       if (e.key === "lang" && e.newValue && e.newValue !== i18n.language) {
@@ -26,23 +26,36 @@ export default function Header() {
     return () => window.removeEventListener("storage", syncLang);
   }, [i18n]);
 
+  // визначаємо, де ми — на сабдомені "about" чи ні
+  const isAbout = typeof window !== "undefined" && window.location.hostname.startsWith("about.");
+
   return (
     <header className="absolute top-6 right-6 z-20 flex flex-wrap gap-2 justify-end items-center">
-      {/* кнопки мов */}
       <div
         className={`flex gap-2 items-center transition-opacity duration-300 ${
           fade ? "opacity-0" : "opacity-100"
         }`}
       >
-        {/* кнопка "Про мене" / "Обо мне" */}
-        <button
-          onClick={() => window.open("https://about.ankstudio.online", "_blank")}
-          className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
-                     bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
-                     shadow-md hover:scale-105 transition-all duration-300"
-        >
-          {i18n.language === "ru" ? "Обо мне" : "Про мене"}
-        </button>
+        {/* якщо ми на about → показати кнопку "Курс", якщо ні → "Обо мне" */}
+        {isAbout ? (
+          <button
+            onClick={() => (window.location.href = "https://ankstudio.online")}
+            className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
+                       bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
+                       shadow-md hover:scale-105 transition-all duration-300"
+          >
+            {i18n.language === "ru" ? "Курс" : "Курс"}
+          </button>
+        ) : (
+          <button
+            onClick={() => window.open("https://about.ankstudio.online", "_blank")}
+            className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
+                       bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
+                       shadow-md hover:scale-105 transition-all duration-300"
+          >
+            {i18n.language === "ru" ? "Обо мне" : "Про мене"}
+          </button>
+        )}
 
         {/* перемикачі мов */}
         {["ru", "uk"].map((lng) => (
