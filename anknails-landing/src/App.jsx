@@ -2,7 +2,6 @@ import Header from "./components/Header";
 import Footer from "./components/Footer";
 import MasterSection from "./components/MasterSection";
 import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
-import PreEnrollFormSection from "./components/PreEnrollFormSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
 import TariffsSection from "./components/TariffsSection";
