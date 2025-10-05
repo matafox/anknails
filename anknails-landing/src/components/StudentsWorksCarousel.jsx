@@ -22,6 +22,12 @@ export default function StudentsWorksCarousel() {
     return () => clearInterval(timer);
   }, [images.length]);
 
+  // попереднє завантаження наступного фото
+  useEffect(() => {
+    const nextImage = new Image();
+    nextImage.src = images[(current + 1) % images.length];
+  }, [current]);
+
   const prev = () => setCurrent((current - 1 + images.length) % images.length);
   const next = () => setCurrent((current + 1) % images.length);
 
@@ -39,8 +45,10 @@ export default function StudentsWorksCarousel() {
           <img
             key={current}
             src={images[current]}
+            loading="lazy" // 🩵 Ліниве завантаження
             alt={`Робота учениці ${current + 1}`}
             className="absolute inset-0 w-full h-full object-cover opacity-0 animate-fadeIn"
+            draggable={false}
           />
         </div>
 
@@ -48,6 +56,7 @@ export default function StudentsWorksCarousel() {
         <button
           onClick={prev}
           className="absolute top-4 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-md rounded-full p-3 hover:scale-110 transition-all shadow-md"
+          aria-label="Попереднє фото"
         >
           <ChevronUp className="w-6 h-6 text-gray-700 dark:text-pink-300" />
         </button>
@@ -55,6 +64,7 @@ export default function StudentsWorksCarousel() {
         <button
           onClick={next}
           className="absolute bottom-4 bg-white/70 dark:bg-neutral-900/60 backdrop-blur-md rounded-full p-3 hover:scale-110 transition-all shadow-md"
+          aria-label="Наступне фото"
         >
           <ChevronDown className="w-6 h-6 text-gray-700 dark:text-pink-300" />
         </button>
@@ -65,8 +75,8 @@ export default function StudentsWorksCarousel() {
         @keyframes fadeIn {
           0% {
             opacity: 0;
-            transform: scale(1.05);
-            filter: blur(10px);
+            transform: scale(1.03);
+            filter: blur(8px);
           }
           100% {
             opacity: 1;
@@ -75,7 +85,7 @@ export default function StudentsWorksCarousel() {
           }
         }
         .animate-fadeIn {
-          animation: fadeIn 1s ease-out forwards;
+          animation: fadeIn 0.8s ease-out forwards;
         }
       `}</style>
     </section>
