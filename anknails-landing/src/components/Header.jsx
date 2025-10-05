@@ -6,7 +6,7 @@ export default function Header() {
 
   return (
     <header className="absolute top-6 right-6 z-20 flex gap-2">
-      {["uk", "ru"].map((lng) => (
+      {["ru", "uk"].map((lng) => (
         <button
           key={lng}
           onClick={() => changeLanguage(lng)}
