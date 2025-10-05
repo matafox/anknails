@@ -1,5 +1,6 @@
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import MasterSection from "./components/MasterSection";
 import ModulesList from "./components/ModulesList";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
