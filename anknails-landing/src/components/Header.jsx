@@ -4,12 +4,6 @@ import { useTranslation } from "react-i18next";
 export default function Header() {
   const { i18n, t } = useTranslation();
   const [fade, setFade] = useState(false);
-  const [isAboutPage, setIsAboutPage] = useState(false);
-
-  useEffect(() => {
-    // перевіряємо, чи це сабдомен about
-    setIsAboutPage(window.location.hostname.startsWith("about."));
-  }, []);
 
   const changeLanguage = (lng) => {
     if (lng === i18n.language) return;
@@ -32,35 +26,25 @@ export default function Header() {
     return () => window.removeEventListener("storage", syncLang);
   }, [i18n]);
 
-  // переходи між сторінками
-  const goToAbout = () => {
-    const lang = i18n.language || "ru";
-    window.location.href = `https://about.ankstudio.online?lang=${lang}`;
-  };
-
-  const goToMain = () => {
-    const lang = i18n.language || "ru";
-    window.location.href = `https://ankstudio.online?lang=${lang}`;
-  };
-
   return (
-    <header className="absolute top-4 right-4 sm:top-6 sm:right-6 z-20 flex flex-wrap gap-2 justify-end items-center">
-      {/* Кнопка "Про мене / Курс" */}
-      <button
-        onClick={isAboutPage ? goToMain : goToAbout}
-        className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
-                   bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium shadow-md 
-                   hover:scale-105 hover:shadow-pink-400/40 transition-all duration-300 animate-glow"
-      >
-        {isAboutPage ? t("course_button", "Курс") : t("about_button", "Про мене")}
-      </button>
-
-      {/* Перемикачі мов */}
+    <header className="absolute top-6 right-6 z-20 flex flex-wrap gap-2 justify-end items-center">
+      {/* кнопки мов */}
       <div
         className={`flex gap-2 items-center transition-opacity duration-300 ${
           fade ? "opacity-0" : "opacity-100"
         }`}
       >
+        {/* кнопка "Про мене" / "Обо мне" */}
+        <button
+          onClick={() => window.open("https://about.ankstudio.online", "_blank")}
+          className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
+                     bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
+                     shadow-md hover:scale-105 transition-all duration-300"
+        >
+          {i18n.language === "ru" ? "Обо мне" : "Про мене"}
+        </button>
+
+        {/* перемикачі мов */}
         {["ru", "uk"].map((lng) => (
           <button
             key={lng}
@@ -81,14 +65,7 @@ export default function Header() {
           transition: all 0.25s ease;
         }
         header button:active {
-          transform: scale(0.93);
-        }
-        @keyframes glow {
-          0%, 100% { box-shadow: 0 0 10px rgba(236,72,153,0.4); }
-          50% { box-shadow: 0 0 20px rgba(244,63,94,0.6); }
-        }
-        .animate-glow {
-          animation: glow 3s ease-in-out infinite;
+          transform: scale(0.95);
         }
       `}</style>
     </header>
