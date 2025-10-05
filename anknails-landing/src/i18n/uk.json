@@ -29,6 +29,9 @@
   "preenroll_fill": "Заповнити коротку анкету",
   "preenroll_title": "Анкета передзапису",
   "preenroll_desc": "Заповни анкету, щоб першою дізнатися про старт та програму курсу.",
+  "for_beginners_title": "ДЛЯ ПОЧАТКІВЦІВ",
+  "for_experienced_title": "ДЛЯ ДОСВІДЧЕНИХ МАЙСТРІВ",
+  "how_learning_title": "ЯК БУДЕ ПРОХОДИТИ НАВЧАННЯ",
   "modules_full": [
     {
       "title": "1 МОДУЛЬ",
