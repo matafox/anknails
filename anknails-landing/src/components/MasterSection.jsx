@@ -58,7 +58,7 @@ export default function MasterSection() {
             <Send className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
           </a>
 
-          {/* TikTok (SVG із public) */}
+          {/* TikTok ( рожевий SVG ) */}
           <a
             href="https://www.tiktok.com/@ank.studio_?_t=ZN-90IPzkUw7vS&_r=1"
             target="_blank"
@@ -68,7 +68,7 @@ export default function MasterSection() {
             <img
               src="/tiktok.svg"
               alt="TikTok"
-              className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-opacity"
+              className="w-5 h-5 opacity-80 group-hover:opacity-100 transition-all duration-300 filter-pink"
             />
           </a>
         </div>
@@ -97,6 +97,13 @@ export default function MasterSection() {
           scrolling="auto"
         />
       </div>
+
+      {/* рожеве забарвлення SVG */}
+      <style>{`
+        .filter-pink {
+          filter: brightness(0) saturate(100%) invert(70%) sepia(22%) saturate(3100%) hue-rotate(310deg) brightness(101%) contrast(95%);
+        }
+      `}</style>
     </section>
   );
 }
