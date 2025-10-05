@@ -5,28 +5,17 @@ import pl from "./pl.json";
 import ru from "./ru.json";
 import uk from "./uk.json";
 
-// ---- 🔄 Синхронізація мови через cookie (спільна для всіх субдоменів)
+// читаємо мову з cookie або localStorage
 function getCookie(name) {
   const match = document.cookie.match(new RegExp("(^| )" + name + "=([^;]+)"));
   return match ? decodeURIComponent(match[2]) : null;
 }
 
-function setCookie(name, value) {
-  const expires = new Date();
-  expires.setFullYear(expires.getFullYear() + 1);
-  document.cookie = `${name}=${encodeURIComponent(
-    value
-  )};expires=${expires.toUTCString()};path=/;domain=.ankstudio.online;SameSite=Lax`;
-}
-
-// ---- Визначення мови
-const savedLang = getCookie("lang") || localStorage.getItem("lang");
+const savedLang = localStorage.getItem("lang") || getCookie("lang");
 const browserLang = navigator.language.split("-")[0];
 const defaultLang =
-  savedLang ||
-  (["ru", "uk", "pl", "en"].includes(browserLang) ? browserLang : "ru");
+  savedLang || (["ru", "uk", "pl", "en"].includes(browserLang) ? browserLang : "ru");
 
-// ---- Ініціалізація i18next
 i18n.use(initReactI18next).init({
   resources: {
     en: { translation: en },
@@ -39,14 +28,10 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
-// ---- При зміні мови зберігаємо в cookie + localStorage
+// 🔁 Коли змінюється мова — зберігаємо і в cookie, і в localStorage
 i18n.on("languageChanged", (lng) => {
-  try {
-    localStorage.setItem("lang", lng);
-    setCookie("lang", lng);
-  } catch (e) {
-    console.warn("Не вдалося зберегти мову:", e);
-  }
+  localStorage.setItem("lang", lng);
+  document.cookie = `lang=${lng}; path=/; domain=.ankstudio.online; max-age=31536000; SameSite=Lax`;
 });
 
 export default i18n;
