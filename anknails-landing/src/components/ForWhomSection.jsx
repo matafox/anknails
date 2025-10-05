@@ -1,4 +1,4 @@
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, CalendarClock, BookOpen } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function ForWhomSection() {
@@ -39,8 +39,11 @@ export default function ForWhomSection() {
 
   return (
     <section className="relative w-full overflow-hidden py-24 flex flex-col items-center">
-      {/* ==== Фонові анімовані плями ==== */}
+      {/* ==== Фонові розмиті краї та світлові плями ==== */}
       <div className="absolute inset-0 -z-10 overflow-hidden">
+        {/* розмиті краї */}
+        <div className="absolute inset-0 bg-gradient-to-b from-pink-100/60 via-transparent to-pink-100/60 dark:from-[#1a1a1a]/60 dark:to-[#1a1a1a]/60 backdrop-blur-[100px]"></div>
+        {/* рухомі плями */}
         <div className="absolute top-[-200px] left-[-100px] w-[500px] h-[500px] bg-pink-300/30 blur-[160px] rounded-full animate-float-slow"></div>
         <div className="absolute bottom-[-150px] right-[-100px] w-[500px] h-[500px] bg-fuchsia-400/30 blur-[180px] rounded-full animate-float-fast"></div>
         <div className="absolute top-[200px] right-[200px] w-[300px] h-[300px] bg-rose-400/25 blur-[120px] rounded-full animate-float-mid"></div>
@@ -98,6 +101,22 @@ export default function ForWhomSection() {
             ))}
           </ul>
         </div>
+
+        {/* Тривалість і доступ */}
+        <div className="md:col-span-2 bg-gradient-to-r from-pink-500/20 to-rose-500/20 backdrop-blur-2xl border border-pink-200/50 dark:border-neutral-700 rounded-2xl p-6 shadow-lg mt-4 flex flex-col sm:flex-row items-center justify-center gap-6">
+          <div className="flex items-center gap-3 text-pink-700 dark:text-pink-300">
+            <CalendarClock className="w-6 h-6" />
+            <span className="font-semibold text-lg">
+              {t("course_duration", "Тривалість курсу: 4 тижні")}
+            </span>
+          </div>
+          <div className="flex items-center gap-3 text-pink-700 dark:text-pink-300">
+            <BookOpen className="w-6 h-6" />
+            <span className="font-semibold text-lg">
+              {t("course_access", "Доступ до уроків: 5 місяців з моменту покупки")}
+            </span>
+          </div>
+        </div>
       </div>
 
       {/* Анімації */}
@@ -121,9 +140,7 @@ export default function ForWhomSection() {
           0% { opacity: 0; transform: translateY(30px); }
           100% { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-up {
-          animation: fade-up 1s ease-out both;
-        }
+        .animate-fade-up { animation: fade-up 1s ease-out both; }
         .animate-float-slow { animation: float-slow 12s ease-in-out infinite; }
         .animate-float-mid { animation: float-mid 9s ease-in-out infinite; }
         .animate-float-fast { animation: float-fast 7s ease-in-out infinite; }
