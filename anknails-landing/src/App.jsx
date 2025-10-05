@@ -53,22 +53,6 @@ export default function App() {
           <TariffsSection />
           <CourseStart />
         </div>
-
-        {/* Кнопка */}
-        <button
-          onClick={handlePreorder}
-          className="mt-16 relative px-10 py-4 rounded-full text-white font-semibold text-lg shadow-xl transition-transform duration-300 hover:scale-105 bg-gradient-to-r from-pink-500 via-rose-500 to-pink-400 hover:shadow-pink-200/80 animate-glow"
-        >
-          {t("preorder")}
-          <span className="absolute inset-0 rounded-full bg-pink-400/40 blur-xl opacity-40 -z-10"></span>
-        </button>
-
-        {/* Toast */}
-        {toast && (
-          <div className="fixed bottom-8 left-1/2 -translate-x-1/2 bg-pink-500 text-white px-6 py-3 rounded-full shadow-lg animate-fade-in">
-            {t("thanks")}
-          </div>
-        )}
       </main>
 
       <Footer />
