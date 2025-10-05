@@ -1,8 +1,6 @@
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import MasterSection from "./components/MasterSection";
-import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
-import CourseIntro from "./components/CourseIntro";
 import { useEffect, useState } from "react";
 
 export default function AboutApp() {
@@ -24,8 +22,6 @@ export default function AboutApp() {
       >
         <div className="space-y-2">
           <MasterSection />
-          <PreEnrollButtonSection />
-          <CourseIntro />
         </div>
       </main>
 
