@@ -46,7 +46,7 @@ export default function MasterSection() {
           </a>
 
           <a
-            href="https://t.me/ank_studio"
+            href="https://t.me/+nMaxkDtzIm45N2Iy"
             target="_blank"
             rel="noopener noreferrer"
             className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 hover:bg-pink-200/50 transition-transform"
