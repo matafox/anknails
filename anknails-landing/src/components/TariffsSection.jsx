@@ -11,7 +11,7 @@ export default function TariffsSection() {
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
-        { label: "Перевірка домашніх завдань", included: false },
+        { label: t("feature_homework"), included: false },
         { label: t("feature_feedback_chat"), included: false },
         { label: t("feature_zoom"), included: false },
         { label: t("feature_certificate"), included: true },
@@ -24,7 +24,7 @@ export default function TariffsSection() {
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
-        { label: "Перевірка домашніх завдань", included: true },
+        { label: t("feature_homework"), included: true },
         { label: t("feature_feedback_chat"), included: true },
         { label: t("feature_zoom"), included: true },
         { label: t("feature_certificate"), included: true },
@@ -49,10 +49,8 @@ export default function TariffsSection() {
               key={i}
               className={`relative rounded-3xl p-8 shadow-lg backdrop-blur-md border transition-all duration-500 ${
                 plan.highlight
-                  ? // PRO — яскравий рожево-червоний
-                    "bg-gradient-to-br from-rose-500/40 to-pink-400/30 dark:from-rose-600/20 dark:to-pink-500/10 border-rose-300/60 shadow-pink-400/40 hover:shadow-pink-500/60"
-                  : // BASIC — лагідний сірий із рожевим відтінком
-                    "bg-gradient-to-br from-gray-100/70 to-pink-50/50 dark:from-neutral-800/60 dark:to-neutral-900/40 border-gray-200/70 dark:border-neutral-700 hover:shadow-pink-100/40"
+                  ? "bg-gradient-to-br from-rose-500/40 to-pink-400/30 dark:from-rose-600/20 dark:to-pink-500/10 border-rose-300/60 shadow-pink-400/40 hover:shadow-pink-500/60"
+                  : "bg-gradient-to-br from-gray-100/70 to-pink-50/50 dark:from-neutral-800/60 dark:to-neutral-900/40 border-gray-200/70 dark:border-neutral-700 hover:shadow-pink-100/40"
               }`}
             >
               {/* бейдж PRO */}
@@ -60,7 +58,7 @@ export default function TariffsSection() {
                 <div className="absolute -top-4 right-6">
                   <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold text-rose-600 dark:text-rose-200 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/60 dark:border-rose-300/20 shadow-[0_0_15px_rgba(255,255,255,0.3)]">
                     <Sparkles className="w-4 h-4 text-rose-500 dark:text-rose-300 animate-pulse" />
-                    <span>Рекомендовано</span>
+                    <span>{t("recommended", "Рекомендовано")}</span>
                   </div>
                 </div>
               )}
