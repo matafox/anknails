@@ -17,20 +17,10 @@ import { useState, useEffect } from "react";
 export default function App() {
   const { t } = useTranslation();
   const [visible, setVisible] = useState(false);
-  const [showScrollTop, setShowScrollTop] = useState(false);
 
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 200);
     return () => clearTimeout(timer);
-  }, []);
-
-  // показ кнопки при прокрутці
-  useEffect(() => {
-    const handleScroll = () => {
-      setShowScrollTop(window.scrollY > 400);
-    };
-    window.addEventListener("scroll", handleScroll);
-    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   const scrollToTop = () => {
@@ -76,16 +66,14 @@ export default function App() {
 
       <Footer />
 
-      {/* Кнопка "наверх" */}
-      {showScrollTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 bg-pink-500 text-white p-3 rounded-full shadow-lg hover:bg-pink-600 transition-all duration-300 hover:scale-110 backdrop-blur-md border border-white/20"
-          aria-label="Прокрутити догори"
-        >
-          <ChevronUp className="w-6 h-6" />
-        </button>
-      )}
+      {/* Кнопка "наверх" — завжди доступна */}
+      <button
+        onClick={scrollToTop}
+        className="fixed bottom-6 right-6 bg-pink-500 text-white p-3 rounded-full shadow-lg hover:bg-pink-600 transition-all duration-300 hover:scale-110 backdrop-blur-md border border-white/20"
+        aria-label="Прокрутити догори"
+      >
+        <ChevronUp className="w-6 h-6" />
+      </button>
 
       <style>{`
         @keyframes fade-in {
