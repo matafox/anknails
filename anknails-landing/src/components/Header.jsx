@@ -2,10 +2,38 @@ import { useTranslation } from "react-i18next";
 
 export default function Header() {
   const { t, i18n } = useTranslation();
-  const changeLanguage = (lng) => i18n.changeLanguage(lng);
+
+  const changeLanguage = (lng) => {
+    i18n.changeLanguage(lng);
+    localStorage.setItem("preferredLang", lng);
+  };
+
+  // визначаємо, чи зараз на сторінці about
+  const isAboutPage = window.location.hostname.startsWith("about.");
 
   return (
     <header className="absolute top-6 right-6 z-20 flex flex-wrap justify-end gap-2 sm:gap-3">
+      {/* Кнопка "Про мене" або "Назад" */}
+      {!isAboutPage ? (
+        <a
+          href="https://about.ankstudio.online"
+          className="px-4 py-1.5 text-sm font-semibold rounded-md backdrop-blur-sm border border-pink-200/60 
+                     bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md
+                     hover:scale-105 hover:shadow-pink-400/40 transition-all duration-300"
+        >
+          {t("about_me", i18n.language === "ru" ? "Обо мне" : "Про мене")}
+        </a>
+      ) : (
+        <button
+          onClick={() => (window.location.href = "https://ankstudio.online")}
+          className="px-4 py-1.5 text-sm font-semibold rounded-md backdrop-blur-sm border border-pink-200/60 
+                     bg-gradient-to-r from-gray-700 to-gray-900 text-white shadow-md
+                     hover:scale-105 hover:shadow-gray-400/40 transition-all duration-300"
+        >
+          {t("back_button", i18n.language === "ru" ? "Назад" : "Назад")}
+        </button>
+      )}
+
       {/* Кнопки мов */}
       {["ru", "uk"].map((lng) => (
         <button
@@ -20,18 +48,6 @@ export default function Header() {
           {lng.toUpperCase()}
         </button>
       ))}
-
-      {/* Кнопка "Про мене" */}
-      <a
-        href="https://about.ankstudio.online"
-        target="_blank"
-        rel="noopener noreferrer"
-        className="px-4 py-1.5 text-sm font-semibold rounded-md backdrop-blur-sm border border-pink-200/60 
-                   bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-md
-                   hover:scale-105 hover:shadow-pink-400/40 transition-all duration-300"
-      >
-        {t("about_me", i18n.language === "ru" ? "Обо мне" : "Про мене")}
-      </a>
     </header>
   );
 }
