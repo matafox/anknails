@@ -28,7 +28,6 @@ i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
 });
 
-// 🔁 Коли змінюється мова — зберігаємо і в cookie, і в localStorage
 i18n.on("languageChanged", (lng) => {
   localStorage.setItem("lang", lng);
   document.cookie = `lang=${lng}; path=/; domain=.ankstudio.online; max-age=31536000; SameSite=Lax`;
