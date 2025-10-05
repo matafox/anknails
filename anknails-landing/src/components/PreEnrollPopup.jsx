@@ -8,13 +8,14 @@ export default function PreEnrollPopup({ isOpen, onClose }) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in-fast"
       onClick={onClose}
     >
       <div
         className="relative bg-white dark:bg-neutral-900 rounded-2xl shadow-2xl 
-                   w-full max-w-3xl mx-4 overflow-hidden border border-pink-100 dark:border-neutral-700 animate-[fadeIn_0.3s_ease]"
-        onClick={(e) => e.stopPropagation()} // блокує закриття при кліку всередині
+                   w-full max-w-3xl mx-4 overflow-hidden border border-pink-100 dark:border-neutral-700 
+                   animate-scale-in"
+        onClick={(e) => e.stopPropagation()}
       >
         {/* Заголовок */}
         <div className="flex items-center justify-between p-4 border-b border-pink-100 dark:border-neutral-700">
@@ -43,6 +44,33 @@ export default function PreEnrollPopup({ isOpen, onClose }) {
           title={t("preenroll_title")}
         ></iframe>
       </div>
+
+      {/* Анімації */}
+      <style jsx>{`
+        @keyframes fade-in-fast {
+          0% { opacity: 0; }
+          100% { opacity: 1; }
+        }
+
+        @keyframes scale-in {
+          0% {
+            opacity: 0;
+            transform: scale(0.9);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+          }
+        }
+
+        .animate-fade-in-fast {
+          animation: fade-in-fast 0.25s ease-out;
+        }
+
+        .animate-scale-in {
+          animation: scale-in 0.25s ease-out;
+        }
+      `}</style>
     </div>
   );
 }
