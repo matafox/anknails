@@ -1,7 +1,6 @@
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import MasterSection from "./components/MasterSection";
-import PortfolioSection from "./components/PortfolioSection";
 import ModulesList from "./components/ModulesList";
 import { useTranslation } from "react-i18next";
 import { useState } from "react";
@@ -28,7 +27,6 @@ export default function App() {
         </p>
 
         <MasterSection /> 
-        <PortfolioSection />
         <ModulesList />
 
         <button
