@@ -4,6 +4,11 @@ export default {
   content: ["./index.html", "./src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      colors: {
+        blush: "#fbe0e6",
+        rose: "#f6b6c5",
+        night: "#1a1a1a",
+      },
       fontFamily: {
         sans: ["Inter", "sans-serif"],
       },
@@ -11,4 +16,3 @@ export default {
   },
   plugins: [],
 };
-
