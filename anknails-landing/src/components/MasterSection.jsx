@@ -5,7 +5,7 @@ export default function MasterSection() {
   const { t } = useTranslation();
 
   return (
-    <section className="relative w-full max-w-6xl mx-auto flex flex-col md:flex-row items-center justify-center gap-10 px-6 py-16">
+    <section className="relative w-full max-w-7xl mx-auto flex flex-col lg:flex-row items-center justify-between gap-10 px-6 py-16">
       {/* background glow */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-[-20%] left-[-10%] w-[400px] h-[400px] bg-pink-300/30 rounded-full blur-[120px]" />
@@ -21,8 +21,8 @@ export default function MasterSection() {
         />
       </div>
 
-      {/* text + insta preview */}
-      <div className="text-center md:text-left max-w-lg">
+      {/* text + соцмережі */}
+      <div className="flex flex-col items-center lg:items-start text-center lg:text-left max-w-md">
         <h2 className="text-3xl sm:text-4xl font-bold mb-3 text-gray-900 dark:text-white">
           {t("master_title")}
         </h2>
@@ -30,46 +30,54 @@ export default function MasterSection() {
           {t("master_about")}
         </p>
 
-        {/* "Слідкуйте за мною:" */}
         <h3 className="text-lg font-medium mb-3 text-gray-800 dark:text-gray-200">
           {t("follow_me") || "Слідкуйте за мною:"}
         </h3>
 
-        {/* соцмережі + маленьке віконце */}
-        <div className="flex flex-col items-center md:items-start gap-4">
-          {/* іконки */}
-          <div className="flex gap-5 mb-2">
-            <a
-              href="https://www.instagram.com/ank.a_studio/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 hover:bg-pink-200/50 transition-transform"
-            >
-              <Instagram className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
-            </a>
+        {/* іконки */}
+        <div className="flex gap-5">
+          <a
+            href="https://www.instagram.com/ank.a_studio/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 hover:bg-pink-200/50 transition-transform"
+          >
+            <Instagram className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
+          </a>
 
-            <a
-              href="https://t.me/ank_studio"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="group relative flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 hover:bg-pink-200/50 transition-transform"
-            >
-              <Send className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
-            </a>
-          </div>
-
-          {/* маленьке вікно Instagram */}
-          <div className="relative w-full max-w-[340px] h-[460px] rounded-2xl overflow-hidden border border-pink-200/50 dark:border-neutral-700 shadow-lg bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md">
-            <iframe
-              src="https://www.instagram.com/ank.a_studio/embed"
-              title="Instagram"
-              className="w-full h-full"
-              allowTransparency="true"
-              frameBorder="0"
-              scrolling="auto"
-            />
-          </div>
+          <a
+            href="https://t.me/ank_studio"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="group flex items-center justify-center w-11 h-11 rounded-full bg-pink-100/40 dark:bg-white/10 backdrop-blur-md border border-pink-300 dark:border-white/10 hover:scale-110 hover:bg-pink-200/50 transition-transform"
+          >
+            <Send className="w-5 h-5 text-pink-600 dark:text-pink-400 group-hover:text-pink-500 transition-colors" />
+          </a>
         </div>
+      </div>
+
+      {/* маленьке Instagram вікно праворуч */}
+      <div className="hidden lg:block flex-shrink-0 w-[340px] h-[460px] rounded-2xl overflow-hidden border border-pink-200/50 dark:border-neutral-700 shadow-lg bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md">
+        <iframe
+          src="https://www.instagram.com/ank.a_studio/embed"
+          title="Instagram"
+          className="w-full h-full"
+          allowTransparency="true"
+          frameBorder="0"
+          scrolling="auto"
+        />
+      </div>
+
+      {/* на мобільних — Instagram блок нижче */}
+      <div className="lg:hidden w-full max-w-[340px] mx-auto h-[460px] rounded-2xl overflow-hidden border border-pink-200/50 dark:border-neutral-700 shadow-lg bg-white/70 dark:bg-neutral-900/50 backdrop-blur-md">
+        <iframe
+          src="https://www.instagram.com/ank.a_studio/embed"
+          title="Instagram"
+          className="w-full h-full"
+          allowTransparency="true"
+          frameBorder="0"
+          scrolling="auto"
+        />
       </div>
     </section>
   );
