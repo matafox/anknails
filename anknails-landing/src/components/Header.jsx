@@ -38,7 +38,7 @@ export default function Header() {
                      bg-gradient-to-r from-gray-700 to-gray-900 text-white shadow-md
                      hover:scale-105 hover:shadow-gray-400/40 transition-all duration-300"
         >
-          {t("back_button", i18n.language === "ru" ? "Назад" : "Назад")}
+          {t("back_button", i18n.language === "ru" ? "Курс" : "Курс")}
         </button>
       )}
 
