@@ -7,6 +7,7 @@ import ModulesList from "./components/ModulesList";
 import ForWhomSection from "./components/ForWhomSection";
 import TariffsSection from "./components/TariffsSection";
 import PreEnrollPopup from "./components/PreEnrollPopup";
+import FaqSection from "./components/FaqSection";
 import CourseStart from "./components/CourseStart";
 import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
@@ -57,6 +58,7 @@ export default function App() {
           <ForWhomSection />
           <TariffsSection />
           <PreEnrollPopup/>
+          <FaqSection />
           <CourseStart />
         </div>
       </main>
