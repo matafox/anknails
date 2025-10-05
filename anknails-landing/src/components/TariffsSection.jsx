@@ -49,15 +49,15 @@ export default function TariffsSection() {
               key={i}
               className={`relative rounded-3xl p-8 shadow-lg backdrop-blur-md border transition-all duration-500 ${
                 plan.highlight
-                  ? "bg-gradient-to-br from-rose-500/40 to-pink-400/30 dark:from-rose-600/20 dark:to-pink-500/10 border-rose-400/70 shadow-pink-400/40 hover:shadow-pink-500/60"
+                  ? "bg-gradient-to-br from-rose-500/40 to-pink-400/30 dark:from-rose-600/20 dark:to-pink-500/10 border-rose-300/60 shadow-pink-400/40 hover:shadow-pink-500/60"
                   : "bg-white/70 dark:bg-neutral-900/50 border-pink-100 dark:border-neutral-700 hover:shadow-pink-200 dark:hover:shadow-pink-900"
               }`}
             >
-              {/* бейдж для PRO */}
+              {/* бейдж PRO */}
               {plan.highlight && (
                 <div className="absolute -top-4 right-6">
-                  <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold text-rose-600 dark:text-rose-300 bg-white/80 dark:bg-white/10 backdrop-blur-md border border-white/60 shadow-md animate-pulse">
-                    <Sparkles className="w-4 h-4" />
+                  <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold text-rose-600 dark:text-rose-200 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/60 dark:border-rose-300/20 shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                    <Sparkles className="w-4 h-4 text-rose-500 dark:text-rose-300 animate-pulse" />
                     <span>Рекомендовано</span>
                   </div>
                 </div>
@@ -93,7 +93,7 @@ export default function TariffsSection() {
 
                     {/* Сертифікат */}
                     {f.label.includes(t("feature_certificate")) && (
-                      <div className="flex items-center gap-1 text-xs bg-pink-100/40 dark:bg-white/10 px-2 py-1 rounded-md text-pink-600 dark:text-pink-300 border border-pink-200/40 dark:border-white/10">
+                      <div className="flex items-center gap-1 text-xs bg-white/60 dark:bg-white/10 px-2 py-1 rounded-md text-rose-600 dark:text-pink-200 border border-white/40 dark:border-pink-200/20 backdrop-blur-md shadow-sm">
                         <FileText className="w-3.5 h-3.5" />
                         <span>PDF</span>
                       </div>
