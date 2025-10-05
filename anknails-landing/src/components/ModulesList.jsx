@@ -11,6 +11,7 @@ export default function ModulesList() {
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full max-w-6xl px-6">
+      {/* звичайні модулі */}
       {modules.map((m, i) => (
         <div
           key={i}
@@ -39,6 +40,16 @@ export default function ModulesList() {
           </ul>
         </div>
       ))}
+
+      {/* бонусний урок */}
+      <div className="p-6 rounded-2xl border-2 border-pink-400 dark:border-pink-500 bg-pink-50/60 dark:bg-pink-900/30 shadow-lg backdrop-blur-md hover:shadow-pink-300/50 dark:hover:shadow-pink-900 transition-all sm:col-span-2 lg:col-span-3 text-center">
+        <h2 className="text-xl font-bold mb-3 text-pink-700 dark:text-pink-300 uppercase tracking-wide">
+          {t("bonus_title")}
+        </h2>
+        <p className="text-gray-700 dark:text-gray-200 font-medium">
+          {t("bonus_desc")}
+        </p>
+      </div>
     </div>
   );
 }
