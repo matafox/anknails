@@ -1,15 +1,11 @@
+import { useState } from "react";
 import { FileEdit } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import PreEnrollPopup from "./PreEnrollPopup";
 
 export default function PreEnrollButtonSection() {
   const { t } = useTranslation();
-
-  const handleScrollToForm = () => {
-    const formSection = document.getElementById("pre-enroll-form");
-    if (formSection) {
-      formSection.scrollIntoView({ behavior: "smooth" });
-    }
-  };
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="flex flex-col items-center py-12">
@@ -18,7 +14,7 @@ export default function PreEnrollButtonSection() {
       </p>
 
       <button
-        onClick={handleScrollToForm}
+        onClick={() => setOpen(true)}
         className="relative flex items-center gap-2 px-6 py-3 rounded-xl
                    bg-pink-500/80 hover:bg-pink-600 text-white font-semibold 
                    shadow-lg shadow-pink-500/30 transition-all duration-300
@@ -26,10 +22,9 @@ export default function PreEnrollButtonSection() {
       >
         <FileEdit className="w-5 h-5" />
         <span>{t("preenroll_fill")}</span>
-
-        {/* світловий ефект */}
-        <span className="absolute inset-0 rounded-xl bg-pink-400/20 opacity-0 hover:opacity-100 blur-md transition-opacity duration-300"></span>
       </button>
+
+      <PreEnrollPopup isOpen={open} onClose={() => setOpen(false)} />
     </div>
   );
 }
