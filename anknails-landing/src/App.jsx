@@ -83,10 +83,10 @@ export default function App() {
           <ModulesList />
           <StudentsWorksCarousel />
           <ForWhomSection />
+          <CourseStart />
           <TariffsSection />
           <PreEnrollPopup />
-          <FaqSection />
-          <CourseStart />
+          <FaqSection />   
         </div>
       </main>
 
