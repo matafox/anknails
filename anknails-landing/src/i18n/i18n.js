@@ -5,24 +5,23 @@ import pl from "./pl.json";
 import ru from "./ru.json";
 import uk from "./uk.json";
 
-// зчитуємо мову з URL або localStorage
-const urlParams = new URLSearchParams(window.location.search);
-const langFromUrl = urlParams.get("lang");
-const langFromStorage = localStorage.getItem("preferredLang");
-const defaultLang = langFromUrl || langFromStorage || "ru";
-
 i18n
   .use(initReactI18next)
   .init({
     resources: { en: { translation: en }, pl: { translation: pl }, ru: { translation: ru }, uk: { translation: uk } },
-    lng: defaultLang,
+    lng: localStorage.getItem("lang") || "ru",
     fallbackLng: "ru",
     interpolation: { escapeValue: false },
   });
 
-// зберігати поточну мову при зміні
+// 🔥 Слухаємо зміну мови і зберігаємо вибір
 i18n.on("languageChanged", (lng) => {
-  localStorage.setItem("preferredLang", lng);
+  localStorage.setItem("lang", lng);
+
+  // оновлюємо URL без перезавантаження
+  const url = new URL(window.location);
+  url.searchParams.set("lang", lng);
+  window.history.replaceState({}, "", url);
 });
 
 export default i18n;
