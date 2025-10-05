@@ -25,14 +25,9 @@ export default function MasterSection() {
         <h2 className="text-3xl sm:text-4xl font-bold mb-3 text-gray-900 dark:text-white">
           {t("master_title")}
         </h2>
-        <p className="text-gray-600 dark:text-gray-300 leading-relaxed mb-6">
+        <p className="text-gray-600 dark:text-gray-300 leading-relaxed">
           {t("master_about")}
         </p>
-
-        <button className="relative px-8 py-3 rounded-full text-white font-medium bg-gradient-to-r from-pink-500 to-rose-500 shadow-lg hover:shadow-pink-300 hover:scale-105 active:scale-95 transition-transform">
-          {t("preorder")}
-          <span className="absolute inset-0 rounded-full bg-pink-400 blur-md opacity-30"></span>
-        </button>
       </div>
     </section>
   );
