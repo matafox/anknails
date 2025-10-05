@@ -1,12 +1,10 @@
 import { useState, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Sparkles } from "lucide-react";
+import { ChevronUp, ChevronDown, Sparkles } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function StudentsWorksCarousel() {
   const { t } = useTranslation();
   const [current, setCurrent] = useState(0);
-
-  // 💡 Сюди встав свої зображення робіт учениць
   const images = [
     "/photos/work1.jpg",
     "/photos/work2.jpg",
@@ -22,49 +20,49 @@ export default function StudentsWorksCarousel() {
     return () => clearInterval(timer);
   }, [images.length]);
 
-  const prev = () =>
-    setCurrent((current - 1 + images.length) % images.length);
-  const next = () =>
-    setCurrent((current + 1) % images.length);
+  const prev = () => setCurrent((current - 1 + images.length) % images.length);
+  const next = () => setCurrent((current + 1) % images.length);
 
   return (
-    <section className="relative w-full py-24 flex flex-col items-center overflow-hidden">
-      {/* фонове світіння */}
-      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-pink-50 via-white to-rose-50 dark:from-[#1a1a1a] dark:to-[#0f0f0f]"></div>
+    <section className="relative w-full py-20 flex flex-col items-center overflow-hidden">
+      {/* Фонове світіння */}
+      <div className="absolute inset-0 -z-10 bg-gradient-to-b from-pink-50 via-white to-rose-50 dark:from-[#1a1a1a] dark:to-[#0f0f0f]" />
 
+      {/* Заголовок */}
       <h2 className="text-4xl font-extrabold text-pink-600 dark:text-pink-400 mb-12 text-center flex items-center gap-2">
         <Sparkles className="w-6 h-6 text-pink-500 animate-pulse" />
         {t("students_works_title", "Роботи наших учениць")}
       </h2>
 
-      <div className="relative w-full max-w-5xl">
-        {/* Зображення */}
-        <div className="relative aspect-[16/9] rounded-3xl overflow-hidden shadow-2xl border border-pink-100 dark:border-neutral-800">
+      {/* Вертикальна карусель */}
+      <div className="relative h-[80vh] w-full max-w-[500px] flex flex-col items-center justify-center">
+        {/* Фото */}
+        <div className="relative w-full h-full overflow-hidden rounded-3xl shadow-2xl border border-pink-100 dark:border-neutral-800">
           <img
+            key={current}
             src={images[current]}
             alt={`Робота учениці ${current + 1}`}
-            className="w-full h-full object-cover transition-all duration-700 ease-in-out"
-            key={current}
+            className="absolute inset-0 w-full h-full object-cover opacity-0 scale-105 blur-sm animate-fadeIn"
           />
         </div>
 
         {/* Кнопки */}
         <button
           onClick={prev}
-          className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/50 dark:bg-neutral-900/60 backdrop-blur-md rounded-full p-3 hover:scale-110 transition-all shadow-md"
+          className="absolute top-4 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md rounded-full p-3 hover:scale-110 transition-all shadow-md"
         >
-          <ChevronLeft className="w-6 h-6 text-pink-600 dark:text-pink-300" />
+          <ChevronUp className="w-6 h-6 text-pink-600 dark:text-pink-300" />
         </button>
         <button
           onClick={next}
-          className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/50 dark:bg-neutral-900/60 backdrop-blur-md rounded-full p-3 hover:scale-110 transition-all shadow-md"
+          className="absolute bottom-4 bg-white/60 dark:bg-neutral-900/60 backdrop-blur-md rounded-full p-3 hover:scale-110 transition-all shadow-md"
         >
-          <ChevronRight className="w-6 h-6 text-pink-600 dark:text-pink-300" />
+          <ChevronDown className="w-6 h-6 text-pink-600 dark:text-pink-300" />
         </button>
       </div>
 
       {/* Індикатори */}
-      <div className="flex gap-2 mt-6">
+      <div className="flex flex-col gap-2 mt-6">
         {images.map((_, i) => (
           <div
             key={i}
@@ -77,6 +75,24 @@ export default function StudentsWorksCarousel() {
           ></div>
         ))}
       </div>
+
+      <style jsx>{`
+        @keyframes fadeIn {
+          0% {
+            opacity: 0;
+            transform: scale(1.05);
+            filter: blur(10px);
+          }
+          100% {
+            opacity: 1;
+            transform: scale(1);
+            filter: blur(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 1s ease-out forwards;
+        }
+      `}</style>
     </section>
   );
 }
