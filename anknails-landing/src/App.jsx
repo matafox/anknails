@@ -58,7 +58,7 @@ export default function App() {
         </p>
 
         {/* Контент */}
-        <div className="space-y-8">
+        <div className="space-y-4">
   <MasterSection />
   <PreEnrollButtonSection />
   <CourseIntro />
