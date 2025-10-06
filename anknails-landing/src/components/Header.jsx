@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { Menu, X } from "lucide-react";
 
 export default function Header() {
-  const { i18n, t } = useTranslation();
+  const { i18n } = useTranslation();
   const [fade, setFade] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -49,7 +49,7 @@ export default function Header() {
     window.dispatchEvent(new CustomEvent("menu-toggle", { detail: newState }));
   };
 
-  // 🔹 навігація до секцій (з прокруткою)
+  // 🔹 прокрутка до секції
   const scrollToSection = (id) => {
     const section = document.getElementById(id);
     if (section) section.scrollIntoView({ behavior: "smooth" });
@@ -57,20 +57,27 @@ export default function Header() {
     window.dispatchEvent(new CustomEvent("menu-toggle", { detail: false }));
   };
 
-  // ❌ меню не показується на сабдомені
+  // ❌ меню не показується на about-субдомені
   if (isAbout) {
     return (
-      <header className="absolute top-6 right-6 z-20 flex gap-2">
+      <header className="absolute top-6 right-6 z-20 flex gap-2 flex-wrap justify-end">
         <button
           onClick={goToCourse}
           className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
             bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
             shadow-md hover:scale-105 transition-all duration-300"
         >
-          {i18n.language === "ru" ? "Курс" : "Курс"}
+          {i18n.language === "ru"
+            ? "Курс"
+            : i18n.language === "pl"
+            ? "Kurs"
+            : i18n.language === "en"
+            ? "Course"
+            : "Курс"}
         </button>
 
-        {["ru", "uk"].map((lng) => (
+        {/* 🇷🇺 🇺🇦 🇬🇧 🇵🇱 */}
+        {["ru", "uk", "en", "pl"].map((lng) => (
           <button
             key={lng}
             onClick={() => changeLanguage(lng)}
@@ -87,6 +94,7 @@ export default function Header() {
     );
   }
 
+  // 🌸 Головна сторінка
   return (
     <header className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
       {/* кнопка меню зліва */}
@@ -117,7 +125,13 @@ export default function Header() {
                      bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
                      shadow-md hover:scale-105 transition-all duration-300"
         >
-          {i18n.language === "ru" ? "Обо мне" : "Про мене"}
+          {i18n.language === "ru"
+            ? "Обо мне"
+            : i18n.language === "pl"
+            ? "O mnie"
+            : i18n.language === "en"
+            ? "About me"
+            : "Про мене"}
         </button>
 
         {["ru", "uk"].map((lng) => (
