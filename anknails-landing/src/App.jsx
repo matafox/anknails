@@ -30,17 +30,20 @@ export default function App() {
     <div
       className="relative min-h-screen flex flex-col justify-between items-center 
       overflow-x-hidden text-center 
-      bg-gradient-to-b from-[#fff2f5] via-[#fff] to-[#fff9fa] 
+      bg-gradient-to-b from-[#f5ebff] via-[#fff] to-[#ffeef8] 
       dark:from-[#141414] dark:via-[#1b1b1b] dark:to-[#141414]"
     >
-      {/* Просте фонове сяйво */}
-      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-pink-200/30 dark:bg-pink-700/10 rounded-full blur-[140px] -z-10"></div>
+      {/* Фонове сяйво */}
+      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-purple-300/30 dark:bg-fuchsia-900/20 rounded-full blur-[160px] -z-10"></div>
 
       <Header />
 
-      <main className="flex-grow w-full flex flex-col items-center justify-center px-4 sm:px-6 z-10 pt-24 sm:pt-28">
+      <main
+        className="flex-grow w-full flex flex-col items-center justify-center 
+        px-4 sm:px-6 z-10 pt-24 sm:pt-28"
+      >
         {/* Заголовок */}
-        <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold mb-3 sm:mb-4 text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-rose-500 to-pink-400">
+        <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold mb-3 sm:mb-4 text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-500">
           {t("title")}
         </h1>
 
@@ -56,18 +59,33 @@ export default function App() {
           <CourseIntro />
         </div>
 
-        {/* Інші секції */}
+        {/* Основні секції з ID для скролу */}
         <div className="space-y-20 sm:space-y-24 mt-20 sm:mt-28">
-          <ModulesList />
-          <StudentsWorksCarousel />
-          <ForWhomSection />
-          <div className="-mt-10 sm:-mt-12">
+          <section id="modules">
+            <ModulesList />
+          </section>
+
+          <section id="works">
+            <StudentsWorksCarousel />
+          </section>
+
+          <section id="forwhom">
+            <ForWhomSection />
+          </section>
+
+          <div id="course-start" className="-mt-10 sm:-mt-12">
             <CourseStart />
           </div>
-          <PreEnrollButtonSection />
-          <TariffsSection />
+
+          <section id="tariffs">
+            <TariffsSection />
+          </section>
+
           <PreEnrollPopup />
-          <FaqSection />
+
+          <section id="faq">
+            <FaqSection />
+          </section>
         </div>
       </main>
 
@@ -78,7 +96,7 @@ export default function App() {
         <button
           onClick={scrollToTop}
           className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[9999]
-          bg-gradient-to-r from-pink-500 to-rose-500 
+          bg-gradient-to-r from-pink-500 to-fuchsia-500 
           text-white p-3 sm:p-4 rounded-full shadow-lg
           hover:scale-110 active:scale-95
           hover:shadow-pink-400/50 transition-transform duration-300
