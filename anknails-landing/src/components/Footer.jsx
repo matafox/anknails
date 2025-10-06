@@ -1,10 +1,42 @@
 import { Heart } from "lucide-react";
+import { useTranslation } from "react-i18next";
 
 export default function Footer() {
+  const { i18n } = useTranslation();
+
+  const acceptedText =
+    i18n.language === "ru" ? "Мы принимаем:" : "Ми приймаємо:";
+
   return (
-    <footer className="relative w-full z-10 py-6 px-4 flex flex-col items-center justify-center text-center text-xs sm:text-sm">
-      {/* Тонка розділова лінія зверху */}
+    <footer className="relative w-full z-10 py-8 px-4 flex flex-col items-center justify-center text-center text-xs sm:text-sm">
+      {/* Розділова лінія зверху */}
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-pink-300/40 to-transparent dark:via-pink-700/30" />
+
+      {/* 💳 Ми приймаємо */}
+      <div className="flex flex-col items-center justify-center mb-5">
+        <span className="text-gray-700 dark:text-gray-200 font-medium mb-3 text-sm sm:text-base">
+          {acceptedText}
+        </span>
+
+        {/* Іконки оплат */}
+        <div className="flex items-center justify-center gap-4 bg-white/60 dark:bg-white/10 backdrop-blur-md rounded-full px-6 py-3 border border-white/40 dark:border-neutral-700 shadow-md">
+          <img
+            src="/applepay.svg"
+            alt="Apple Pay"
+            className="h-6 w-auto opacity-90"
+          />
+          <img
+            src="/visa.svg"
+            alt="Visa"
+            className="h-6 w-auto opacity-90"
+          />
+          <img
+            src="/mastercard.svg"
+            alt="Mastercard"
+            className="h-6 w-auto opacity-90"
+          />
+        </div>
+      </div>
 
       {/* Основний текст */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 text-gray-600 dark:text-gray-400 leading-relaxed">
@@ -12,7 +44,6 @@ export default function Footer() {
           © {new Date().getFullYear()} ANK Studio
         </span>
 
-        {/* Крапка між елементами */}
         <span className="hidden sm:inline text-gray-400 dark:text-gray-600">•</span>
 
         <span className="flex items-center gap-1.5">
