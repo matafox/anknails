@@ -1,5 +1,10 @@
 import React, { useState } from "react";
-import { ChevronDown, CreditCard, BookOpenCheck, FileBadge2 } from "lucide-react";
+import {
+  ChevronDown,
+  CreditCard,
+  BookOpenCheck,
+  FileBadge2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function FaqSection() {
@@ -25,41 +30,41 @@ export default function FaqSection() {
   ];
 
   return (
-    <section className="w-full py-20 flex flex-col items-center justify-center">
-      <h2 className="text-4xl font-extrabold text-pink-600 dark:text-pink-400 mb-10 text-center">
+    <section className="w-full py-16 px-4 sm:px-6 flex flex-col items-center justify-center">
+      <h2 className="text-3xl sm:text-4xl font-extrabold bg-gradient-to-r from-pink-600 to-rose-500 bg-clip-text text-transparent mb-10 text-center">
         {t("faq_title")}
       </h2>
 
-      <div className="w-full max-w-4xl px-6 space-y-4">
+      <div className="w-full max-w-2xl sm:max-w-3xl mx-auto space-y-5">
         {faqs.map((faq, index) => {
           const isOpen = openIndex === index;
           return (
             <div
               key={index}
-              className={`bg-white/60 dark:bg-neutral-900/40 backdrop-blur-2xl 
-              border border-pink-200/40 dark:border-neutral-700 
-              rounded-2xl shadow-md overflow-hidden 
-              transition-all duration-300`}
+              className={`relative bg-white/70 dark:bg-neutral-900/50 backdrop-blur-xl 
+              border border-pink-200/50 dark:border-neutral-700 
+              rounded-2xl shadow-[0_4px_20px_rgba(0,0,0,0.05)] 
+              overflow-hidden transition-all duration-300`}
             >
               <button
                 onClick={() => setOpenIndex(isOpen ? null : index)}
-                className="w-full flex items-center justify-between px-5 py-4 text-left text-gray-900 dark:text-white font-semibold text-base sm:text-lg"
+                className="w-full flex items-center justify-between px-5 sm:px-6 py-4 sm:py-5 text-left"
               >
-                {/* Іконка зліва */}
-                <div className="flex items-center gap-3 min-w-0 flex-1">
+                {/* Іконка + текст */}
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  {/* Іконка у рамці */}
                   <div
-                    className={`flex items-center justify-center flex-shrink-0 
-                    w-10 h-10 rounded-xl border 
+                    className={`flex items-center justify-center flex-shrink-0
+                    w-11 h-11 sm:w-12 sm:h-12 rounded-xl border
                     ${
                       isOpen
-                        ? "border-pink-400/70 bg-white/70 dark:bg-neutral-800/60"
-                        : "border-pink-200/60 bg-white/60 dark:bg-neutral-800/50"
+                        ? "border-pink-400/80 bg-white/80 dark:bg-neutral-800/60"
+                        : "border-pink-200/60 bg-white/60 dark:bg-neutral-800/40"
                     } 
                     backdrop-blur-md shadow-sm`}
                   >
-                    {/* Іконка з фіксованим розміром */}
                     {React.cloneElement(faq.icon, {
-                      size: 20,
+                      size: 22,
                       strokeWidth: 2.2,
                       className: "text-pink-500",
                     })}
@@ -67,10 +72,10 @@ export default function FaqSection() {
 
                   {/* Текст питання */}
                   <span
-                    className={`block transition-all duration-300 text-gray-900 dark:text-gray-100 ${
+                    className={`block text-gray-900 dark:text-gray-100 font-semibold transition-all duration-300 ${
                       isOpen
-                        ? "whitespace-normal leading-snug"
-                        : "truncate max-w-[80%]"
+                        ? "whitespace-normal text-base sm:text-lg leading-snug"
+                        : "truncate text-base sm:text-lg max-w-[80%]"
                     }`}
                   >
                     {faq.question}
@@ -79,7 +84,7 @@ export default function FaqSection() {
 
                 {/* Стрілка */}
                 <ChevronDown
-                  className={`w-5 h-5 text-pink-500 flex-shrink-0 transition-transform duration-300 ${
+                  className={`w-5 h-5 text-pink-500 flex-shrink-0 ml-2 transition-transform duration-300 ${
                     isOpen ? "rotate-180" : "rotate-0"
                   }`}
                 />
@@ -87,8 +92,7 @@ export default function FaqSection() {
 
               {/* Відповідь */}
               <div
-                className={`px-5 pb-5 text-gray-700 dark:text-gray-300 text-base leading-relaxed 
-                transition-all duration-500 ${
+                className={`px-5 sm:px-6 pb-5 sm:pb-6 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed transition-all duration-500 ${
                   isOpen
                     ? "max-h-[400px] opacity-100"
                     : "max-h-0 opacity-0 overflow-hidden"
