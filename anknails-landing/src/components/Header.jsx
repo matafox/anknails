@@ -1,119 +1,178 @@
-import Header from "./components/Header";
-import Footer from "./components/Footer";
-import MasterSection from "./components/MasterSection";
-import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
-import CourseIntro from "./components/CourseIntro";
-import ModulesList from "./components/ModulesList";
-import ForWhomSection from "./components/ForWhomSection";
-import StudentsWorksCarousel from "./components/StudentsWorksCarousel";
-import TariffsSection from "./components/TariffsSection";
-import PreEnrollPopup from "./components/PreEnrollPopup";
-import FaqSection from "./components/FaqSection";
-import CourseStart from "./components/CourseStart";
-import { ChevronUp } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { useState, useEffect } from "react";
+import { Menu, X } from "lucide-react";
 
-export default function App() {
-  const { t } = useTranslation();
-  const [showScrollTop, setShowScrollTop] = useState(false);
+export default function Header() {
+  const { i18n } = useTranslation();
+  const [fade, setFade] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const changeLanguage = (lng) => {
+    if (lng === i18n.language) return;
+    setFade(true);
+    setTimeout(() => {
+      i18n.changeLanguage(lng);
+      localStorage.setItem("lang", lng);
+      setFade(false);
+    }, 200);
+  };
+
+  // 🔄 синхронізація між вкладками
   useEffect(() => {
-    const handleScroll = () => setShowScrollTop(window.scrollY > 400);
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+    const syncLang = (e) => {
+      if (e.key === "lang" && e.newValue && e.newValue !== i18n.language) {
+        i18n.changeLanguage(e.newValue);
+      }
+    };
+    window.addEventListener("storage", syncLang);
+    return () => window.removeEventListener("storage", syncLang);
+  }, [i18n]);
 
-  // слухаємо події від Header для приховування кнопки догори
-  useEffect(() => {
-    const handleMenuToggle = (e) => setMenuOpen(e.detail);
-    window.addEventListener("menu-toggle", handleMenuToggle);
-    return () => window.removeEventListener("menu-toggle", handleMenuToggle);
-  }, []);
+  const isAbout =
+    typeof window !== "undefined" &&
+    window.location.hostname.startsWith("about.");
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
+  // 🔹 переходи між сторінками
+  const goToCourse = () => {
+    const lang = localStorage.getItem("lang") || i18n.language || "ru";
+    window.location.href = `https://ankstudio.online?lang=${lang}`;
+  };
 
-  return (
-    <div
-      className="relative min-h-screen flex flex-col justify-between items-center 
-      overflow-x-hidden text-center 
-      bg-gradient-to-b from-[#fff2f5] via-[#fff] to-[#fff9fa] 
-      dark:from-[#141414] dark:via-[#1b1b1b] dark:to-[#141414]"
-    >
-      {/* фонове сяйво */}
-      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-pink-200/30 dark:bg-pink-700/10 rounded-full blur-[140px] -z-10"></div>
+  const goToAbout = () => {
+    const lang = localStorage.getItem("lang") || i18n.language || "ru";
+    window.location.href = `https://about.ankstudio.online?lang=${lang}`;
+  };
 
-      <Header />
+  // 🔹 відкриття / закриття меню
+  const toggleMenu = () => {
+    const newState = !menuOpen;
+    setMenuOpen(newState);
+    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: newState }));
+  };
 
-      <main className="flex-grow w-full flex flex-col items-center justify-center px-4 sm:px-6 z-10 pt-24 sm:pt-28">
-        {/* Заголовок */}
-        <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold mb-3 sm:mb-4 text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-rose-500 to-pink-400">
-          {t("title")}
-        </h1>
+  // 🔹 прокрутка до секції
+  const scrollToSection = (id) => {
+    const section = document.getElementById(id);
+    if (section) section.scrollIntoView({ behavior: "smooth" });
+    setMenuOpen(false);
+    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: false }));
+  };
 
-        {/* Підзаголовок */}
-        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-8 sm:mb-10 max-w-md sm:max-w-xl leading-relaxed">
-          {t("subtitle")}
-        </p>
-
-        {/* Початкові секції */}
-        <div className="space-y-10 sm:space-y-12">
-          <MasterSection />
-          <PreEnrollButtonSection />
-          <CourseIntro />
-        </div>
-
-        {/* Інші секції */}
-        <div className="space-y-20 sm:space-y-24 mt-20 sm:mt-28">
-          <div id="modules">
-            <ModulesList />
-          </div>
-
-          <div id="forwhom">
-            <ForWhomSection />
-          </div>
-
-          {/* 🔽 Старт курсу */}
-          <div className="-mt-10 sm:-mt-12" id="coursestart">
-            <CourseStart />
-          </div>
-
-          {/* 🔽 Роботи учениць — перенесено нижче */}
-          <div id="works">
-            <StudentsWorksCarousel />
-          </div>
-
-          <div id="tariffs">
-            <PreEnrollButtonSection />
-            <TariffsSection />
-          </div>
-
-          <PreEnrollPopup />
-
-          <div id="faq">
-            <FaqSection />
-          </div>
-        </div>
-      </main>
-
-      <Footer />
-
-      {/* кнопка догори */}
-      {showScrollTop && !menuOpen && (
+  // 🌸 якщо це about-сторінка → показуємо кнопки мов і "курс"
+  if (isAbout) {
+    return (
+      <header className="absolute top-6 right-6 z-20 flex flex-wrap justify-end items-center gap-2">
         <button
-          onClick={scrollToTop}
-          className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[9999]
-          bg-gradient-to-r from-pink-500 to-rose-500 
-          text-white p-3 sm:p-4 rounded-full shadow-lg
-          hover:scale-110 active:scale-95
-          hover:shadow-pink-400/50 transition-transform duration-300
-          border border-white/30 backdrop-blur-md"
-          aria-label="Прокрутити догори"
+          onClick={goToCourse}
+          className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
+          bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
+          shadow-md hover:scale-105 transition-all duration-300"
         >
-          <ChevronUp className="w-5 h-5 sm:w-6 sm:h-6" />
+          {i18n.language === "ru"
+            ? "Курс"
+            : i18n.language === "pl"
+            ? "Kurs"
+            : i18n.language === "en"
+            ? "Course"
+            : "Курс"}
         </button>
+
+        {["ru", "uk", "en", "pl"].map((lng) => (
+          <button
+            key={lng}
+            onClick={() => changeLanguage(lng)}
+            className={`px-3 py-1 text-sm rounded-md backdrop-blur-sm border transition-all ${
+              i18n.language === lng
+                ? "bg-pink-500 text-white border-transparent shadow-lg"
+                : "bg-white/60 dark:bg-white/10 text-gray-700 dark:text-gray-300 border-pink-100 dark:border-neutral-700 hover:bg-pink-100/70"
+            }`}
+          >
+            {lng.toUpperCase()}
+          </button>
+        ))}
+      </header>
+    );
+  }
+
+  // 🌷 головна сторінка
+  return (
+    <header className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
+      {/* кнопка меню зліва */}
+      <button
+        onClick={toggleMenu}
+        className="p-2 rounded-md bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-lg
+                   hover:bg-white/60 dark:hover:bg-white/20 transition-all shadow-md"
+        aria-label="Меню"
+      >
+        {menuOpen ? (
+          <X className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+        ) : (
+          <Menu className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+        )}
+      </button>
+
+      {/* кнопки мов і “Обо мне” */}
+      <div
+        className={`flex gap-2 items-center flex-wrap justify-end transition-opacity duration-300 ${
+          fade ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        <button
+          onClick={goToAbout}
+          className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
+                     bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
+                     shadow-md hover:scale-105 transition-all duration-300"
+        >
+          {i18n.language === "ru"
+            ? "Обо мне"
+            : i18n.language === "pl"
+            ? "O mnie"
+            : i18n.language === "en"
+            ? "About me"
+            : "Про мене"}
+        </button>
+
+        {["ru", "uk"].map((lng) => (
+          <button
+            key={lng}
+            onClick={() => changeLanguage(lng)}
+            className={`px-3 py-1 text-sm rounded-md backdrop-blur-sm border transition-all ${
+              i18n.language === lng
+                ? "bg-pink-500 text-white border-transparent shadow-lg"
+                : "bg-white/50 dark:bg-white/10 text-gray-600 dark:text-gray-300 border-pink-100 dark:border-neutral-700 hover:bg-pink-100/80"
+            }`}
+          >
+            {lng.toUpperCase()}
+          </button>
+        ))}
+      </div>
+
+      {/* скляне меню */}
+      {menuOpen && (
+        <div
+          className="fixed inset-0 bg-white/50 dark:bg-black/50 backdrop-blur-2xl z-40 flex flex-col items-center justify-center 
+          space-y-6 sm:space-y-8 text-xl sm:text-2xl font-semibold text-gray-800 dark:text-white"
+        >
+          <button onClick={() => scrollToSection("modules")}>
+            {i18n.language === "ru" ? "Модули" : "Модулі"}
+          </button>
+          <button onClick={() => scrollToSection("forwhom")}>
+            {i18n.language === "ru" ? "Для кого курс" : "Для кого курс"}
+          </button>
+          <button onClick={() => scrollToSection("coursestart")}>
+            {i18n.language === "ru" ? "Старт курса" : "Старт курсу"}
+          </button>
+          <button onClick={() => scrollToSection("works")}>
+            {i18n.language === "ru" ? "Работы учениц" : "Роботи учениць"}
+          </button>
+          <button onClick={() => scrollToSection("tariffs")}>
+            {i18n.language === "ru" ? "Тарифы" : "Тарифи"}
+          </button>
+          <button onClick={() => scrollToSection("faq")}>
+            {i18n.language === "ru" ? "FAQ" : "Питання"}
+          </button>
+        </div>
       )}
-    </div>
+    </header>
   );
 }
