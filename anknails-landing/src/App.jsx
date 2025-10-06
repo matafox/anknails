@@ -65,7 +65,7 @@ export default function App() {
           <div className="-mt-10 sm:-mt-12">
             <CourseStart />
           </div>
-
+          <CourseIntro />
           <TariffsSection />
           <PreEnrollPopup />
           <FaqSection />
