@@ -61,11 +61,10 @@ export default function App() {
           <ModulesList />
           <StudentsWorksCarousel />
           <ForWhomSection />
-
           <div className="-mt-10 sm:-mt-12">
             <CourseStart />
           </div>
-          <CourseIntro />
+          <PreEnrollButtonSection />
           <TariffsSection />
           <PreEnrollPopup />
           <FaqSection />
