@@ -18,7 +18,6 @@ export default function Header() {
     }, 200);
   };
 
-  // 🔄 синхронізація між вкладками
   useEffect(() => {
     const syncLang = (e) => {
       if (e.key === "lang" && e.newValue && e.newValue !== i18n.language) {
@@ -61,6 +60,7 @@ export default function Header() {
     setTimeout(() => setMenuOpen(false), 400);
   };
 
+  // 🔒 меню не показуємо на about-сайті
   if (isAbout) {
     return (
       <header className="absolute top-6 right-6 z-20 flex flex-wrap gap-2 justify-end items-center">
@@ -97,25 +97,8 @@ export default function Header() {
   }
 
   return (
-    <header className="fixed top-6 left-6 right-6 z-40 flex justify-between items-center">
-      {/* Кнопка меню */}
-      <button
-        onClick={() => (menuOpen ? closeMenu() : openMenu())}
-        className="p-3 rounded-full bg-white/60 dark:bg-white/10 backdrop-blur-md 
-                   border border-pink-200 dark:border-neutral-700 shadow-md 
-                   hover:scale-105 transition-transform duration-500"
-        aria-label="Меню"
-      >
-        <div
-          className={`transition-transform duration-500 ${
-            menuOpen ? "rotate-45 text-rose-500" : "rotate-0 text-pink-600"
-          }`}
-        >
-          {menuOpen ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
-        </div>
-      </button>
-
-      {/* Мови + “Обо мне” */}
+    <header className="fixed top-6 right-6 z-50 flex items-center gap-3">
+      {/* Кнопки мов і "Обо мне" */}
       <div
         className={`flex gap-2 items-center transition-opacity duration-300 ${
           fade ? "opacity-0" : "opacity-100"
@@ -145,26 +128,52 @@ export default function Header() {
         ))}
       </div>
 
-      {/* Скляне меню */}
-      {menuOpen && (
+      {/* Кнопка меню */}
+      <button
+        onClick={() => (menuOpen ? closeMenu() : openMenu())}
+        className="p-3 rounded-full bg-white/60 dark:bg-white/10 backdrop-blur-md 
+                   border border-pink-200 dark:border-neutral-700 shadow-md 
+                   hover:scale-110 active:scale-95 transition-transform duration-500"
+        aria-label="Меню"
+      >
         <div
-          className={`fixed inset-0 z-30 flex flex-col items-center justify-center
-          transition-all duration-500 ease-out
-          ${
-            menuVisible
-              ? "opacity-100 scale-100"
-              : "opacity-0 scale-95 pointer-events-none"
+          className={`transition-transform duration-500 ${
+            menuOpen ? "rotate-45 text-rose-500" : "rotate-0 text-pink-600"
           }`}
         >
-          {/* Скляний бек */}
-          <div className="absolute inset-0 bg-white/15 dark:bg-black/25 backdrop-blur-3xl border-t border-white/20 shadow-2xl" />
+          {menuOpen ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
+        </div>
+      </button>
 
-          {/* Напівпрозорі сяючі плями */}
-          <div className="absolute top-[-100px] left-[50px] w-[400px] h-[400px] bg-pink-300/30 blur-[150px] rounded-full" />
-          <div className="absolute bottom-[-150px] right-[50px] w-[400px] h-[400px] bg-rose-400/30 blur-[160px] rounded-full" />
+      {/* Меню (glass background) */}
+      {menuOpen && (
+        <div
+          className={`fixed inset-0 z-40 flex flex-col items-center justify-center 
+          transition-all duration-500 ease-out 
+          ${menuVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}
+        >
+          {/* Скляний фон */}
+          <div
+            className="absolute inset-0 bg-white/20 dark:bg-black/25 backdrop-blur-3xl 
+                       border-t border-white/10 shadow-inner"
+          ></div>
 
-          {/* Меню */}
-          <nav className="relative z-40 flex flex-col items-center gap-6 text-3xl font-semibold text-gray-800 dark:text-gray-100">
+          {/* Світлові плями */}
+          <div className="absolute top-[-100px] left-[50px] w-[400px] h-[400px] bg-pink-300/25 blur-[150px] rounded-full"></div>
+          <div className="absolute bottom-[-150px] right-[50px] w-[400px] h-[400px] bg-fuchsia-400/30 blur-[160px] rounded-full"></div>
+
+          {/* Кнопка закриття у меню */}
+          <button
+            onClick={closeMenu}
+            className="absolute top-8 right-8 p-3 rounded-full bg-white/60 dark:bg-white/10 backdrop-blur-md 
+                       border border-pink-200 dark:border-neutral-700 shadow-md 
+                       hover:scale-110 active:scale-95 transition-transform duration-500 z-50"
+          >
+            <X className="w-6 h-6 text-pink-600 dark:text-pink-300" />
+          </button>
+
+          {/* Посилання */}
+          <nav className="relative z-50 flex flex-col items-center gap-6 text-3xl font-semibold text-gray-900 dark:text-white">
             {[
               { id: "modules", label: i18n.language === "ru" ? "Модули" : "Модулі" },
               { id: "works", label: i18n.language === "ru" ? "Работы" : "Роботи" },
@@ -175,8 +184,9 @@ export default function Header() {
               <button
                 key={item.id}
                 onClick={() => scrollToSection(item.id)}
-                className="relative text-white/90 hover:text-white transition-all duration-300"
-                style={{ animationDelay: `${i * 0.1}s` }}
+                className="text-white/90 hover:text-white bg-pink-500/10 hover:bg-pink-500/20 
+                           px-6 py-3 rounded-xl backdrop-blur-sm border border-white/20
+                           shadow-lg transition-all duration-300"
               >
                 {item.label}
               </button>
