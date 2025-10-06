@@ -26,32 +26,28 @@ export default function FaqSection() {
 
   return (
     <section className="w-full py-20 flex flex-col items-center justify-center">
-      {/* Заголовок */}
       <h2 className="text-4xl font-extrabold text-pink-600 dark:text-pink-400 mb-10 text-center">
         {t("faq_title")}
       </h2>
 
-      {/* Контейнер з фіксованою шириною */}
-      <div className="w-full flex justify-center">
-        <div className="w-full max-w-md sm:max-w-2xl px-4 space-y-4">
+      <div className="w-full flex justify-center px-4">
+        <div className="w-full max-w-md sm:max-w-2xl space-y-4">
           {faqs.map((faq, index) => {
             const isOpen = openIndex === index;
             return (
               <div
                 key={index}
-                className={`bg-white/60 dark:bg-neutral-900/40 backdrop-blur-2xl 
+                className={`w-full mx-auto bg-white/60 dark:bg-neutral-900/40 backdrop-blur-2xl 
                 border border-pink-200/40 dark:border-neutral-700 
                 rounded-2xl shadow-md overflow-hidden 
                 transition-all duration-300`}
               >
-                {/* Кнопка питання */}
                 <button
                   onClick={() => setOpenIndex(isOpen ? null : index)}
                   className="w-full flex items-center justify-between px-5 py-4 text-left 
                   text-gray-900 dark:text-white font-semibold text-base sm:text-lg"
                 >
-                  <div className="flex items-center gap-3 min-w-0 flex-1">
-                    {/* Іконка в рамці */}
+                  <div className="flex items-center gap-3 min-w-0 flex-1 max-w-full">
                     <div
                       className={`flex items-center justify-center flex-shrink-0 
                       w-10 h-10 rounded-xl border 
@@ -69,9 +65,9 @@ export default function FaqSection() {
                       })}
                     </div>
 
-                    {/* Текст питання */}
                     <span
-                      className={`block transition-all duration-300 text-gray-900 dark:text-gray-100 ${
+                      className={`block text-gray-900 dark:text-gray-100 transition-all duration-300 
+                      ${
                         isOpen
                           ? "whitespace-normal leading-snug"
                           : "truncate max-w-[80%]"
@@ -81,7 +77,6 @@ export default function FaqSection() {
                     </span>
                   </div>
 
-                  {/* Стрілка */}
                   <ChevronDown
                     className={`w-5 h-5 text-pink-500 flex-shrink-0 transition-transform duration-300 ${
                       isOpen ? "rotate-180" : "rotate-0"
@@ -89,7 +84,6 @@ export default function FaqSection() {
                   />
                 </button>
 
-                {/* Відповідь */}
                 <div
                   className={`px-5 pb-5 text-gray-700 dark:text-gray-300 text-base leading-relaxed 
                   transition-all duration-500 ${
