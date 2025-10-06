@@ -29,11 +29,14 @@ export default function AboutApp() {
 
       <main
         className={`flex flex-col items-center justify-start w-full 
-        px-4 sm:px-6 z-10 pt-24 sm:pt-28 pb-20 transition-opacity duration-500 ${
+        px-5 sm:px-10 md:px-16 z-10 pt-24 sm:pt-28 pb-20 transition-opacity duration-500 ${
           visible ? "opacity-100" : "opacity-0"
         }`}
       >
-        <div className="space-y-4 sm:space-y-6 w-full max-w-4xl text-center">
+        <div
+          className="space-y-6 sm:space-y-8 w-full max-w-5xl text-left sm:text-center leading-relaxed text-lg sm:text-xl
+                     text-gray-800 dark:text-gray-200 font-[450]"
+        >
           <MasterSection />
         </div>
       </main>
