@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { ChevronDown, CreditCard, BookOpenCheck, FileBadge2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
@@ -50,12 +50,14 @@ export default function FaqSection() {
                   <div
                     className={`flex items-center justify-center flex-shrink-0 
                     w-10 h-10 rounded-xl border 
-                    ${isOpen
-                      ? "border-pink-400/70 bg-white/70 dark:bg-neutral-800/60"
-                      : "border-pink-200/60 bg-white/60 dark:bg-neutral-800/50"} 
+                    ${
+                      isOpen
+                        ? "border-pink-400/70 bg-white/70 dark:bg-neutral-800/60"
+                        : "border-pink-200/60 bg-white/60 dark:bg-neutral-800/50"
+                    } 
                     backdrop-blur-md shadow-sm`}
                   >
-                    {/** Примусовий розмір іконки */}
+                    {/* Іконка з фіксованим розміром */}
                     {React.cloneElement(faq.icon, {
                       size: 20,
                       strokeWidth: 2.2,
@@ -63,10 +65,12 @@ export default function FaqSection() {
                     })}
                   </div>
 
-                  {/* Текст питання з обрізкою */}
+                  {/* Текст питання */}
                   <span
-                    className={`block truncate transition-all duration-300 ${
-                      isOpen ? "whitespace-normal" : "max-w-[80%]"
+                    className={`block transition-all duration-300 text-gray-900 dark:text-gray-100 ${
+                      isOpen
+                        ? "whitespace-normal leading-snug"
+                        : "truncate max-w-[80%]"
                     }`}
                   >
                     {faq.question}
