@@ -13,17 +13,17 @@ export default function FaqSection() {
 
   const faqs = [
     {
-      icon: <CreditCard />,
+      Icon: CreditCard,
       question: t("faq_payment_question"),
       answer: t("faq_payment_answer"),
     },
     {
-      icon: <BookOpenCheck />,
+      Icon: BookOpenCheck,
       question: t("faq_content_question"),
       answer: t("faq_content_answer"),
     },
     {
-      icon: <FileBadge2 />,
+      Icon: FileBadge2,
       question: t("faq_certificate_question"),
       answer: t("faq_certificate_answer"),
     },
@@ -38,12 +38,13 @@ export default function FaqSection() {
       <div className="w-full max-w-4xl px-4 sm:px-6 space-y-4">
         {faqs.map((faq, index) => {
           const isOpen = openIndex === index;
+          const Icon = faq.Icon;
+
           return (
             <div
               key={index}
               className="bg-white/60 dark:bg-neutral-900/40 backdrop-blur-2xl border border-pink-200/40 dark:border-neutral-700 rounded-2xl shadow-md overflow-hidden transition-all duration-300"
             >
-              {/* кнопка */}
               <button
                 onClick={() => setOpenIndex(isOpen ? null : index)}
                 className="w-full flex items-center justify-between px-5 py-4 text-left"
@@ -57,14 +58,11 @@ export default function FaqSection() {
                         : "border-pink-200/50 bg-white/60 dark:bg-neutral-800/50"
                     }`}
                   >
-                    {faq.icon &&
-                      // робимо всі іконки одного розміру
-                      // навіть якщо вони різні за формою
-                      (faq.icon.type({
-                        size: 22,
-                        strokeWidth: 2.3,
-                        className: "text-pink-500",
-                      }) || faq.icon)}
+                    <Icon
+                      size={22}
+                      strokeWidth={2.3}
+                      className="text-pink-500"
+                    />
                   </div>
 
                   {/* Текст питання */}
@@ -79,7 +77,6 @@ export default function FaqSection() {
                   </span>
                 </div>
 
-                {/* Стрілка */}
                 <ChevronDown
                   className={`w-5 h-5 text-pink-500 flex-shrink-0 transition-transform duration-300 ${
                     isOpen ? "rotate-180" : "rotate-0"
@@ -87,7 +84,6 @@ export default function FaqSection() {
                 />
               </button>
 
-              {/* Відповідь */}
               <div
                 className={`px-5 pb-5 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed transition-all duration-500 ${
                   isOpen
