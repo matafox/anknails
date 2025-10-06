@@ -1,12 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, X } from "lucide-react";
 
 export default function Header() {
   const { i18n } = useTranslation();
-  const [fade, setFade] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [menuVisible, setMenuVisible] = useState(false);
+  const [fade, setFade] = useState(false);
 
   const changeLanguage = (lng) => {
     if (lng === i18n.language) return;
@@ -46,29 +45,35 @@ export default function Header() {
     const el = document.getElementById(id);
     if (el) {
       el.scrollIntoView({ behavior: "smooth", block: "start" });
-      closeMenu();
+      setMenuOpen(false);
     }
   };
 
-  const openMenu = () => {
-    setMenuOpen(true);
-    setTimeout(() => setMenuVisible(true), 30);
-  };
+  return (
+    <header className="fixed top-4 left-4 right-4 z-50 flex justify-between items-center">
+      {/* --- Ліва частина: кнопка меню --- */}
+      <button
+        onClick={() => setMenuOpen(!menuOpen)}
+        className="p-2 rounded-full border border-pink-200 dark:border-neutral-700 
+                   bg-white/40 dark:bg-neutral-800/60 backdrop-blur-md 
+                   shadow-md hover:scale-110 transition-transform duration-300"
+        aria-label="Меню"
+      >
+        {menuOpen ? (
+          <X className="w-6 h-6 text-pink-600 dark:text-pink-300 transition-transform duration-300 rotate-90" />
+        ) : (
+          <Plus className="w-6 h-6 text-pink-600 dark:text-pink-300 transition-transform duration-300 rotate-0" />
+        )}
+      </button>
 
-  const closeMenu = () => {
-    setMenuVisible(false);
-    setTimeout(() => setMenuOpen(false), 400);
-  };
-
-  // 🔒 меню не показуємо на about-сайті
-  if (isAbout) {
-    return (
-      <header className="absolute top-6 right-6 z-20 flex flex-wrap gap-2 justify-end items-center">
-        <div
-          className={`flex gap-2 items-center transition-opacity duration-300 ${
-            fade ? "opacity-0" : "opacity-100"
-          }`}
-        >
+      {/* --- Права частина: мови + кнопка "Про мене" --- */}
+      <div
+        className={`flex gap-2 items-center transition-opacity duration-300 ${
+          fade ? "opacity-0" : "opacity-100"
+        }`}
+      >
+        {/* кнопка "Курс" або "Обо мне" */}
+        {isAbout ? (
           <button
             onClick={goToCourse}
             className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
@@ -77,59 +82,18 @@ export default function Header() {
           >
             {i18n.language === "ru" ? "Курс" : "Курс"}
           </button>
+        ) : (
+          <button
+            onClick={goToAbout}
+            className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
+                       bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
+                       shadow-md hover:scale-105 transition-all duration-300"
+          >
+            {i18n.language === "ru" ? "Обо мне" : "Про мене"}
+          </button>
+        )}
 
-          {["ru", "uk"].map((lng) => (
-            <button
-              key={lng}
-              onClick={() => changeLanguage(lng)}
-              className={`px-3 py-1 text-sm rounded-md backdrop-blur-sm border transition-all ${
-                i18n.language === lng
-                  ? "bg-pink-500 text-white border-transparent shadow-lg"
-                  : "bg-white/50 dark:bg-white/10 text-gray-600 dark:text-gray-300 border-pink-100 dark:border-neutral-700 hover:bg-pink-100/80"
-              }`}
-            >
-              {lng.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </header>
-    );
-  }
-
-  return (
-    <header className="fixed top-6 left-6 z-50 flex items-center gap-3">
-      {/* Кнопка меню (зліва) */}
-      <button
-        onClick={() => (menuOpen ? closeMenu() : openMenu())}
-        className="p-3 rounded-full bg-white/60 dark:bg-white/10 backdrop-blur-md 
-                   border border-pink-200 dark:border-neutral-700 shadow-md 
-                   hover:scale-110 active:scale-95 transition-transform duration-500"
-        aria-label="Меню"
-      >
-        <div
-          className={`transition-transform duration-500 ${
-            menuOpen ? "rotate-45 text-rose-500" : "rotate-0 text-pink-600"
-          }`}
-        >
-          {menuOpen ? <X className="w-6 h-6" /> : <Plus className="w-6 h-6" />}
-        </div>
-      </button>
-
-      {/* Кнопки мов і “Обо мне” */}
-      <div
-        className={`flex gap-2 items-center transition-opacity duration-300 ${
-          fade ? "opacity-0" : "opacity-100"
-        }`}
-      >
-        <button
-          onClick={goToAbout}
-          className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
-                     bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium
-                     shadow-md hover:scale-105 transition-all duration-300"
-        >
-          {i18n.language === "ru" ? "Обо мне" : "Про мене"}
-        </button>
-
+        {/* перемикач мов */}
         {["ru", "uk"].map((lng) => (
           <button
             key={lng}
@@ -145,43 +109,36 @@ export default function Header() {
         ))}
       </div>
 
-      {/* Меню (glass background) */}
+      {/* --- Меню (повноекранне скляне) --- */}
       {menuOpen && (
         <div
-          className={`fixed inset-0 z-40 flex flex-col items-center justify-center 
-          transition-all duration-500 ease-out 
-          ${menuVisible ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"}`}
+          className="fixed inset-0 bg-white/40 dark:bg-black/40 backdrop-blur-2xl 
+                     flex flex-col items-center justify-center z-40 
+                     text-gray-900 dark:text-white space-y-6 text-2xl font-medium
+                     transition-all duration-300"
         >
-          {/* Скляний фон */}
-          <div
-            className="absolute inset-0 bg-white/20 dark:bg-black/25 backdrop-blur-3xl 
-                       border-t border-white/10 shadow-inner pointer-events-auto"
-          ></div>
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="absolute top-5 right-5 p-2 rounded-full bg-pink-500 text-white shadow-lg hover:scale-110 transition-transform duration-300"
+          >
+            <X className="w-6 h-6" />
+          </button>
 
-          {/* Світлові плями */}
-          <div className="absolute top-[-100px] left-[50px] w-[400px] h-[400px] bg-pink-300/25 blur-[150px] rounded-full"></div>
-          <div className="absolute bottom-[-150px] right-[50px] w-[400px] h-[400px] bg-fuchsia-400/30 blur-[160px] rounded-full"></div>
-
-          {/* Посилання */}
-          <nav className="relative z-50 flex flex-col items-center gap-6 text-3xl font-semibold text-gray-900 dark:text-white pointer-events-auto">
-            {[
-              { id: "modules", label: i18n.language === "ru" ? "Модули" : "Модулі" },
-              { id: "works", label: i18n.language === "ru" ? "Работы" : "Роботи" },
-              { id: "forwhom", label: i18n.language === "ru" ? "Для кого" : "Для кого" },
-              { id: "tariffs", label: i18n.language === "ru" ? "Тарифы" : "Тарифи" },
-              { id: "faq", label: i18n.language === "ru" ? "Вопросы" : "Питання" },
-            ].map((item) => (
-              <button
-                key={item.id}
-                onClick={() => scrollToSection(item.id)}
-                className="text-white/90 hover:text-white bg-pink-500/10 hover:bg-pink-500/20 
-                           px-6 py-3 rounded-xl backdrop-blur-sm border border-white/20
-                           shadow-lg transition-all duration-300"
-              >
-                {item.label}
-              </button>
-            ))}
-          </nav>
+          <button onClick={() => scrollToSection("modules")}>
+            {i18n.language === "ru" ? "Модули" : "Модулі"}
+          </button>
+          <button onClick={() => scrollToSection("works")}>
+            {i18n.language === "ru" ? "Работы учениц" : "Роботи учениць"}
+          </button>
+          <button onClick={() => scrollToSection("forwhom")}>
+            {i18n.language === "ru" ? "Кому подходит" : "Для кого курс"}
+          </button>
+          <button onClick={() => scrollToSection("tariffs")}>
+            {i18n.language === "ru" ? "Тарифы" : "Тарифи"}
+          </button>
+          <button onClick={() => scrollToSection("faq")}>
+            {i18n.language === "ru" ? "Вопросы" : "Питання"}
+          </button>
         </div>
       )}
     </header>
