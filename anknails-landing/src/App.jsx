@@ -17,11 +17,19 @@ import { useState, useEffect } from "react";
 export default function App() {
   const { t } = useTranslation();
   const [showScrollTop, setShowScrollTop] = useState(false);
+  const [menuOpen, setMenuOpen] = useState(false); // 🔹 отримуємо стан меню
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // 🔄 слухач події від Header (через custom event)
+  useEffect(() => {
+    const handleMenuToggle = (e) => setMenuOpen(e.detail);
+    window.addEventListener("menu-toggle", handleMenuToggle);
+    return () => window.removeEventListener("menu-toggle", handleMenuToggle);
   }, []);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
@@ -30,20 +38,18 @@ export default function App() {
     <div
       className="relative min-h-screen flex flex-col justify-between items-center 
       overflow-x-hidden text-center 
-      bg-gradient-to-b from-[#f5ebff] via-[#fff] to-[#ffeef8] 
-      dark:from-[#141414] dark:via-[#1b1b1b] dark:to-[#141414]"
+      bg-gradient-to-b from-[#f6f0ff] via-[#fff] to-[#fdf9ff] 
+      dark:from-[#100d16] dark:via-[#18141f] dark:to-[#100d16]"
     >
       {/* Фонове сяйво */}
-      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[700px] h-[700px] bg-purple-300/30 dark:bg-fuchsia-900/20 rounded-full blur-[160px] -z-10"></div>
+      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-fuchsia-300/30 dark:bg-fuchsia-700/10 rounded-full blur-[140px] -z-10"></div>
 
-      <Header />
+      {/* 🔹 Передаємо стан меню через кастомну подію */}
+      <Header onMenuToggle={(open) => setMenuOpen(open)} />
 
-      <main
-        className="flex-grow w-full flex flex-col items-center justify-center 
-        px-4 sm:px-6 z-10 pt-24 sm:pt-28"
-      >
+      <main className="flex-grow w-full flex flex-col items-center justify-center px-4 sm:px-6 z-10 pt-24 sm:pt-28">
         {/* Заголовок */}
-        <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold mb-3 sm:mb-4 text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-500">
+        <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold mb-3 sm:mb-4 text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
           {t("title")}
         </h1>
 
@@ -59,47 +65,48 @@ export default function App() {
           <CourseIntro />
         </div>
 
-        {/* Основні секції з ID для скролу */}
+        {/* Інші секції */}
         <div className="space-y-20 sm:space-y-24 mt-20 sm:mt-28">
-          <section id="modules">
+          <div id="modules">
             <ModulesList />
-          </section>
+          </div>
 
-          <section id="works">
+          <div id="works">
             <StudentsWorksCarousel />
-          </section>
+          </div>
 
-          <section id="forwhom">
+          <div id="forwhom">
             <ForWhomSection />
-          </section>
+          </div>
 
-          <div id="course-start" className="-mt-10 sm:-mt-12">
+          <div className="-mt-10 sm:-mt-12" id="coursestart">
             <CourseStart />
           </div>
 
-          <section id="tariffs">
+          <div id="tariffs">
+            <PreEnrollButtonSection />
             <TariffsSection />
-          </section>
+          </div>
 
           <PreEnrollPopup />
 
-          <section id="faq">
+          <div id="faq">
             <FaqSection />
-          </section>
+          </div>
         </div>
       </main>
 
       <Footer />
 
-      {/* Кнопка догори */}
-      {showScrollTop && (
+      {/* 🔹 Кнопка догори — ховається, коли меню відкрите */}
+      {showScrollTop && !menuOpen && (
         <button
           onClick={scrollToTop}
           className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[9999]
-          bg-gradient-to-r from-pink-500 to-fuchsia-500 
+          bg-gradient-to-r from-fuchsia-500 to-pink-500 
           text-white p-3 sm:p-4 rounded-full shadow-lg
           hover:scale-110 active:scale-95
-          hover:shadow-pink-400/50 transition-transform duration-300
+          hover:shadow-fuchsia-400/50 transition-transform duration-300
           border border-white/30 backdrop-blur-md"
           aria-label="Прокрутити догори"
         >
