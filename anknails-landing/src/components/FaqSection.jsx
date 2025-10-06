@@ -1,5 +1,10 @@
 import { useState } from "react";
-import { ChevronDown, CreditCard, BookOpenCheck, FileBadge2 } from "lucide-react";
+import {
+  ChevronDown,
+  CreditCard,
+  BookOpenCheck,
+  FileBadge2,
+} from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function FaqSection() {
@@ -8,17 +13,17 @@ export default function FaqSection() {
 
   const faqs = [
     {
-      icon: <CreditCard className="w-6 h-6 text-pink-500" />,
+      icon: <CreditCard />,
       question: t("faq_payment_question"),
       answer: t("faq_payment_answer"),
     },
     {
-      icon: <BookOpenCheck className="w-6 h-6 text-pink-500" />,
+      icon: <BookOpenCheck />,
       question: t("faq_content_question"),
       answer: t("faq_content_answer"),
     },
     {
-      icon: <FileBadge2 className="w-6 h-6 text-pink-500" />,
+      icon: <FileBadge2 />,
       question: t("faq_certificate_question"),
       answer: t("faq_certificate_answer"),
     },
@@ -30,39 +35,71 @@ export default function FaqSection() {
         {t("faq_title")}
       </h2>
 
-      <div className="w-full max-w-4xl px-6 space-y-4">
-        {faqs.map((faq, index) => (
-          <div
-            key={index}
-            className="bg-white/60 dark:bg-neutral-900/40 backdrop-blur-2xl border border-pink-200/40 dark:border-neutral-700 rounded-2xl shadow-md overflow-hidden transition-all duration-300"
-          >
-            <button
-              onClick={() => setOpenIndex(openIndex === index ? null : index)}
-              className="w-full flex justify-between items-center px-6 py-5 text-left text-gray-900 dark:text-white font-semibold text-lg"
-            >
-              <div className="flex items-center gap-3">
-                {faq.icon}
-                {faq.question}
-              </div>
-              <ChevronDown
-                className={`w-5 h-5 text-pink-500 transition-transform duration-300 ${
-                  openIndex === index ? "rotate-180" : "rotate-0"
-                }`}
-              />
-            </button>
-
-            {/* Відповідь */}
+      <div className="w-full max-w-4xl px-4 sm:px-6 space-y-4">
+        {faqs.map((faq, index) => {
+          const isOpen = openIndex === index;
+          return (
             <div
-              className={`px-6 pb-5 text-gray-700 dark:text-gray-300 text-base leading-relaxed transition-all duration-500 ${
-                openIndex === index
-                  ? "max-h-[400px] opacity-100"
-                  : "max-h-0 opacity-0 overflow-hidden"
-              }`}
+              key={index}
+              className="bg-white/60 dark:bg-neutral-900/40 backdrop-blur-2xl border border-pink-200/40 dark:border-neutral-700 rounded-2xl shadow-md overflow-hidden transition-all duration-300"
             >
-              {faq.answer}
+              {/* кнопка */}
+              <button
+                onClick={() => setOpenIndex(isOpen ? null : index)}
+                className="w-full flex items-center justify-between px-5 py-4 text-left"
+              >
+                <div className="flex items-center gap-3 min-w-0 flex-1">
+                  {/* Іконка в рамці */}
+                  <div
+                    className={`flex items-center justify-center w-11 h-11 flex-shrink-0 rounded-xl border transition-all duration-300 ${
+                      isOpen
+                        ? "border-pink-400/70 bg-white/80 dark:bg-neutral-800/70"
+                        : "border-pink-200/50 bg-white/60 dark:bg-neutral-800/50"
+                    }`}
+                  >
+                    {faq.icon &&
+                      // робимо всі іконки одного розміру
+                      // навіть якщо вони різні за формою
+                      (faq.icon.type({
+                        size: 22,
+                        strokeWidth: 2.3,
+                        className: "text-pink-500",
+                      }) || faq.icon)}
+                  </div>
+
+                  {/* Текст питання */}
+                  <span
+                    className={`font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base transition-all duration-300 ${
+                      isOpen
+                        ? "whitespace-normal leading-snug"
+                        : "truncate overflow-ellipsis max-w-[80%]"
+                    }`}
+                  >
+                    {faq.question}
+                  </span>
+                </div>
+
+                {/* Стрілка */}
+                <ChevronDown
+                  className={`w-5 h-5 text-pink-500 flex-shrink-0 transition-transform duration-300 ${
+                    isOpen ? "rotate-180" : "rotate-0"
+                  }`}
+                />
+              </button>
+
+              {/* Відповідь */}
+              <div
+                className={`px-5 pb-5 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed transition-all duration-500 ${
+                  isOpen
+                    ? "max-h-[400px] opacity-100"
+                    : "max-h-0 opacity-0 overflow-hidden"
+                }`}
+              >
+                {faq.answer}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </section>
   );
