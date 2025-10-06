@@ -1,4 +1,4 @@
-iimport { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { Plus, X } from "lucide-react";
 
@@ -101,7 +101,9 @@ export default function Header() {
       {/* Кнопка меню */}
       <button
         onClick={() => (menuOpen ? closeMenu() : openMenu())}
-        className="p-3 rounded-full bg-white/50 dark:bg-white/10 backdrop-blur-md border border-pink-200 dark:border-neutral-700 shadow-md hover:scale-105 transition-transform duration-500"
+        className="p-3 rounded-full bg-white/60 dark:bg-white/10 backdrop-blur-md 
+                   border border-pink-200 dark:border-neutral-700 shadow-md 
+                   hover:scale-105 transition-transform duration-500"
         aria-label="Меню"
       >
         <div
@@ -113,7 +115,7 @@ export default function Header() {
         </div>
       </button>
 
-      {/* Правий блок: кнопки */}
+      {/* Мови + “Обо мне” */}
       <div
         className={`flex gap-2 items-center transition-opacity duration-300 ${
           fade ? "opacity-0" : "opacity-100"
@@ -143,46 +145,45 @@ export default function Header() {
         ))}
       </div>
 
-      {/* Плавне меню */}
+      {/* Скляне меню */}
       {menuOpen && (
         <div
-          className={`fixed top-0 left-0 w-full h-full z-30 bg-gradient-to-b from-pink-100 via-white to-rose-100 dark:from-[#1a1a1a] dark:via-[#232323] dark:to-[#1a1a1a]
-          backdrop-blur-2xl flex flex-col items-center justify-center text-3xl font-semibold text-gray-800 dark:text-gray-100
-          transition-all duration-500 ${
+          className={`fixed inset-0 z-30 flex flex-col items-center justify-center
+          transition-all duration-500 ease-out
+          ${
             menuVisible
-              ? "opacity-100 translate-y-0"
-              : "opacity-0 -translate-y-10 pointer-events-none"
+              ? "opacity-100 scale-100"
+              : "opacity-0 scale-95 pointer-events-none"
           }`}
         >
-          {[
-            { id: "modules", label: i18n.language === "ru" ? "Модули" : "Модулі" },
-            { id: "works", label: i18n.language === "ru" ? "Работы" : "Роботи" },
-            { id: "forwhom", label: i18n.language === "ru" ? "Для кого" : "Для кого" },
-            { id: "faq", label: i18n.language === "ru" ? "Вопросы" : "Питання" },
-            { id: "tariffs", label: i18n.language === "ru" ? "Тарифы" : "Тарифи" },
-          ].map((item, i) => (
-            <button
-              key={item.id}
-              onClick={() => scrollToSection(item.id)}
-              className={`hover:text-pink-600 dark:hover:text-rose-400 transition-colors duration-300 ${
-                menuVisible ? "opacity-100" : "opacity-0"
-              }`}
-              style={{ transitionDelay: `${0.1 + i * 0.1}s` }}
-            >
-              {item.label}
-            </button>
-          ))}
+          {/* Скляний бек */}
+          <div className="absolute inset-0 bg-white/15 dark:bg-black/25 backdrop-blur-3xl border-t border-white/20 shadow-2xl" />
+
+          {/* Напівпрозорі сяючі плями */}
+          <div className="absolute top-[-100px] left-[50px] w-[400px] h-[400px] bg-pink-300/30 blur-[150px] rounded-full" />
+          <div className="absolute bottom-[-150px] right-[50px] w-[400px] h-[400px] bg-rose-400/30 blur-[160px] rounded-full" />
+
+          {/* Меню */}
+          <nav className="relative z-40 flex flex-col items-center gap-6 text-3xl font-semibold text-gray-800 dark:text-gray-100">
+            {[
+              { id: "modules", label: i18n.language === "ru" ? "Модули" : "Модулі" },
+              { id: "works", label: i18n.language === "ru" ? "Работы" : "Роботи" },
+              { id: "forwhom", label: i18n.language === "ru" ? "Для кого" : "Для кого" },
+              { id: "tariffs", label: i18n.language === "ru" ? "Тарифы" : "Тарифи" },
+              { id: "faq", label: i18n.language === "ru" ? "Вопросы" : "Питання" },
+            ].map((item, i) => (
+              <button
+                key={item.id}
+                onClick={() => scrollToSection(item.id)}
+                className="relative text-white/90 hover:text-white transition-all duration-300"
+                style={{ animationDelay: `${i * 0.1}s` }}
+              >
+                {item.label}
+              </button>
+            ))}
+          </nav>
         </div>
       )}
-
-      <style>{`
-        header button {
-          transition: all 0.25s ease;
-        }
-        header button:active {
-          transform: scale(0.95);
-        }
-      `}</style>
     </header>
   );
 }
