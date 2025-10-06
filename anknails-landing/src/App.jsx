@@ -83,16 +83,16 @@ export default function App() {
             <ModulesList />
           </div>
 
-          <div id="works">
-            <StudentsWorksCarousel />
-          </div>
-
           <div id="forwhom">
             <ForWhomSection />
           </div>
 
           <div className="-mt-10 sm:-mt-12" id="coursestart">
             <CourseStart />
+          </div>
+
+          <div id="works">
+            <StudentsWorksCarousel />
           </div>
 
           <div id="tariffs">
