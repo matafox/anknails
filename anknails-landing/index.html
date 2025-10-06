@@ -2,29 +2,19 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-
-    <!-- 🚫 Заборонено масштабування -->
     <meta
       name="viewport"
       content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
     />
-
     <title>ANK Studio - Nail Course</title>
-
-    <!-- 💅 Favicon -->
     <link
       rel="icon"
       href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>💅</text></svg>"
     />
-
-    <!-- 🌐 Синхронізація мови між сторінками -->
     <script>
       try {
-        // Якщо є мова — зберігаємо в localStorage (доступно на всіх субдоменах)
         const lang = localStorage.getItem("lang");
         if (lang) localStorage.setItem("lang", lang);
-
-        // Якщо ще не вибрана — пробуємо взяти з браузера
         if (!lang) {
           const browserLang = navigator.language.split("-")[0];
           if (["ru", "uk", "pl", "en"].includes(browserLang)) {
