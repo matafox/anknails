@@ -4,7 +4,15 @@ import { useTranslation } from "react-i18next";
 
 export default function FaqSection() {
   const { t } = useTranslation();
-  const [openIndex, setOpenIndex] = useState(null);
+  const [openItems, setOpenItems] = useState([]); // ✅ кілька відкритих одночасно
+
+  const toggleItem = (index) => {
+    setOpenItems((prev) =>
+      prev.includes(index)
+        ? prev.filter((i) => i !== index)
+        : [...prev, index]
+    );
+  };
 
   const faqs = [
     {
@@ -31,19 +39,19 @@ export default function FaqSection() {
         {t("faq_title")}
       </h2>
 
-      {/* Контейнер FAQ */}
+      {/* Контейнер */}
       <div className="w-full max-w-md sm:max-w-xl space-y-5">
         {faqs.map((faq, index) => {
-          const isOpen = openIndex === index;
+          const isOpen = openItems.includes(index);
           return (
             <div
               key={index}
               className={`w-full rounded-2xl border border-pink-200/50 dark:border-neutral-700 
-                bg-white/70 dark:bg-neutral-900/40 backdrop-blur-2xl shadow-sm transition-all duration-300`}
+              bg-white/70 dark:bg-neutral-900/40 backdrop-blur-2xl shadow-sm transition-all duration-300`}
             >
-              {/* Заголовок питання */}
+              {/* Кнопка заголовка */}
               <button
-                onClick={() => setOpenIndex(isOpen ? null : index)}
+                onClick={() => toggleItem(index)}
                 className="w-full flex items-center justify-between px-5 py-4 text-left"
               >
                 <div className="flex items-center gap-3 w-full">
@@ -74,6 +82,7 @@ export default function FaqSection() {
                   </span>
                 </div>
 
+                {/* Стрілка */}
                 <ChevronDown
                   className={`w-5 h-5 text-pink-500 transition-transform duration-300 ${
                     isOpen ? "rotate-180" : "rotate-0"
@@ -85,7 +94,9 @@ export default function FaqSection() {
               <div
                 className={`px-5 pb-5 text-sm sm:text-base text-gray-700 dark:text-gray-300 leading-relaxed 
                 transition-all duration-500 ease-in-out ${
-                  isOpen ? "max-h-[400px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"
+                  isOpen
+                    ? "max-h-[400px] opacity-100"
+                    : "max-h-0 opacity-0 overflow-hidden"
                 }`}
               >
                 {faq.answer}
