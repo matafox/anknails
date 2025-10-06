@@ -13,23 +13,24 @@ export default function AboutApp() {
 
   return (
     <div
-      className="relative min-h-screen flex flex-col text-center 
-      bg-gradient-to-b from-[#a37bff] via-[#b388ff] to-[#e3c4ff]
-      dark:from-[#1a1029] dark:via-[#2a1740] dark:to-[#3a2059]
-      text-white overflow-x-clip"
+      className="relative flex flex-col items-center text-center
+      min-h-screen w-full overflow-x-hidden bg-gradient-to-b 
+      from-[#8b5cf6] via-[#a855f7] to-[#f0abfc]
+      dark:from-[#1b132d] dark:via-[#2a1740] dark:to-[#3b2059]
+      text-white"
     >
-      {/* м’яке фіолетове сяйво */}
-      <div className="absolute inset-0 -z-10 overflow-hidden">
-        <div className="absolute top-[-200px] left-[-100px] w-[500px] h-[500px] bg-purple-400/30 blur-[160px] rounded-full"></div>
-        <div className="absolute bottom-[-200px] right-[-100px] w-[600px] h-[600px] bg-fuchsia-400/25 blur-[180px] rounded-full"></div>
-        <div className="absolute top-[300px] right-[200px] w-[300px] h-[300px] bg-pink-400/20 blur-[120px] rounded-full"></div>
+      {/* фонові плями — тепер фіксовані, не обриваються */}
+      <div className="fixed inset-0 -z-10 overflow-hidden">
+        <div className="absolute top-[-100px] left-[-150px] w-[600px] h-[600px] bg-purple-400/25 blur-[180px] rounded-full"></div>
+        <div className="absolute bottom-[-200px] right-[-150px] w-[700px] h-[700px] bg-fuchsia-500/25 blur-[200px] rounded-full"></div>
+        <div className="absolute top-[250px] right-[100px] w-[300px] h-[300px] bg-pink-400/20 blur-[150px] rounded-full"></div>
       </div>
 
       <Header />
 
       <main
         className={`flex-grow w-full flex flex-col items-center justify-center 
-        px-4 sm:px-6 z-10 pt-24 sm:pt-28 transition-opacity duration-700 ${
+        px-4 sm:px-6 z-10 pt-24 sm:pt-28 transition-opacity duration-500 ${
           visible ? "opacity-100" : "opacity-0"
         }`}
       >
@@ -40,16 +41,13 @@ export default function AboutApp() {
 
       <Footer />
 
-      {/* ====== Глобальні стилі для плавного скролу ====== */}
       <style>{`
         html, body {
           scroll-behavior: smooth;
+          overscroll-behavior: contain;
           -webkit-overflow-scrolling: touch;
-          overscroll-behavior-y: contain;
-        }
-        * {
-          scroll-margin: 0;
-          scroll-padding: 0;
+          height: 100%;
+          background: transparent;
         }
       `}</style>
     </div>
