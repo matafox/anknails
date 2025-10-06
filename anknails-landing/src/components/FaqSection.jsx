@@ -13,17 +13,17 @@ export default function FaqSection() {
 
   const faqs = [
     {
-      icon: <CreditCard className="w-6 h-6 text-pink-500" />,
+      icon: <CreditCard className="w-5 h-5 text-pink-500" />,
       question: t("faq_payment_question"),
       answer: t("faq_payment_answer"),
     },
     {
-      icon: <BookOpenCheck className="w-6 h-6 text-pink-500" />,
+      icon: <BookOpenCheck className="w-5 h-5 text-pink-500" />,
       question: t("faq_content_question"),
       answer: t("faq_content_answer"),
     },
     {
-      icon: <FileBadge2 className="w-6 h-6 text-pink-500" />,
+      icon: <FileBadge2 className="w-5 h-5 text-pink-500" />,
       question: t("faq_certificate_question"),
       answer: t("faq_certificate_answer"),
     },
@@ -31,10 +31,12 @@ export default function FaqSection() {
 
   return (
     <section className="w-full py-20 flex flex-col items-center justify-center">
+      {/* Заголовок */}
       <h2 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 to-fuchsia-500 mb-10 text-center">
         {t("faq_title")}
       </h2>
 
+      {/* Список FAQ */}
       <div className="w-full max-w-4xl px-6 space-y-4">
         {faqs.map((faq, index) => {
           const isOpen = openIndex === index;
@@ -49,12 +51,17 @@ export default function FaqSection() {
                 onClick={() => setOpenIndex(isOpen ? null : index)}
                 className="w-full flex justify-between items-center px-6 py-5 text-left"
               >
-                <div className="flex items-center gap-3">
-                  {faq.icon}
+                <div className="flex items-center gap-4">
+                  {/* Іконка в рамочці */}
+                  <div className="flex items-center justify-center w-10 h-10 rounded-xl border border-pink-200/70 dark:border-pink-800 bg-white/60 dark:bg-neutral-800/60 backdrop-blur-md shadow-sm">
+                    {faq.icon}
+                  </div>
+
                   <span className="font-semibold text-lg text-gray-900 dark:text-white">
                     {faq.question}
                   </span>
                 </div>
+
                 <ChevronDown
                   className={`w-5 h-5 text-pink-500 transition-transform ${
                     isOpen ? "rotate-180" : "rotate-0"
