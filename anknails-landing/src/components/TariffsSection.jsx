@@ -1,8 +1,10 @@
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Check, X, FileText, Sparkles } from "lucide-react";
+import { Check, X, FileText, Sparkles, Info } from "lucide-react";
 
 export default function TariffsSection() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
+  const [showInfo, setShowInfo] = useState(false);
 
   const tariffs = [
     {
@@ -33,8 +35,14 @@ export default function TariffsSection() {
     },
   ];
 
+  // Текст повідомлення двома мовами
+  const infoText =
+    i18n.language === "ru"
+      ? "Вся информация о ценах и возможности предзаказа появится на сайте немного позже."
+      : "Уся інформація стосовно цін та можливості передзамовлення з’явиться на сайті трохи згодом.";
+
   return (
-    <section className="w-full max-w-6xl mx-auto px-6 py-16 text-center">
+    <section className="relative w-full max-w-6xl mx-auto px-6 py-16 text-center">
       <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-gray-900 dark:text-white">
         {t("tariffs_title")}
       </h2>
@@ -47,7 +55,8 @@ export default function TariffsSection() {
           return (
             <div
               key={i}
-              className={`relative rounded-3xl p-8 shadow-lg backdrop-blur-md border transition-all duration-500 ${
+              onClick={() => setShowInfo(true)}
+              className={`relative cursor-pointer rounded-3xl p-8 shadow-lg backdrop-blur-md border transition-all duration-500 ${
                 plan.highlight
                   ? "bg-gradient-to-br from-rose-500/40 to-pink-400/30 dark:from-rose-600/20 dark:to-pink-500/10 border-rose-300/60 shadow-pink-400/40 hover:shadow-pink-500/60"
                   : "bg-gradient-to-br from-gray-100/70 to-pink-50/50 dark:from-neutral-800/60 dark:to-neutral-900/40 border-gray-200/70 dark:border-neutral-700 hover:shadow-pink-100/40"
@@ -118,6 +127,37 @@ export default function TariffsSection() {
           );
         })}
       </div>
+
+      {/* Інфо-модалка */}
+      {showInfo && (
+        <div
+          onClick={() => setShowInfo(false)}
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex items-center justify-center z-[9999] p-4 animate-fadeIn"
+        >
+          <div
+            onClick={(e) => e.stopPropagation()}
+            className="bg-white/60 dark:bg-neutral-800/60 backdrop-blur-2xl border border-white/40 dark:border-neutral-700 rounded-3xl p-6 max-w-sm text-center shadow-2xl animate-pop"
+          >
+            <Info className="w-8 h-8 mx-auto mb-3 text-pink-500" />
+            <p className="text-gray-800 dark:text-gray-200 font-medium leading-relaxed">
+              {infoText}
+            </p>
+          </div>
+        </div>
+      )}
+
+      <style>{`
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
+        }
+        @keyframes pop {
+          from { transform: scale(0.9); opacity: 0; }
+          to { transform: scale(1); opacity: 1; }
+        }
+        .animate-fadeIn { animation: fadeIn 0.3s ease-out; }
+        .animate-pop { animation: pop 0.3s ease-out; }
+      `}</style>
     </section>
   );
 }
