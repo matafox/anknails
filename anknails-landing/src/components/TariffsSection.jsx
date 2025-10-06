@@ -35,11 +35,12 @@ export default function TariffsSection() {
     },
   ];
 
-  // Текст повідомлення двома мовами
   const infoText =
     i18n.language === "ru"
       ? "Вся информация о ценах и возможности предзаказа появится на сайте немного позже."
       : "Уся інформація стосовно цін та можливості передзамовлення з’явиться на сайті трохи згодом.";
+
+  const okText = i18n.language === "ru" ? "Хорошо, спасибо 💅" : "Добре, дякую 💅";
 
   return (
     <section className="relative w-full max-w-6xl mx-auto px-6 py-16 text-center">
@@ -72,7 +73,6 @@ export default function TariffsSection() {
                 </div>
               )}
 
-              {/* Назва тарифу */}
               <h3
                 className={`text-2xl font-semibold mb-2 ${
                   plan.highlight
@@ -83,12 +83,10 @@ export default function TariffsSection() {
                 {plan.title}
               </h3>
 
-              {/* Опис */}
               <p className="text-gray-600 dark:text-gray-300 mb-6">
                 {plan.desc}
               </p>
 
-              {/* включено */}
               <ul className="space-y-3 text-left mb-6">
                 {included.map((f, idx) => (
                   <li
@@ -100,7 +98,6 @@ export default function TariffsSection() {
                       <span>{f.label}</span>
                     </div>
 
-                    {/* Сертифікат */}
                     {f.label.includes(t("feature_certificate")) && (
                       <div className="flex items-center gap-1 text-xs bg-white/60 dark:bg-white/10 px-2 py-1 rounded-md text-rose-600 dark:text-pink-200 border border-white/40 dark:border-pink-200/20 backdrop-blur-md shadow-sm">
                         <FileText className="w-3.5 h-3.5" />
@@ -111,7 +108,6 @@ export default function TariffsSection() {
                 ))}
               </ul>
 
-              {/* не включено */}
               <ul className="space-y-3 text-left opacity-70">
                 {excluded.map((f, idx) => (
                   <li
@@ -136,12 +132,20 @@ export default function TariffsSection() {
         >
           <div
             onClick={(e) => e.stopPropagation()}
-            className="bg-white/60 dark:bg-neutral-800/60 backdrop-blur-2xl border border-white/40 dark:border-neutral-700 rounded-3xl p-6 max-w-sm text-center shadow-2xl animate-pop"
+            className="bg-white/70 dark:bg-neutral-800/70 backdrop-blur-2xl border border-white/40 dark:border-neutral-700 rounded-3xl p-6 max-w-sm text-center shadow-2xl animate-pop flex flex-col items-center"
           >
             <Info className="w-8 h-8 mx-auto mb-3 text-pink-500" />
-            <p className="text-gray-800 dark:text-gray-200 font-medium leading-relaxed">
+            <p className="text-gray-800 dark:text-gray-200 font-medium leading-relaxed mb-6">
               {infoText}
             </p>
+            <button
+              onClick={() => setShowInfo(false)}
+              className="px-5 py-2 rounded-full bg-white/60 dark:bg-white/10 border border-white/50 
+              backdrop-blur-md shadow-md text-pink-600 dark:text-pink-300 font-medium 
+              hover:scale-105 active:scale-95 transition-all duration-300 flex items-center gap-2"
+            >
+              <span>{okText}</span>
+            </button>
           </div>
         </div>
       )}
