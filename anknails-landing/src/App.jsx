@@ -71,11 +71,11 @@ export default function App() {
         </p>
 
         {/* Початкові секції */}
-        <div className="space-y-10 sm:space-y-12">
-          <MasterSection />
-          <PreEnrollButtonSection />
-          <CourseIntro />
-        </div>
+        <div className="space-y-1 sm:space-y-2">
+  <MasterSection />
+  <PreEnrollButtonSection />
+  <CourseIntro />
+</div>
 
         {/* Інші секції */}
         <div className="space-y-20 sm:space-y-24 mt-20 sm:mt-28">
