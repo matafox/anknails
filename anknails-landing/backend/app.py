@@ -161,9 +161,3 @@ def admin():
 @app.get("/")
 def home():
     return {"status": "ok", "msg": "ANK backend running"}
-
-
-# ================== ENTRYPOINT (для Railway) ==================
-if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run("backend.app:app", host="0.0.0.0", port=int(os.getenv("PORT", 8080)))
