@@ -77,3 +77,8 @@ def admin():
     <table>{"".join(f"<tr><td>{v.ip}</td><td>{v.country}</td><td>{v.path}</td><td>{v.created_at.strftime('%H:%M %d.%m')}</td></tr>" for v in last)}</table>
     </body></html>"""
     return HTMLResponse(html)
+
+# 🩷 додаємо головну сторінку, щоб не було "Not Found"
+@app.get("/")
+def home():
+    return {"status": "ok", "msg": "ANK backend is running"}
