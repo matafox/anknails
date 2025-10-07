@@ -6,7 +6,7 @@ export default function Header() {
   const { i18n } = useTranslation();
   const [fade, setFade] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(false);
+  const [atTop, setAtTop] = useState(true); // 👈 тільки якщо вгорі
 
   const changeLanguage = (lng) => {
     if (lng === i18n.language) return;
@@ -29,27 +29,20 @@ export default function Header() {
     return () => window.removeEventListener("storage", syncLang);
   }, [i18n]);
 
-  // 🌸 відстеження скролу
+  // 🌸 показуємо кнопку тільки якщо користувач у верхній частині
   useEffect(() => {
-    const onScroll = () => {
-      setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setAtTop(window.scrollY < 10);
     };
-    window.addEventListener("scroll", onScroll);
-    return () => window.removeEventListener("scroll", onScroll);
+    handleScroll();
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   // 🚫 блокуємо прокрутку коли меню відкрите
   useEffect(() => {
-    if (menuOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = menuOpen ? "hidden" : "";
   }, [menuOpen]);
-
-  const isAbout =
-    typeof window !== "undefined" &&
-    window.location.hostname.startsWith("about.");
 
   const goToCourse = () => {
     const lang = localStorage.getItem("lang") || i18n.language || "ru";
@@ -62,36 +55,41 @@ export default function Header() {
   };
 
   const toggleMenu = () => {
+    if (!atTop) return; // ❌ не відкривати, якщо не зверху
     setMenuOpen((prev) => !prev);
-    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: !menuOpen }));
   };
 
   const scrollToSection = (id) => {
     const section = document.getElementById(id);
     if (section) section.scrollIntoView({ behavior: "smooth" });
     setMenuOpen(false);
-    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: false }));
   };
 
-  // 🌷 головна сторінка
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4 transition-all duration-300 
-      ${scrolled ? "backdrop-blur-lg bg-white/70 dark:bg-black/40 shadow-md" : "bg-transparent"}`}
+      className={`fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4 transition-all duration-300 ${
+        menuOpen
+          ? "backdrop-blur-2xl bg-white/60 dark:bg-black/50"
+          : atTop
+          ? "bg-transparent"
+          : "opacity-0 pointer-events-none"
+      }`}
     >
-      {/* кнопка меню */}
-      <button
-        onClick={toggleMenu}
-        className="p-2 rounded-md bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-lg
-                   hover:bg-white/60 dark:hover:bg-white/20 transition-all shadow-md duration-300 transform opacity-100"
-        aria-label="Меню"
-      >
-        {menuOpen ? (
-          <X className="w-6 h-6 text-pink-600 dark:text-pink-400" />
-        ) : (
-          <Menu className="w-6 h-6 text-pink-600 dark:text-pink-400" />
-        )}
-      </button>
+      {/* кнопка меню — показується тільки коли вгорі */}
+      {atTop && (
+        <button
+          onClick={toggleMenu}
+          className="p-2 rounded-md bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-lg
+                     hover:bg-white/60 dark:hover:bg-white/20 transition-all shadow-md duration-300"
+          aria-label="Меню"
+        >
+          {menuOpen ? (
+            <X className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+          ) : (
+            <Menu className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+          )}
+        </button>
+      )}
 
       {/* кнопки мов і “Обо мне” */}
       <div
@@ -132,8 +130,8 @@ export default function Header() {
       {/* меню поверх усього */}
       {menuOpen && (
         <div
-          className="fixed inset-0 bg-white/70 dark:bg-black/60 backdrop-blur-2xl z-[9999] flex flex-col items-center justify-center 
-          space-y-6 sm:space-y-8 text-xl sm:text-2xl font-semibold text-gray-800 dark:text-white transition-all duration-300"
+          className="fixed inset-0 bg-white/50 dark:bg-black/60 backdrop-blur-3xl z-[9999] flex flex-col items-center justify-center 
+          space-y-6 sm:space-y-8 text-xl sm:text-2xl font-semibold text-gray-800 dark:text-white"
         >
           <button onClick={() => scrollToSection("modules")}>
             {i18n.language === "ru" ? "Модули" : "Модулі"}
