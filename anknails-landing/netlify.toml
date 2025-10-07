@@ -1,0 +1,18 @@
+[build]
+  base = "anknails-landing"
+  publish = "dist"
+  command = "npm run build"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# 🚫 Ігноримо бекенд-файли
+[[redirects]]
+  from = "/requirements.txt"
+  to = "/"
+  status = 404
+
+[[redirects]]
+  from = "/runtime.txt"
+  to = "/"
+  status = 404
