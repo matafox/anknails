@@ -3,8 +3,8 @@ FROM python:3.11-slim
 
 WORKDIR /app
 
-# копіюємо бекенд
-COPY backend /app/backend
+# копіюємо весь бекенд
+COPY backend backend
 
 # встановлюємо залежності
 RUN pip install --no-cache-dir -r backend/requirements.txt
@@ -16,4 +16,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # запускаємо сервер FastAPI
-CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port $PORT --app-dir backend"]
+CMD ["uvicorn", "app:app", "--host", "0.0.0.0", "--port", "8080", "--app-dir", "backend"]
