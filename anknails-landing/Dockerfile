@@ -16,4 +16,4 @@ ENV PORT=8080
 EXPOSE 8080
 
 # запускаємо сервер FastAPI
-CMD ["sh", "-c", "uvicorn backend.app:app --host 0.0.0.0 --port $PORT"]
+CMD ["sh", "-c", "uvicorn app:app --host 0.0.0.0 --port $PORT --app-dir backend"]
