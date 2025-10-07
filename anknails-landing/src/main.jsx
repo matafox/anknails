@@ -13,3 +13,10 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     {isAboutPage ? <AboutApp /> : <App />}
   </React.StrictMode>
 );
+
+// ---- 👇 Пінг для аналітики (Railway backend) ----
+try {
+  fetch("https://anknails-production.up.railway.app/ping")
+    .then(() => console.log("Analytics ping sent"))
+    .catch(() => {});
+} catch (e) {}
