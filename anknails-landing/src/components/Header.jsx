@@ -6,7 +6,14 @@ export default function Header() {
   const { i18n } = useTranslation();
   const [fade, setFade] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [atTop, setAtTop] = useState(true); // 👈 тільки якщо вгорі
+  const [showMenuButton, setShowMenuButton] = useState(true);
+  const [isMainDomain, setIsMainDomain] = useState(true); // 👈 перевіряємо домен
+
+  // ✅ визначаємо чи це основний домен
+  useEffect(() => {
+    const host = window.location.hostname;
+    setIsMainDomain(!host.startsWith("about.") && !host.includes("course."));
+  }, []);
 
   const changeLanguage = (lng) => {
     if (lng === i18n.language) return;
@@ -29,35 +36,43 @@ export default function Header() {
     return () => window.removeEventListener("storage", syncLang);
   }, [i18n]);
 
-  // 🌸 показуємо кнопку тільки якщо користувач у верхній частині
+  // 🌸 тільки на головному домені: ховаємо кнопку при скролі
   useEffect(() => {
+    if (!isMainDomain) return; // ❌ не чіпати, якщо субдомен
+
+    let lastScroll = 0;
     const handleScroll = () => {
-      setAtTop(window.scrollY < 10);
+      const current = window.scrollY;
+
+      if (current > 100 && current > lastScroll) {
+        setShowMenuButton(false);
+      } else if (current <= 10) {
+        setShowMenuButton(true);
+      }
+
+      lastScroll = current;
     };
-    handleScroll();
+
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  }, [isMainDomain]);
 
-  // 🚫 блокуємо прокрутку коли меню відкрите
+  // 🚫 блокуємо прокрутку при відкритому меню
   useEffect(() => {
     document.body.style.overflow = menuOpen ? "hidden" : "";
   }, [menuOpen]);
-
-  const goToCourse = () => {
-    const lang = localStorage.getItem("lang") || i18n.language || "ru";
-    window.location.href = `https://ankstudio.online?lang=${lang}`;
-  };
 
   const goToAbout = () => {
     const lang = localStorage.getItem("lang") || i18n.language || "ru";
     window.location.href = `https://about.ankstudio.online?lang=${lang}`;
   };
 
-  const toggleMenu = () => {
-    if (!atTop) return; // ❌ не відкривати, якщо не зверху
-    setMenuOpen((prev) => !prev);
+  const goToCourse = () => {
+    const lang = localStorage.getItem("lang") || i18n.language || "ru";
+    window.location.href = `https://ankstudio.online?lang=${lang}`;
   };
+
+  const toggleMenu = () => setMenuOpen((prev) => !prev);
 
   const scrollToSection = (id) => {
     const section = document.getElementById(id);
@@ -67,29 +82,29 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4 transition-all duration-300 ${
-        menuOpen
-          ? "backdrop-blur-2xl bg-white/60 dark:bg-black/50"
-          : atTop
-          ? "bg-transparent"
-          : "opacity-0 pointer-events-none"
-      }`}
+      className={`fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4
+        backdrop-blur-lg bg-white/70 dark:bg-black/40 shadow-md transition-all duration-300`}
     >
-      {/* кнопка меню — показується тільки коли вгорі */}
-      {atTop && (
-        <button
-          onClick={toggleMenu}
-          className="p-2 rounded-md bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-lg
-                     hover:bg-white/60 dark:hover:bg-white/20 transition-all shadow-md duration-300"
-          aria-label="Меню"
-        >
-          {menuOpen ? (
-            <X className="w-6 h-6 text-pink-600 dark:text-pink-400" />
-          ) : (
-            <Menu className="w-6 h-6 text-pink-600 dark:text-pink-400" />
-          )}
-        </button>
-      )}
+      {/* кнопка меню */}
+      <button
+        onClick={toggleMenu}
+        className={`p-2 rounded-md bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-lg
+          hover:bg-white/60 dark:hover:bg-white/20 transition-all shadow-md duration-500 transform
+          ${
+            isMainDomain
+              ? showMenuButton
+                ? "opacity-100 translate-y-0"
+                : "opacity-0 -translate-y-3 pointer-events-none"
+              : "opacity-100 translate-y-0"
+          }`}
+        aria-label="Меню"
+      >
+        {menuOpen ? (
+          <X className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+        ) : (
+          <Menu className="w-6 h-6 text-pink-600 dark:text-pink-400" />
+        )}
+      </button>
 
       {/* кнопки мов і “Обо мне” */}
       <div
@@ -127,11 +142,11 @@ export default function Header() {
         ))}
       </div>
 
-      {/* меню поверх усього */}
+      {/* фулскрін меню */}
       {menuOpen && (
         <div
           className="fixed inset-0 bg-white/50 dark:bg-black/60 backdrop-blur-3xl z-[9999] flex flex-col items-center justify-center 
-          space-y-6 sm:space-y-8 text-xl sm:text-2xl font-semibold text-gray-800 dark:text-white"
+          space-y-6 sm:space-y-8 text-xl sm:text-2xl font-semibold text-gray-800 dark:text-white transition-all duration-300"
         >
           <button onClick={() => scrollToSection("modules")}>
             {i18n.language === "ru" ? "Модули" : "Модулі"}
