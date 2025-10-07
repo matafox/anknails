@@ -1,13 +1,13 @@
 [build]
   base = "anknails-landing"
-  publish = "anknails-landing/dist"
-  command = "npm run build"
+  publish = "dist"
+  command = "npm install && npm run build"
 
 [build.environment]
   NODE_VERSION = "20"
   NPM_FLAGS = "--legacy-peer-deps"
 
-# 🚫 Ігноримо будь-які Python або backend штуки
+# 🚫 Ігноримо backend-файли
 [[redirects]]
   from = "/requirements.txt"
   to = "/"
@@ -18,7 +18,7 @@
   to = "/"
   status = 404
 
-# 🔐 Адмін статистики
+# 🔐 Редірект на адмінку статистики Railway
 [[redirects]]
   from = "/admin"
   to = "https://anknails-production.up.railway.app/anksecret2025"
