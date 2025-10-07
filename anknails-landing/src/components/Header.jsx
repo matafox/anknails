@@ -7,8 +7,6 @@ export default function Header() {
   const [fade, setFade] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
-  const [showMenuButton, setShowMenuButton] = useState(true); // 👈 показ кнопки
-  const [lastScroll, setLastScroll] = useState(0); // 👈 остання позиція скролу
 
   const changeLanguage = (lng) => {
     if (lng === i18n.language) return;
@@ -31,24 +29,23 @@ export default function Header() {
     return () => window.removeEventListener("storage", syncLang);
   }, [i18n]);
 
-  // 🌸 стежимо за прокруткою
+  // 🌸 відстеження скролу
   useEffect(() => {
     const onScroll = () => {
-      const currentScroll = window.scrollY;
-      setScrolled(currentScroll > 20);
-
-      // якщо скролимо вниз — ховай кнопку, якщо вгору — показуй
-      if (currentScroll > lastScroll && currentScroll > 100) {
-        setShowMenuButton(false);
-      } else {
-        setShowMenuButton(true);
-      }
-      setLastScroll(currentScroll);
+      setScrolled(window.scrollY > 20);
     };
-
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
-  }, [lastScroll]);
+  }, []);
+
+  // 🚫 блокуємо прокрутку коли меню відкрите
+  useEffect(() => {
+    if (menuOpen) {
+      document.body.style.overflow = "hidden";
+    } else {
+      document.body.style.overflow = "";
+    }
+  }, [menuOpen]);
 
   const isAbout =
     typeof window !== "undefined" &&
@@ -65,9 +62,8 @@ export default function Header() {
   };
 
   const toggleMenu = () => {
-    const newState = !menuOpen;
-    setMenuOpen(newState);
-    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: newState }));
+    setMenuOpen((prev) => !prev);
+    window.dispatchEvent(new CustomEvent("menu-toggle", { detail: !menuOpen }));
   };
 
   const scrollToSection = (id) => {
@@ -77,18 +73,17 @@ export default function Header() {
     window.dispatchEvent(new CustomEvent("menu-toggle", { detail: false }));
   };
 
-  // 🌸 головна сторінка
+  // 🌷 головна сторінка
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 flex justify-between items-center px-6 py-4 transition-all duration-300 
       ${scrolled ? "backdrop-blur-lg bg-white/70 dark:bg-black/40 shadow-md" : "bg-transparent"}`}
     >
-      {/* кнопка меню — тепер з анімацією появи/зникнення */}
+      {/* кнопка меню */}
       <button
         onClick={toggleMenu}
-        className={`p-2 rounded-md bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-lg
-                   hover:bg-white/60 dark:hover:bg-white/20 transition-all shadow-md duration-300 transform
-                   ${showMenuButton ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-3 pointer-events-none"}`}
+        className="p-2 rounded-md bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-lg
+                   hover:bg-white/60 dark:hover:bg-white/20 transition-all shadow-md duration-300 transform opacity-100"
         aria-label="Меню"
       >
         {menuOpen ? (
@@ -137,8 +132,8 @@ export default function Header() {
       {/* меню поверх усього */}
       {menuOpen && (
         <div
-          className="fixed inset-0 bg-white/50 dark:bg-black/50 backdrop-blur-2xl z-[9999] flex flex-col items-center justify-center 
-          space-y-6 sm:space-y-8 text-xl sm:text-2xl font-semibold text-gray-800 dark:text-white"
+          className="fixed inset-0 bg-white/70 dark:bg-black/60 backdrop-blur-2xl z-[9999] flex flex-col items-center justify-center 
+          space-y-6 sm:space-y-8 text-xl sm:text-2xl font-semibold text-gray-800 dark:text-white transition-all duration-300"
         >
           <button onClick={() => scrollToSection("modules")}>
             {i18n.language === "ru" ? "Модули" : "Модулі"}
