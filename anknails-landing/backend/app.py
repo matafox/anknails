@@ -5,18 +5,21 @@ from sqlalchemy.orm import declarative_base, sessionmaker
 from datetime import datetime, timedelta
 import requests, os
 from collections import defaultdict
+import pathlib
 
 app = FastAPI(title="ANK Analytics")
 
-# 🔐 Конфігурація
+# ================== CONFIG ==================
 SECRET_PATH = os.getenv("ADMIN_SECRET", "anksecret2025")
-DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./visits.db")
+DATA_DIR = pathlib.Path("/data")
+DATA_DIR.mkdir(exist_ok=True)
+DATABASE_URL = f"sqlite:///{DATA_DIR}/visits.db"
 
 engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
 SessionLocal = sessionmaker(bind=engine)
 Base = declarative_base()
 
-# ---------------------- МОДЕЛЬ ----------------------
+# ================== MODEL ==================
 class Visit(Base):
     __tablename__ = "visits"
     id = Column(Integer, primary_key=True)
@@ -27,7 +30,7 @@ class Visit(Base):
 
 Base.metadata.create_all(bind=engine)
 
-# ---------------------- ХЕЛПЕРИ ----------------------
+# ================== HELPERS ==================
 def get_ip(request: Request):
     xff = request.headers.get("x-forwarded-for")
     return xff.split(",")[0].strip() if xff else request.client.host
@@ -41,16 +44,16 @@ def get_country(ip):
     except:
         return "unknown"
 
-# ---------------------- ІГНОРУЄМО СТАТИЧНІ ЗАПИТИ ----------------------
 IGNORED_EXTENSIONS = (
     ".ico", ".png", ".jpg", ".jpeg", ".svg", ".gif",
     ".webp", ".css", ".js", ".json", ".txt", ".map",
     ".woff", ".woff2", ".ttf"
 )
+
 def is_static_request(path: str) -> bool:
     return any(path.lower().endswith(ext) for ext in IGNORED_EXTENSIONS)
 
-# ---------------------- МІДЛВАР З АНТИСПАМОМ ----------------------
+# ================== MIDDLEWARE ==================
 @app.middleware("http")
 async def track(request: Request, call_next):
     response = await call_next(request)
@@ -65,7 +68,7 @@ async def track(request: Request, call_next):
         ip = get_ip(request)
         now = datetime.utcnow()
 
-        # 🔹 Перевіряємо, чи цей IP не логувався останні 15 хв
+        # не дублюємо протягом 15 хв
         recent = db.query(Visit).filter(
             Visit.ip == ip,
             Visit.created_at > now - timedelta(minutes=15)
@@ -80,12 +83,17 @@ async def track(request: Request, call_next):
 
     return response
 
-# ---------------------- АДМІН-ПАНЕЛЬ ----------------------
+# ================== ADMIN PANEL ==================
 @app.get(f"/{SECRET_PATH}", response_class=HTMLResponse)
 def admin():
     db = SessionLocal()
-    total = db.query(func.count(Visit.id)).scalar()
-    unique_ips = db.query(func.count(distinct(Visit.ip))).scalar()
+
+    total = db.query(func.count(Visit.id)).scalar() or 0
+    unique_ips = db.query(func.count(distinct(Visit.ip))).scalar() or 0
+
+    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
+    today_visits = db.query(func.count(Visit.id)).filter(Visit.created_at >= today_start).scalar() or 0
+
     by_country = db.query(Visit.country, func.count(Visit.id)).group_by(Visit.country).all()
     visits = db.query(Visit).order_by(Visit.created_at.desc()).all()
     grouped = defaultdict(list)
@@ -94,23 +102,27 @@ def admin():
         grouped[day].append(v)
     db.close()
 
-    html = """
+    html = f"""
     <html><head><meta charset='utf-8'>
     <title>ANK Analytics</title>
     <style>
-      body {font-family:sans-serif;background:#fff0f7;padding:40px;max-width:1000px;margin:auto;}
-      h1 {color:#d63384;}
-      h3 {color:#d63384;margin-top:40px;}
-      table {width:100%;border-collapse:collapse;margin-top:10px;}
-      td,th {border-bottom:1px solid #eee;padding:6px 10px;text-align:left;}
-      tr:hover {background:#fff8fc;}
-      .day-block {background:#ffeaf5;padding:10px 16px;border-radius:12px;margin-top:30px;}
+      body {{font-family:sans-serif;background:#fff0f7;padding:40px;max-width:1000px;margin:auto;}}
+      h1 {{color:#d63384;}}
+      h3 {{color:#d63384;margin-top:40px;}}
+      table {{width:100%;border-collapse:collapse;margin-top:10px;}}
+      td,th {{border-bottom:1px solid #eee;padding:6px 10px;text-align:left;}}
+      tr:hover {{background:#fff8fc;}}
+      .day-block {{background:#ffeaf5;padding:10px 16px;border-radius:12px;margin-top:30px;}}
     </style></head><body>
     <h1>🌸 ANK Analytics</h1>
-    <b>Всього відвідувань:</b> {total or 0} <br/>
-    <b>Унікальних IP:</b> {unique_ips or 0}<br/><br/>
+    <b>Всього відвідувань:</b> {total}<br/>
+    <b>Унікальних IP:</b> {unique_ips}<br/>
+    <b>Сьогоднішніх:</b> {today_visits}<br/><br/>
     <h3>📍 Країни</h3>
-    <table>""" + "".join(f"<tr><td>{c}</td><td>{n}</td></tr>" for c, n in by_country) + "</table>"
+    <table>
+      {''.join(f"<tr><td>{c}</td><td>{n}</td></tr>" for c,n in by_country)}
+    </table>
+    """
 
     for day, records in grouped.items():
         html += f"<div class='day-block'><h3>📅 {day} — {len(records)} візитів</h3>"
@@ -123,7 +135,7 @@ def admin():
     html += "</body></html>"
     return HTMLResponse(html)
 
-# ---------------------- ГОЛОВНА ----------------------
+# ================== ROOT ==================
 @app.get("/")
 def home():
-    return {"status": "ok", "msg": "ANK backend is running"}
+    return {"status": "ok", "msg": "ANK backend running"}
