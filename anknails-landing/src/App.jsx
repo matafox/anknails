@@ -73,7 +73,7 @@ export default function App() {
         {/* Початкові секції */}
         <div className="space-y-1 sm:space-y-2">
   <MasterSection />
-  <PreEnrollButtonSection />
+  
   <CourseIntro />
 </div>
 
@@ -96,7 +96,7 @@ export default function App() {
           </div>
 
           <div id="tariffs">
-            <PreEnrollButtonSection />
+            
             <TariffsSection />
           </div>
 
