@@ -1,142 +1,165 @@
-import { useState } from "react";
-import {
-  ChevronDown,
-  CreditCard,
-  BookOpenCheck,
-  FileBadge2,
-  MessageCircleQuestion,
-} from "lucide-react";
+import { Check, X, FileText, Sparkles, Tag } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { marked } from "marked";
 
-export default function FaqSection() {
+export default function TariffsSection() {
   const { t, i18n } = useTranslation();
-  const [openIndex, setOpenIndex] = useState(null);
 
-  const faqs = [
+  const tariffs = [
     {
-      Icon: CreditCard,
-      question:
-        i18n.language === "ru"
-          ? "Как проходит покупка курса?"
-          : "Як відбувається купівля курсу?",
-      answer:
-        i18n.language === "ru"
-          ? `
-После **выбора тарифа** вы будете автоматически перенаправлены на страницу [Instagram](https://www.instagram.com/ank.a_studio),  
-где сможете написать администратору, уточнить детали и выбрать удобный способ оплаты.  
-
-Оплата проводится вручную и полностью безопасна. После подтверждения вы получите сообщение с доступом к обучению.  
-
-Количество мест ограничено, поэтому бронирование рекомендуется заранее.
-`
-          : `
-Після **вибору тарифу** ви автоматично перенаправляєтесь на сторінку [Instagram](https://www.instagram.com/ank.a_studio),  
-де можете написати адміністратору, уточнити деталі та обрати зручний спосіб оплати.  
-
-Оплата здійснюється вручну й повністю безпечно. Після підтвердження ви отримаєте повідомлення з доступом до навчання.  
-
-Кількість місць обмежена, тому рекомендуємо забронювати заздалегідь.
-`,
+      title: t("tariff_basic"),
+      desc: t("tariff_basic_desc"),
+      oldPrice: "990 zł",
+      newPrice: "700 zł",
+      features: [
+        { label: t("feature_theory"), included: true },
+        { label: t("feature_practice"), included: true },
+        { label: t("feature_homework"), included: false },
+        { label: t("feature_feedback_chat"), included: false },
+        { label: t("feature_zoom"), included: false },
+        { label: t("feature_certificate"), included: true },
+      ],
+      highlight: false,
     },
     {
-      Icon: BookOpenCheck,
-      question:
-        i18n.language === "ru"
-          ? "Что входит в курс?"
-          : "Що входить у курс?",
-      answer:
-        i18n.language === "ru"
-          ? "Курс включает видеоматериалы, теорию, практические уроки и обратную связь (в зависимости от тарифа). Также предоставляется доступ к чату с учениками и дополнительным материалам."
-          : "Курс включає відеоуроки, теорію, практичні завдання та зворотний зв’язок (залежно від тарифу). Також надається доступ до чату з ученицями та додаткових матеріалів.",
-    },
-    {
-      Icon: FileBadge2,
-      question:
-        i18n.language === "ru"
-          ? "Выдаётся ли сертификат?"
-          : "Чи видається сертифікат?",
-      answer:
-        i18n.language === "ru"
-          ? "Да. После успешного прохождения курса вы получите именной сертификат в PDF-формате, подтверждающий завершение программы."
-          : "Так. Після успішного проходження курсу ви отримаєте іменний сертифікат у форматі PDF, що підтверджує завершення програми.",
+      title: t("tariff_pro"),
+      desc: t("tariff_pro_desc"),
+      oldPrice: "1390 zł",
+      newPrice: "1000 zł",
+      features: [
+        { label: t("feature_theory"), included: true },
+        { label: t("feature_practice"), included: true },
+        { label: t("feature_homework"), included: true },
+        { label: t("feature_feedback_chat"), included: true },
+        { label: t("feature_zoom"), included: true },
+        { label: t("feature_certificate"), included: true },
+      ],
+      highlight: true,
     },
   ];
 
-  return (
-    <section className="w-full py-20 flex flex-col items-center justify-center">
-      {/* 🩵 Заголовок */}
-      <div className="flex items-center gap-3 mb-10 px-4">
-        <div className="p-3 rounded-2xl bg-white/50 dark:bg-white/10 backdrop-blur-lg border border-pink-200/40 dark:border-neutral-700 shadow-md">
-          <MessageCircleQuestion className="w-6 h-6 text-pink-500" />
-        </div>
-        <h2 className="text-4xl font-extrabold bg-clip-text text-transparent bg-gradient-to-r from-pink-500 via-rose-500 to-fuchsia-500 drop-shadow-[0_0_20px_rgba(244,114,182,0.25)]">
-          {t("faq_title", "Часті питання")}
-        </h2>
-      </div>
+  // 🔗 Перехід в Instagram при натисканні
+  const handlePurchase = () =>
+    window.open("https://www.instagram.com/ank.a_studio", "_blank");
 
-      {/* 🩷 Питання */}
-      <div className="w-full max-w-4xl px-4 sm:px-6 flex flex-col gap-4">
-        {faqs.map((faq, index) => {
-          const isOpen = openIndex === index;
-          const Icon = faq.Icon;
-          const htmlAnswer = marked.parse(faq.answer);
+  return (
+    <section className="relative w-full max-w-6xl mx-auto px-6 py-16 text-center">
+      <h2 className="text-3xl sm:text-4xl font-bold mb-12 text-gray-900 dark:text-white">
+        {t("tariffs_title")}
+      </h2>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+        {tariffs.map((plan, i) => {
+          const included = plan.features.filter((f) => f.included);
+          const excluded = plan.features.filter((f) => !f.included);
 
           return (
             <div
-              key={index}
-              className={`relative bg-white/60 dark:bg-neutral-900/40 backdrop-blur-2xl 
-              border border-pink-200/40 dark:border-neutral-700 
-              rounded-2xl shadow-md transition-all duration-300`}
+              key={i}
+              onClick={handlePurchase}
+              className={`relative cursor-pointer rounded-3xl p-8 shadow-lg backdrop-blur-md border transition-all duration-500 hover:scale-[1.02] ${
+                plan.highlight
+                  ? "bg-gradient-to-br from-rose-500/40 to-pink-400/30 dark:from-rose-600/20 dark:to-pink-500/10 border-rose-300/60 shadow-pink-400/40 hover:shadow-pink-500/60"
+                  : "bg-gradient-to-br from-gray-100/70 to-pink-50/50 dark:from-neutral-800/60 dark:to-neutral-900/40 border-gray-200/70 dark:border-neutral-700 hover:shadow-pink-100/40"
+              }`}
             >
-              {/* Кнопка питання */}
-              <button
-                onClick={() => setOpenIndex(isOpen ? null : index)}
-                className="w-full flex items-center justify-between px-5 py-5 text-left"
-              >
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  <div
-                    className={`flex items-center justify-center w-11 h-11 flex-shrink-0 rounded-xl border transition-all duration-300 
-                      ${
-                        isOpen
-                          ? "border-pink-400/70 bg-white/80 dark:bg-neutral-800/70"
-                          : "border-pink-200/50 bg-white/60 dark:bg-neutral-800/50"
-                      }`}
-                  >
-                    <Icon size={22} strokeWidth={2.3} className="text-pink-500" />
+              {/* бейдж “Рекомендовано” */}
+              {plan.highlight && (
+                <div className="absolute -top-4 right-6">
+                  <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold text-rose-600 dark:text-rose-200 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/60 dark:border-rose-300/20 shadow-[0_0_15px_rgba(255,255,255,0.3)]">
+                    <Sparkles className="w-4 h-4 text-rose-500 dark:text-rose-300 animate-pulse" />
+                    <span>{t("recommended", "Рекомендовано")}</span>
                   </div>
+                </div>
+              )}
 
+              <h3
+                className={`text-2xl font-semibold mb-2 ${
+                  plan.highlight
+                    ? "text-rose-700 dark:text-pink-300"
+                    : "text-gray-800 dark:text-gray-100"
+                }`}
+              >
+                {plan.title}
+              </h3>
+
+              {/* 🩷 Позначка про обмеження місць */}
+              {plan.highlight && (
+                <p className="text-xs font-medium text-rose-600 dark:text-pink-300 mb-2">
+                  {i18n.language === "ru"
+                    ? "Количество мест ограничено"
+                    : "Кількість місць обмежена"}
+                </p>
+              )}
+
+              <p className="text-gray-600 dark:text-gray-300 mb-6">{plan.desc}</p>
+
+              {/* 💰 Ціна */}
+              <div className="relative inline-flex items-end gap-3 mb-8">
+                <div className="flex flex-col items-center">
+                  <span className="text-gray-400 dark:text-gray-500 text-sm line-through select-none">
+                    {plan.oldPrice}
+                  </span>
                   <span
-                    className={`font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base leading-snug`}
+                    className={`text-3xl font-extrabold tracking-tight ${
+                      plan.highlight
+                        ? "text-rose-600 dark:text-pink-300"
+                        : "text-pink-600 dark:text-pink-400"
+                    } animate-pulse-slow`}
                   >
-                    {faq.question}
+                    {plan.newPrice}
                   </span>
                 </div>
 
-                <ChevronDown
-                  className={`w-5 h-5 text-pink-500 flex-shrink-0 transition-transform duration-300 ${
-                    isOpen ? "rotate-180" : "rotate-0"
-                  }`}
-                />
-              </button>
-
-              {/* Відповідь */}
-              <div
-                className={`px-5 pb-5 text-gray-700 dark:text-gray-300 text-sm sm:text-base leading-relaxed transition-all duration-500 ${
-                  isOpen
-                    ? "max-h-[500px] opacity-100"
-                    : "max-h-0 opacity-0 overflow-hidden"
-                }`}
-              >
-                <div
-                  className="prose prose-pink dark:prose-invert text-left"
-                  dangerouslySetInnerHTML={{ __html: htmlAnswer }}
-                />
+                <div className="flex items-center gap-1 text-xs px-3 py-1 rounded-full border bg-white/60 dark:bg-white/10 border-pink-200/40 dark:border-pink-500/30 text-pink-600 dark:text-pink-300 font-medium backdrop-blur-sm shadow-sm">
+                  <Tag className="w-3.5 h-3.5" />
+                  <span>{t("discount", "Акція до 10 листопада!")}</span>
+                </div>
               </div>
+
+              {/* ✅ Включене */}
+              <ul className="space-y-3 text-left mb-6">
+                {included.map((f, idx) => (
+                  <li
+                    key={idx}
+                    className="flex items-center justify-between text-gray-700 dark:text-gray-300"
+                  >
+                    <div className="flex items-center gap-2">
+                      <Check className="w-5 h-5 text-pink-500" />
+                      <span>{f.label}</span>
+                    </div>
+
+                    {f.label.includes(t("feature_certificate")) && (
+                      <div className="flex items-center gap-1 text-xs bg-white/60 dark:bg-white/10 px-2 py-1 rounded-md text-rose-600 dark:text-pink-200 border border-white/40 dark:border-pink-200/20 backdrop-blur-md shadow-sm">
+                        <FileText className="w-3.5 h-3.5" />
+                        <span>PDF</span>
+                      </div>
+                    )}
+                  </li>
+                ))}
+              </ul>
+
+              {/* 🚫 Виключене */}
+              <ul className="space-y-3 text-left opacity-70">
+                {excluded.map((f, idx) => (
+                  <li key={idx} className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
+                    <X className="w-5 h-5 text-gray-400 dark:text-gray-600" />
+                    <span>{f.label}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           );
         })}
       </div>
+
+      <style>{`
+        @keyframes pulse-slow {
+          0% { transform: scale(1); opacity: 1; }
+          50% { transform: scale(1.05); opacity: 0.9; }
+          100% { transform: scale(1); opacity: 1; }
+        }
+        .animate-pulse-slow { animation: pulse-slow 3s ease-in-out infinite; }
+      `}</style>
     </section>
   );
 }
