@@ -129,10 +129,10 @@ export default function FaqSection() {
                     : "max-h-0 opacity-0 overflow-hidden"
                 }`}
               >
-                <div
-                  className="prose prose-pink dark:prose-invert text-right" // 🩷 додано text-right
-                  dangerouslySetInnerHTML={{ __html: htmlAnswer }}
-                />
+<div
+  className="prose prose-pink dark:prose-invert text-left"
+  dangerouslySetInnerHTML={{ __html: htmlAnswer }}
+/>
               </div>
             </div>
           );
