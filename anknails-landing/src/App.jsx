@@ -1,6 +1,7 @@
 import Header from "./components/Header";
 import Footer from "./components/Footer";
 import MasterSection from "./components/MasterSection";
+import PreorderCourse from "./components/PreorderCourse";
 import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
