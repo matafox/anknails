@@ -71,42 +71,41 @@ export default function App() {
           {t("subtitle")}
         </p>
 
-        {/* Початкові секції */}
-        <div className="space-y-1 sm:space-y-2">
+      {/* Початкові секції */}
+<div className="space-y-0 sm:space-y-0">
   <MasterSection />
   <PreorderCourse />
   <CourseIntro />
 </div>
 
-        {/* Інші секції */}
-        <div className="space-y-20 sm:space-y-24 mt-20 sm:mt-28">
-          <div id="modules">
-            <ModulesList />
-          </div>
+{/* Інші секції */}
+<div className="space-y-0 sm:space-y-0 mt-0 sm:mt-0">
+  <div id="modules">
+    <ModulesList />
+  </div>
 
-          <div id="forwhom">
-            <ForWhomSection />
-          </div>
+  <div id="forwhom">
+    <ForWhomSection />
+  </div>
 
-          <div className="-mt-10 sm:-mt-12" id="coursestart">
-            <CourseStart />
-          </div>
+  <div id="coursestart">
+    <CourseStart />
+  </div>
 
-          <div id="works">
-            <StudentsWorksCarousel />
-          </div>
+  <div id="works">
+    <StudentsWorksCarousel />
+  </div>
 
-          <div id="tariffs">
-            
-            <TariffsSection />
-          </div>
+  <div id="tariffs">
+    <TariffsSection />
+  </div>
 
-          <PreEnrollPopup />
+  <PreEnrollPopup />
 
-          <div id="faq">
-            <FaqSection />
-          </div>
-        </div>
+  <div id="faq">
+    <FaqSection />
+  </div>
+</div>
       </main>
 
       <Footer />
