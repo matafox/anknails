@@ -80,13 +80,13 @@ export default function App() {
 
 {/* Інші секції */}
 <div className="space-y-0 sm:space-y-0 mt-0 sm:mt-0">
-  <div id="modules">
-    <ModulesList />
-  </div>
+  <div id="modules" className="mb-10 sm:mb-16">
+  <ModulesList />
+</div>
 
-  <div id="forwhom">
-    <ForWhomSection />
-  </div>
+<div id="forwhom" className="mt-0">
+  <ForWhomSection />
+</div>
 
   <div id="coursestart">
     <CourseStart />
