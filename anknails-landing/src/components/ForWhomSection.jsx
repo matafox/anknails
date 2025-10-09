@@ -96,18 +96,29 @@ export default function ForWhomSection() {
           </ul>
         </div>
 
-        {/* Тривалість і доступ */}
-        <div className="md:col-span-2 bg-gradient-to-r from-pink-500/20 to-rose-500/20 backdrop-blur-2xl border border-pink-200/50 dark:border-neutral-700 rounded-2xl p-6 shadow-lg mt-4 flex flex-col sm:flex-row items-center justify-center gap-6">
-          <div className="flex items-center gap-3 text-pink-700 dark:text-pink-300">
-            <CalendarClock className="w-6 h-6" />
-            <span className="font-semibold text-lg">{t("course_duration")}</span>
-          </div>
-          <div className="flex items-center gap-3 text-pink-700 dark:text-pink-300">
-            <BookOpen className="w-6 h-6" />
-            <span className="font-semibold text-lg">{t("course_access")}</span>
-          </div>
-        </div>
-      </div>
+{/* Тривалість і доступ */}
+<div className="md:col-span-2 bg-gradient-to-r from-pink-500/10 via-fuchsia-500/10 to-rose-500/10 backdrop-blur-2xl border border-pink-200/40 dark:border-neutral-700 rounded-3xl p-10 shadow-[0_0_40px_rgba(236,72,153,0.15)] mt-8 flex flex-col sm:flex-row items-center justify-center gap-10 sm:gap-16 transition-all duration-500 hover:shadow-[0_0_60px_rgba(236,72,153,0.3)]">
+  {/* Тривалість курсу */}
+  <div className="flex flex-col items-center text-center group">
+    <div className="relative w-16 h-16 flex items-center justify-center rounded-2xl bg-white/40 dark:bg-white/5 border border-pink-200/40 dark:border-pink-500/30 shadow-[inset_0_0_15px_rgba(255,255,255,0.2),0_0_25px_rgba(236,72,153,0.2)] backdrop-blur-xl group-hover:scale-110 group-hover:shadow-[0_0_25px_rgba(236,72,153,0.4)] transition-all duration-500">
+      <CalendarClock className="w-7 h-7 text-pink-600 dark:text-pink-400" />
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-pink-400/20 to-fuchsia-500/20 opacity-0 group-hover:opacity-100 blur-[10px] transition-all"></div>
+    </div>
+    <span className="mt-4 font-semibold text-lg text-pink-700 dark:text-pink-300 drop-shadow-sm">{t("course_duration")}</span>
+  </div>
+
+  {/* Розділювач */}
+  <div className="hidden sm:block w-px h-14 bg-gradient-to-b from-transparent via-pink-400/40 to-transparent"></div>
+
+  {/* Доступ до матеріалів */}
+  <div className="flex flex-col items-center text-center group">
+    <div className="relative w-16 h-16 flex items-center justify-center rounded-2xl bg-white/40 dark:bg-white/5 border border-pink-200/40 dark:border-pink-500/30 shadow-[inset_0_0_15px_rgba(255,255,255,0.2),0_0_25px_rgba(236,72,153,0.2)] backdrop-blur-xl group-hover:scale-110 group-hover:shadow-[0_0_25px_rgba(236,72,153,0.4)] transition-all duration-500">
+      <BookOpen className="w-7 h-7 text-pink-600 dark:text-pink-400" />
+      <div className="absolute inset-0 rounded-2xl bg-gradient-to-br from-fuchsia-400/20 to-rose-500/20 opacity-0 group-hover:opacity-100 blur-[10px] transition-all"></div>
+    </div>
+    <span className="mt-4 font-semibold text-lg text-pink-700 dark:text-pink-300 drop-shadow-sm">{t("course_access")}</span>
+  </div>
+</div>
 
       <style jsx>{`
         @keyframes float-slow {
