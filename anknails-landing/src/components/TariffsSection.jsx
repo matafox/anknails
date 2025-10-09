@@ -1,4 +1,4 @@
-import { Check, X, FileText, Sparkles, Tag, HelpCircle, ArrowRight } from "lucide-react";
+import { Check, X, FileText, Sparkles, Tag, HelpCircle, ArrowRight, ChevronRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function TariffsSection() {
@@ -170,7 +170,7 @@ export default function TariffsSection() {
           className="mt-2 px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
         >
           <span>{i18n.language === "ru" ? "Сделать предоплату 50 zł" : "Зробити передоплату 50 zł"}</span>
-          <ArrowRight className="w-5 h-5" />
+          <ChevronRight className="w-5 h-5" />
         </button>
       </div>
 
