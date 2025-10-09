@@ -4,10 +4,11 @@ export default function ModulesList() {
   const { t } = useTranslation();
   const modules = t("modules_full", { returnObjects: true });
 
+  // 🟧 Помаранчева для "Теорія", 🩷 Рожева для "Практика"
   const badgeClass = (type) =>
     type === "Теорія"
-      ? "bg-pink-500/20 text-pink-700 dark:bg-pink-400/20 dark:text-pink-200"
-      : "bg-rose-500/20 text-rose-700 dark:bg-rose-400/20 dark:text-rose-200";
+      ? "bg-orange-500/20 text-orange-700 dark:bg-orange-400/20 dark:text-orange-200"
+      : "bg-pink-500/20 text-pink-700 dark:bg-pink-400/20 dark:text-pink-200";
 
   return (
     <div className="w-full max-w-6xl px-6 mx-auto">
