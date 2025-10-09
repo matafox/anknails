@@ -1,12 +1,13 @@
-import { Check, X, FileText, Sparkles, Tag } from "lucide-react";
+import { Check, X, FileText, Sparkles, Tag, HelpCircle, ArrowRight } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function TariffsSection() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
 
   const STRIPE_LINKS = {
     basic: "https://buy.stripe.com/test_basic_checkout_link",
     pro: "https://buy.stripe.com/test_pro_checkout_link",
+    consult: "https://buy.stripe.com/test_consult_50zl", // 🔹 посилання на оплату 50 zł
   };
 
   const tariffs = [
@@ -44,9 +45,7 @@ export default function TariffsSection() {
     },
   ];
 
-  const handlePurchase = (url) => {
-    window.open(url, "_blank");
-  };
+  const handlePurchase = (url) => window.open(url, "_blank");
 
   return (
     <section className="relative w-full max-w-6xl mx-auto px-6 py-16 text-center">
@@ -54,7 +53,8 @@ export default function TariffsSection() {
         {t("tariffs_title")}
       </h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
+      {/* --- Блоки тарифів --- */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-10 mb-16">
         {tariffs.map((plan, i) => {
           const included = plan.features.filter((f) => f.included);
           const excluded = plan.features.filter((f) => !f.included);
@@ -69,7 +69,6 @@ export default function TariffsSection() {
                   : "bg-gradient-to-br from-gray-100/70 to-pink-50/50 dark:from-neutral-800/60 dark:to-neutral-900/40 border-gray-200/70 dark:border-neutral-700 hover:shadow-pink-100/40"
               }`}
             >
-              {/* бейдж PRO */}
               {plan.highlight && (
                 <div className="absolute -top-4 right-6">
                   <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold text-rose-600 dark:text-rose-200 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/60 dark:border-rose-300/20 shadow-[0_0_15px_rgba(255,255,255,0.3)]">
@@ -79,7 +78,6 @@ export default function TariffsSection() {
                 </div>
               )}
 
-              {/* Назва */}
               <h3
                 className={`text-2xl font-semibold mb-2 ${
                   plan.highlight
@@ -90,11 +88,9 @@ export default function TariffsSection() {
                 {plan.title}
               </h3>
 
-              <p className="text-gray-600 dark:text-gray-300 mb-6">
-                {plan.desc}
-              </p>
+              <p className="text-gray-600 dark:text-gray-300 mb-6">{plan.desc}</p>
 
-              {/* Блок ціни */}
+              {/* Ціна */}
               <div className="relative inline-flex items-end gap-3 mb-8">
                 <div className="flex flex-col items-center">
                   <span className="text-gray-400 dark:text-gray-500 text-sm line-through select-none">
@@ -113,9 +109,7 @@ export default function TariffsSection() {
 
                 <div className="flex items-center gap-1 text-xs px-3 py-1 rounded-full border bg-white/60 dark:bg-white/10 border-pink-200/40 dark:border-pink-500/30 text-pink-600 dark:text-pink-300 font-medium backdrop-blur-sm shadow-sm">
                   <Tag className="w-3.5 h-3.5" />
-                  <span>
-                    {t("discount", "Акція до 10 листопада!")}
-                  </span>
+                  <span>{t("discount", "Акція до 10 листопада!")}</span>
                 </div>
               </div>
 
@@ -141,13 +135,10 @@ export default function TariffsSection() {
                 ))}
               </ul>
 
-              {/* Список виключених */}
+              {/* Виключені */}
               <ul className="space-y-3 text-left opacity-70">
                 {excluded.map((f, idx) => (
-                  <li
-                    key={idx}
-                    className="flex items-center gap-2 text-gray-500 dark:text-gray-400"
-                  >
+                  <li key={idx} className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                     <X className="w-5 h-5 text-gray-400 dark:text-gray-600" />
                     <span>{f.label}</span>
                   </li>
@@ -156,6 +147,31 @@ export default function TariffsSection() {
             </div>
           );
         })}
+      </div>
+
+      {/* --- Блок передоплати --- */}
+      <div className="mt-8 max-w-2xl mx-auto text-center bg-white/50 dark:bg-white/10 backdrop-blur-xl border border-pink-200/40 dark:border-pink-600/30 rounded-3xl p-8 shadow-lg">
+        <div className="flex flex-col items-center gap-3 mb-5">
+          <HelpCircle className="w-10 h-10 text-pink-500" />
+          <h3 className="text-xl font-semibold text-gray-800 dark:text-gray-100">
+            {i18n.language === "ru"
+              ? "Не уверены, какой тариф выбрать?"
+              : "Не впевнені, який тариф обрати?"}
+          </h3>
+          <p className="text-gray-600 dark:text-gray-300 text-sm max-w-md">
+            {i18n.language === "ru"
+              ? "Внесите предоплату 50 zł и получите личную консультацию — я помогу подобрать оптимальный вариант обучения 💅"
+              : "Зробіть передоплату 50 zł і отримайте особисту консультацію — я допоможу підібрати найкращий варіант навчання 💅"}
+          </p>
+        </div>
+
+        <button
+          onClick={() => handlePurchase(STRIPE_LINKS.consult)}
+          className="mt-2 px-6 py-3 rounded-full bg-gradient-to-r from-pink-500 to-rose-500 text-white font-medium shadow-md hover:scale-105 active:scale-95 transition-all flex items-center justify-center gap-2"
+        >
+          <span>{i18n.language === "ru" ? "Сделать предоплату 50 zł" : "Зробити передоплату 50 zł"}</span>
+          <ArrowRight className="w-5 h-5" />
+        </button>
       </div>
 
       <style>{`
