@@ -74,7 +74,7 @@ export default function App() {
         {/* Початкові секції */}
         <div className="space-y-1 sm:space-y-2">
   <MasterSection />
-  
+  <PreorderCourse />
   <CourseIntro />
 </div>
 
