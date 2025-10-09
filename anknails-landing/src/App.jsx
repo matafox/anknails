@@ -80,17 +80,17 @@ export default function App() {
 
 {/* Інші секції */}
 <div className="space-y-0 sm:space-y-0 mt-0 sm:mt-0">
-  <div id="modules" className="mb-10 sm:mb-16">
+<div id="modules" className="mb-10 sm:mb-16">
   <ModulesList />
 </div>
 
-<div id="forwhom" className="mt-0">
+<div id="forwhom" className="mt-0 mb-10 sm:mb-16">
   <ForWhomSection />
 </div>
 
-  <div id="coursestart">
-    <CourseStart />
-  </div>
+<div id="coursestart" className="mt-0 mb-10 sm:mb-16">
+  <CourseStart />
+</div>
 
   <div id="works">
     <StudentsWorksCarousel />
