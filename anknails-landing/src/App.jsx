@@ -86,10 +86,12 @@ export default function App() {
             <ModulesList />
           </div>
 
-          {/* Блок бронювання */}
-          <div id="booking" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-            <BookingMessage />
-          </div>
+         <div
+  id="booking"
+  className="mt-16 sm:mt-24 mb-16 sm:mb-28 px-4"
+>
+  <BookingMessage />
+</div>
 
           {/* Для кого курс */}
           <div id="forwhom" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
