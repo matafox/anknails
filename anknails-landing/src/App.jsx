@@ -85,7 +85,9 @@ export default function App() {
   <ModulesList />
 </div>
 
+  <div id="forwhom" className="mt-0 mb-10 sm:mb-16">
   <BookingMessage />
+</div>
 
 <div id="forwhom" className="mt-0 mb-10 sm:mb-16">
   <ForWhomSection />
