@@ -5,6 +5,7 @@ import PreorderCourse from "./components/PreorderCourse";
 import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
+import BookingMessage from "../components/BookingMessage";
 import ForWhomSection from "./components/ForWhomSection";
 import StudentsWorksCarousel from "./components/StudentsWorksCarousel";
 import TariffsSection from "./components/TariffsSection";
@@ -84,6 +85,8 @@ export default function App() {
   <ModulesList />
 </div>
 
+  <BookingMessage />
+
 <div id="forwhom" className="mt-0 mb-10 sm:mb-16">
   <ForWhomSection />
 </div>
@@ -101,6 +104,8 @@ export default function App() {
   </div>
 
   <PreEnrollPopup />
+
+  <BookingMessage />
 
   <div id="faq">
     <FaqSection />
