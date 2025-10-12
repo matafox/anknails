@@ -72,56 +72,58 @@ export default function App() {
           {t("subtitle")}
         </p>
 
-      {/* Початкові секції */}
-<div className="space-y-0 sm:space-y-0">
-  <MasterSection />
-  <PreorderCourse />
-  <CourseIntro />
-</div>
+        {/* Початкові секції */}
+        <div className="space-y-0 sm:space-y-0">
+          <MasterSection />
+          <PreorderCourse />
+          <CourseIntro />
+        </div>
 
-{/* Інші секції */}
-<div className="space-y-0 sm:space-y-0 mt-0 sm:mt-0">
-  {/* Модулі */}
-  <div id="modules" className="mb-10 sm:mb-16">
-    <ModulesList />
-  </div>
+        {/* Інші секції */}
+        <div className="space-y-0 sm:space-y-0 mt-0 sm:mt-0">
+          {/* Модулі */}
+          <div id="modules" className="mb-10 sm:mb-16">
+            <ModulesList />
+          </div>
 
-  {/* Блок бронювання */}
-  <div id="booking" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-    <BookingMessage />
-  </div>
+          {/* Блок бронювання */}
+          <div id="booking" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+            <BookingMessage />
+          </div>
 
-  {/* Для кого курс */}
-  <div id="forwhom" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-    <ForWhomSection />
-  </div>
-</div>
+          {/* Для кого курс */}
+          <div id="forwhom" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+            <ForWhomSection />
+          </div>
 
-<div id="coursestart" className="mt-0 mb-10 sm:mb-16">
-  <CourseStart />
-</div>
+          {/* Початок курсу */}
+          <div id="coursestart" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+            <CourseStart />
+          </div>
 
-  <div id="works">
-    <StudentsWorksCarousel />
-  </div>
+          {/* Роботи студентів */}
+          <div id="works" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+            <StudentsWorksCarousel />
+          </div>
 
-  <div id="tariffs">
-    <TariffsSection />
-  </div>
+          {/* Тарифи */}
+          <div id="tariffs" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+            <TariffsSection />
+          </div>
 
-  <PreEnrollPopup />
+          {/* Popup */}
+          <PreEnrollPopup />
 
-  <BookingMessage />
-
-  <div id="faq">
-    <FaqSection />
-  </div>
-</div>
+          {/* FAQ */}
+          <div id="faq" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+            <FaqSection />
+          </div>
+        </div>
       </main>
 
       <Footer />
 
-      {/* Кнопка догори (ховається, коли меню відкрите) */}
+      {/* Кнопка догори */}
       {showScrollTop && !menuOpen && (
         <button
           onClick={scrollToTop}
