@@ -46,7 +46,6 @@ export default function BookingMessage() {
             rel="noopener noreferrer"
             className="inline-flex items-center gap-2 mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow transition-all duration-300"
           >
-            <Send className="w-4 h-4 text-white" />
             {text[lang].button}
           </a>
         </div>
