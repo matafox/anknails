@@ -1,8 +1,48 @@
-import { Check, X, FileText, Sparkles, Tag } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Check, X, FileText, Sparkles, Tag, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function TariffsSection() {
   const { t, i18n } = useTranslation();
+  const [remainingTime, setRemainingTime] = useState("");
+
+  useEffect(() => {
+    const updateTimer = () => {
+      const now = new Date();
+      // наступна північ (00:00)
+      const nextMidnight = new Date(
+        now.getFullYear(),
+        now.getMonth(),
+        now.getDate() + 1,
+        0,
+        0,
+        0,
+        0
+      );
+      const diff = nextMidnight - now;
+
+      if (diff <= 0) {
+        setRemainingTime("00:00:00");
+        return;
+      }
+
+      const hours = Math.floor(diff / (1000 * 60 * 60))
+        .toString()
+        .padStart(2, "0");
+      const minutes = Math.floor((diff / (1000 * 60)) % 60)
+        .toString()
+        .padStart(2, "0");
+      const seconds = Math.floor((diff / 1000) % 60)
+        .toString()
+        .padStart(2, "0");
+
+      setRemainingTime(`${hours}:${minutes}:${seconds}`);
+    };
+
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
+    return () => clearInterval(interval);
+  }, []);
 
   const tariffs = [
     {
@@ -37,7 +77,6 @@ export default function TariffsSection() {
     },
   ];
 
-  // 🔗 Перехід в Instagram при натисканні
   const handlePurchase = () =>
     window.open("https://www.instagram.com/ank.a_studio", "_blank");
 
@@ -62,7 +101,6 @@ export default function TariffsSection() {
                   : "bg-gradient-to-br from-gray-100/70 to-pink-50/50 dark:from-neutral-800/60 dark:to-neutral-900/40 border-gray-200/70 dark:border-neutral-700 hover:shadow-pink-100/40"
               }`}
             >
-              {/* бейдж “Рекомендовано” */}
               {plan.highlight && (
                 <div className="absolute -top-4 right-6">
                   <div className="flex items-center gap-1 px-3 py-1 rounded-full text-sm font-semibold text-rose-600 dark:text-rose-200 bg-white/70 dark:bg-white/5 backdrop-blur-xl border border-white/60 dark:border-rose-300/20 shadow-[0_0_15px_rgba(255,255,255,0.3)]">
@@ -82,7 +120,6 @@ export default function TariffsSection() {
                 {plan.title}
               </h3>
 
-              {/* 🩷 Позначка про обмеження місць */}
               {plan.highlight && (
                 <p className="text-xs font-medium text-rose-600 dark:text-pink-300 mb-2">
                   {i18n.language === "ru"
@@ -93,7 +130,7 @@ export default function TariffsSection() {
 
               <p className="text-gray-600 dark:text-gray-300 mb-6">{plan.desc}</p>
 
-              {/* 💰 Ціна */}
+              {/* 💰 Ціна + таймер */}
               <div className="relative inline-flex items-end gap-3 mb-8">
                 <div className="flex flex-col items-center">
                   <span className="text-gray-400 dark:text-gray-500 text-sm line-through select-none">
@@ -110,13 +147,15 @@ export default function TariffsSection() {
                   </span>
                 </div>
 
+                {/* 🕒 Таймер */}
                 <div className="flex items-center gap-1 text-xs px-3 py-1 rounded-full border bg-white/60 dark:bg-white/10 border-pink-200/40 dark:border-pink-500/30 text-pink-600 dark:text-pink-300 font-medium backdrop-blur-sm shadow-sm">
-                  <Tag className="w-3.5 h-3.5" />
-                  <span>{t("discount", "Акція до 10 листопада!")}</span>
+                  <Clock className="w-3.5 h-3.5" />
+                  <span>
+                    {t("discount_timer", "Акція закінчиться через")} {remainingTime}
+                  </span>
                 </div>
               </div>
 
-              {/* ✅ Включене */}
               <ul className="space-y-3 text-left mb-6">
                 {included.map((f, idx) => (
                   <li
@@ -138,7 +177,6 @@ export default function TariffsSection() {
                 ))}
               </ul>
 
-              {/* 🚫 Виключене */}
               <ul className="space-y-3 text-left opacity-70">
                 {excluded.map((f, idx) => (
                   <li key={idx} className="flex items-center gap-2 text-gray-500 dark:text-gray-400">
