@@ -5,7 +5,7 @@ import PreorderCourse from "./components/PreorderCourse";
 import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
-import BookingMessage from "../components/BookingMessage";
+import BookingMessage from "./components/BookingMessage";
 import ForWhomSection from "./components/ForWhomSection";
 import StudentsWorksCarousel from "./components/StudentsWorksCarousel";
 import TariffsSection from "./components/TariffsSection";
