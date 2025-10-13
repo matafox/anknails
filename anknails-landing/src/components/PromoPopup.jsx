@@ -3,48 +3,62 @@ import { X, Clock } from "lucide-react";
 
 export default function PromoPopup({ lang = "uk", onVisibleChange }) {
   const [visible, setVisible] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(17 * 3600 + 25 * 60); // 17 год 25 хв
+  const [timeLeft, setTimeLeft] = useState(0);
 
   const t = {
     uk: {
       title: "🔥 Акційна пропозиція!",
-      text: "Зараз діє знижка на курс. Встигни придбати за акційною ціною!",
+      text: "Зараз діє знижка на курс. Встигни придбати за акційною ціною до кінця дня!",
       button: "До тарифів",
       endsIn: "Акція закінчиться через",
       labels: { h: "год", m: "хв", s: "сек" },
+      expired: "Акцію завершено 💅",
     },
     ru: {
       title: "🔥 Акционное предложение!",
-      text: "Сейчас действует скидка на курс. Успей приобрести по акции!",
+      text: "Сейчас действует скидка на курс. Успей приобрести по акции до конца дня!",
       button: "К тарифам",
       endsIn: "Акция закончится через",
       labels: { h: "ч", m: "мин", s: "сек" },
+      expired: "Акция завершена 💅",
     },
   }[lang];
 
-  // показати через 5 секунд — завжди
+  // 🩷 показати через 5 секунд — завжди
   useEffect(() => {
     const timer = setTimeout(() => setVisible(true), 5000);
     return () => clearTimeout(timer);
   }, []);
 
-  // синхронізація зі станом App
+  // 🔁 синхронізація зі станом App
   useEffect(() => {
     onVisibleChange?.(visible);
   }, [visible, onVisibleChange]);
 
-  // таймер
+  // 🕒 обчислення часу до опівночі
+  const updateTimer = () => {
+    const now = new Date();
+    const midnight = new Date();
+    midnight.setHours(24, 0, 0, 0); // наступна опівночь
+    const diff = Math.max(0, Math.floor((midnight - now) / 1000));
+    setTimeLeft(diff);
+  };
+
+  // 🔄 оновлюємо таймер щосекунди
   useEffect(() => {
-    if (!visible || timeLeft <= 0) return;
-    const interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
+    if (!visible) return;
+    updateTimer();
+    const interval = setInterval(updateTimer, 1000);
     return () => clearInterval(interval);
-  }, [visible, timeLeft]);
+  }, [visible]);
 
   const handleClose = () => setVisible(false);
 
   const hours = Math.floor(timeLeft / 3600);
   const minutes = Math.floor((timeLeft % 3600) / 60);
   const seconds = (timeLeft % 60).toString().padStart(2, "0");
+
+  const expired = timeLeft <= 0;
 
   return (
     <div
@@ -73,16 +87,24 @@ export default function PromoPopup({ lang = "uk", onVisibleChange }) {
           {t.text}
         </p>
 
-        <div className="flex items-center gap-2 mb-3 text-sm">
-          <Clock size={16} className="text-pink-500 dark:text-pink-400" />
-          <span className="text-gray-700 dark:text-white/80">
-            {t.endsIn}
-          </span>
-        </div>
+        {!expired ? (
+          <>
+            <div className="flex items-center gap-2 mb-3 text-sm">
+              <Clock size={16} className="text-pink-500 dark:text-pink-400" />
+              <span className="text-gray-700 dark:text-white/80">
+                {t.endsIn}
+              </span>
+            </div>
 
-        <div className="text-2xl font-mono mb-5 text-pink-600 dark:text-pink-300">
-          {hours}{t.labels.h} {minutes}{t.labels.m} {seconds}{t.labels.s}
-        </div>
+            <div className="text-2xl font-mono mb-5 text-pink-600 dark:text-pink-300">
+              {hours}{t.labels.h} {minutes}{t.labels.m} {seconds}{t.labels.s}
+            </div>
+          </>
+        ) : (
+          <div className="text-lg text-pink-600 dark:text-pink-300 font-semibold mb-4">
+            {t.expired}
+          </div>
+        )}
 
         <a
           href="#tariffs"
