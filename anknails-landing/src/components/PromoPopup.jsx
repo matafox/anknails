@@ -20,21 +20,18 @@ export default function PromoPopup({ lang = "uk", onVisibleChange }) {
     },
   }[lang];
 
-  // показати через 5 секунд
+  // 🩷 показати через 5 секунд — тепер завжди, незалежно від попередніх закриттів
   useEffect(() => {
-    const wasClosed = localStorage.getItem("promo_popup_closed");
-    if (!wasClosed) {
-      const timer = setTimeout(() => setVisible(true), 5000);
-      return () => clearTimeout(timer);
-    }
+    const timer = setTimeout(() => setVisible(true), 5000);
+    return () => clearTimeout(timer);
   }, []);
 
-  // передаємо стан у App
+  // 🔁 передаємо стан у App (щоб ховати стрілку)
   useEffect(() => {
     onVisibleChange?.(visible);
   }, [visible, onVisibleChange]);
 
-  // таймер
+  // 🕒 таймер
   useEffect(() => {
     if (!visible || timeLeft <= 0) return;
     const interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
@@ -43,7 +40,6 @@ export default function PromoPopup({ lang = "uk", onVisibleChange }) {
 
   const handleClose = () => {
     setVisible(false);
-    localStorage.setItem("promo_popup_closed", "true");
   };
 
   const hours = Math.floor(timeLeft / 3600);
