@@ -117,6 +117,8 @@ export default function App() {
           {/* Popup */}
           <PreEnrollPopup />
 
+          <BookingMessage />
+
           {/* FAQ */}
           <div id="faq" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
             <FaqSection />
