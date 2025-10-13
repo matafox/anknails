@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { X, Clock } from "lucide-react";
 
-export default function PromoPopup({ lang = "uk" }) {
+export default function PromoPopup({ lang = "uk", onVisibleChange }) {
   const [visible, setVisible] = useState(false);
-  const [timeLeft, setTimeLeft] = useState(17 * 3600 + 25 * 60 + 0); // 17 год 25 хв
+  const [timeLeft, setTimeLeft] = useState(17 * 3600 + 25 * 60); // 17 год 25 хв
 
   const t = {
     uk: {
@@ -29,10 +29,14 @@ export default function PromoPopup({ lang = "uk" }) {
     }
   }, []);
 
+  // передаємо стан у App
+  useEffect(() => {
+    onVisibleChange?.(visible);
+  }, [visible, onVisibleChange]);
+
   // таймер
   useEffect(() => {
-    if (!visible) return;
-    if (timeLeft <= 0) return;
+    if (!visible || timeLeft <= 0) return;
     const interval = setInterval(() => setTimeLeft((prev) => prev - 1), 1000);
     return () => clearInterval(interval);
   }, [visible, timeLeft]);
