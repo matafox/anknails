@@ -1,5 +1,6 @@
 import Header from "./components/Header";
 import Footer from "./components/Footer";
+import PromoPopup from "./components/PromoPopup";
 import MasterSection from "./components/MasterSection";
 import PreorderCourse from "./components/PreorderCourse";
 import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
@@ -116,6 +117,8 @@ export default function App() {
 
           {/* Popup */}
           <PreEnrollPopup />
+
+          <PromoPopup />
 
           <BookingMessage />
 
