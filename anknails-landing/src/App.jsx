@@ -21,6 +21,7 @@ export default function App() {
   const { t } = useTranslation();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [popupVisible, setPopupVisible] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -43,7 +44,6 @@ export default function App() {
       bg-gradient-to-b from-[#f6f0ff] via-[#fff] to-[#fdf9ff] 
       dark:from-[#100d16] dark:via-[#18141f] dark:to-[#100d16]"
     >
-      {/* Фонове сяйво */}
       <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-fuchsia-300/30 dark:bg-fuchsia-700/10 rounded-full blur-[140px] -z-10"></div>
 
       <Header onMenuToggle={(open) => setMenuOpen(open)} />
@@ -55,7 +55,6 @@ export default function App() {
             {t("title")}
           </h1>
 
-          {/* 🩷 Скляний бейдж “Скоро” */}
           <div className="px-4 py-1.5 rounded-full border border-white/40 dark:border-white/10 
                           bg-white/40 dark:bg-white/10 backdrop-blur-xl shadow-[0_0_20px_rgba(255,0,128,0.2)]
                           text-sm sm:text-base font-semibold text-fuchsia-600 dark:text-pink-300
@@ -68,61 +67,48 @@ export default function App() {
           </div>
         </div>
 
-        {/* Підзаголовок */}
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-8 sm:mb-10 max-w-md sm:max-w-xl leading-relaxed">
           {t("subtitle")}
         </p>
 
-        {/* Початкові секції */}
+        {/* Основний контент */}
         <div className="space-y-0 sm:space-y-0">
           <MasterSection />
           <PreorderCourse />
           <CourseIntro />
         </div>
 
-        {/* Інші секції */}
         <div className="space-y-0 sm:space-y-0 mt-0 sm:mt-0">
-          {/* Модулі */}
           <div id="modules" className="mb-10 sm:mb-16">
             <ModulesList />
           </div>
 
-       <div className="space-y-20 sm:space-y-28">
-  <div
-    id="booking"
-    className="mt-16 sm:mt-24 mb-16 sm:mb-28 px-4"
-  >
-    <BookingMessage />
-  </div>
+          <div className="space-y-20 sm:space-y-28">
+            <div id="booking" className="mt-16 sm:mt-24 mb-16 sm:mb-28 px-4">
+              <BookingMessage />
+            </div>
 
-  <div id="forwhom" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-    <ForWhomSection />
-  </div>
-</div>
+            <div id="forwhom" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+              <ForWhomSection />
+            </div>
+          </div>
 
-          {/* Початок курсу */}
           <div id="coursestart" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
             <CourseStart />
           </div>
 
-          {/* Роботи студентів */}
           <div id="works" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
             <StudentsWorksCarousel />
           </div>
 
-          {/* Тарифи */}
           <div id="tariffs" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
             <TariffsSection />
           </div>
 
-          {/* Popup */}
           <PreEnrollPopup />
-
-          <PromoPopup />
-
+          <PromoPopup onVisibleChange={setPopupVisible} />
           <BookingMessage />
 
-          {/* FAQ */}
           <div id="faq" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
             <FaqSection />
           </div>
@@ -132,7 +118,7 @@ export default function App() {
       <Footer />
 
       {/* Кнопка догори */}
-      {showScrollTop && !menuOpen && (
+      {showScrollTop && !menuOpen && !popupVisible && (
         <button
           onClick={scrollToTop}
           className="fixed bottom-5 right-5 sm:bottom-6 sm:right-6 z-[9999]
@@ -147,7 +133,6 @@ export default function App() {
         </button>
       )}
 
-      {/* 💫 CSS для fade-in */}
       <style>{`
         @keyframes fade-in {
           from { opacity: 0; transform: translateY(8px) scale(0.97); }
