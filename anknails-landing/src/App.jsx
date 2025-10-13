@@ -18,7 +18,7 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 
 export default function App() {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation(); // 🩷 додано i18n
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
@@ -106,7 +106,10 @@ export default function App() {
           </div>
 
           <PreEnrollPopup />
+
+          {/* ✅ тепер передаємо актуальну мову */}
           <PromoPopup lang={i18n.language} onVisibleChange={setPopupVisible} />
+
           <BookingMessage />
 
           <div id="faq" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
