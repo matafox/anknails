@@ -106,7 +106,7 @@ export default function App() {
           </div>
 
           <PreEnrollPopup />
-          <PromoPopup onVisibleChange={setPopupVisible} />
+          <PromoPopup lang={i18n.language} onVisibleChange={setPopupVisible} />
           <BookingMessage />
 
           <div id="faq" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
