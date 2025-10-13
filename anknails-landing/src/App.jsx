@@ -86,17 +86,18 @@ export default function App() {
             <ModulesList />
           </div>
 
-         <div
-  id="booking"
-  className="mt-16 sm:mt-24 mb-16 sm:mb-28 px-4"
->
-  <BookingMessage />
-</div>
+       <div className="space-y-20 sm:space-y-28">
+  <div
+    id="booking"
+    className="mt-16 sm:mt-24 mb-16 sm:mb-28 px-4"
+  >
+    <BookingMessage />
+  </div>
 
-          {/* Для кого курс */}
-          <div id="forwhom" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-            <ForWhomSection />
-          </div>
+  <div id="forwhom" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+    <ForWhomSection />
+  </div>
+</div>
 
           {/* Початок курсу */}
           <div id="coursestart" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
