@@ -3,7 +3,6 @@ import Footer from "./components/Footer";
 import PromoPopup from "./components/PromoPopup";
 import MasterSection from "./components/MasterSection";
 import PreorderCourse from "./components/PreorderCourse";
-import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
 import BookingMessage from "./components/BookingMessage";
@@ -22,7 +21,7 @@ export default function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [view, setView] = useState("main"); // 👈 додано керування видом (головна / модулі)
+  const [view, setView] = useState("home"); // 🔹 керування сторінками
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -38,29 +37,16 @@ export default function App() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  return (
-    <div
-      className="relative min-h-screen flex flex-col justify-between items-center 
-      overflow-x-hidden text-center 
-      bg-gradient-to-b from-[#f6f0ff] via-[#fff] to-[#fdf9ff] 
-      dark:from-[#100d16] dark:via-[#18141f] dark:to-[#100d16]"
-    >
-      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-fuchsia-300/30 dark:bg-fuchsia-700/10 rounded-full blur-[140px] -z-10"></div>
-
-      {/* 🔹 передаємо setView у Header */}
-      <Header onMenuToggle={(open) => setMenuOpen(open)} setView={setView} />
-
-      <main className="flex-grow w-full flex flex-col items-center justify-center px-4 sm:px-6 z-10 pt-24 sm:pt-28">
-
-        {/* 🔹 переключення між видами */}
-        {view === "main" && (
+  // 💎 вміст для кожного розділу
+  const renderView = () => {
+    switch (view) {
+      case "home":
+        return (
           <>
-            {/* Заголовок + бейдж */}
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4">
               <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
                 {t("title")}
               </h1>
-
               <div className="px-4 py-1.5 rounded-full border border-white/40 dark:border-white/10 
                               bg-white/40 dark:bg-white/10 backdrop-blur-xl shadow-[0_0_20px_rgba(255,0,128,0.2)]
                               text-sm sm:text-base font-semibold text-fuchsia-600 dark:text-pink-300
@@ -77,65 +63,87 @@ export default function App() {
               {t("subtitle")}
             </p>
 
-            {/* Основний контент */}
-            <div className="space-y-0 sm:space-y-0">
-              <MasterSection />
-              <PreorderCourse />
-              <CourseIntro />
-            </div>
-
-            <div className="space-y-0 sm:space-y-0 mt-0 sm:mt-0">
-              <div id="modules" className="mb-10 sm:mb-16">
-                <ModulesList />
-              </div>
-
-              <div className="space-y-20 sm:space-y-28">
-                <div id="booking" className="mt-16 sm:mt-24 mb-16 sm:mb-28 px-4">
-                  <BookingMessage />
-                </div>
-
-                <div id="forwhom" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-                  <ForWhomSection />
-                </div>
-              </div>
-
-              <div id="coursestart" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-                <CourseStart />
-              </div>
-
-              <div id="works" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-                <StudentsWorksCarousel />
-              </div>
-
-              <div id="tariffs" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-                <TariffsSection />
-              </div>
-
-              <PreEnrollPopup />
-              <PromoPopup lang={i18n.language} onVisibleChange={setPopupVisible} />
-              <BookingMessage />
-
-              <div id="faq" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-                <FaqSection />
-              </div>
-            </div>
+            <MasterSection />
+            <PreorderCourse />
+            <CourseIntro />
+            <BookingMessage />
           </>
-        )}
+        );
 
-        {/* 🔹 якщо обрано “modules” → тільки список модулів */}
-        {view === "modules" && (
+      case "modules":
+        return (
           <div className="w-full max-w-6xl px-6 pb-24">
             <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-gray-900 dark:text-white">
               {i18n.language === "ru" ? "Модули курса" : "Модулі курсу"}
             </h2>
             <ModulesList />
           </div>
+        );
+
+      case "forwhom":
+        return (
+          <div className="w-full max-w-6xl px-6 pb-24">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-gray-900 dark:text-white">
+              {i18n.language === "ru" ? "Для кого курс" : "Для кого курс"}
+            </h2>
+            <ForWhomSection />
+          </div>
+        );
+
+      case "tariffs":
+        return (
+          <div className="w-full max-w-6xl px-6 pb-24">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-gray-900 dark:text-white">
+              {i18n.language === "ru" ? "Тарифы" : "Тарифи"}
+            </h2>
+            <TariffsSection />
+          </div>
+        );
+
+      case "faq":
+        return (
+          <div className="w-full max-w-6xl px-6 pb-24">
+            <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-gray-900 dark:text-white">
+              FAQ
+            </h2>
+            <FaqSection />
+          </div>
+        );
+
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div
+      className="relative min-h-screen flex flex-col justify-between items-center 
+      overflow-x-hidden text-center 
+      bg-gradient-to-b from-[#f6f0ff] via-[#fff] to-[#fdf9ff] 
+      dark:from-[#100d16] dark:via-[#18141f] dark:to-[#100d16]"
+    >
+      <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-fuchsia-300/30 dark:bg-fuchsia-700/10 rounded-full blur-[140px] -z-10"></div>
+
+      {/* Передаємо setView у Header */}
+      <Header onMenuToggle={(open) => setMenuOpen(open)} setView={setView} />
+
+      <main className="flex-grow w-full flex flex-col items-center justify-center px-4 sm:px-6 z-10 pt-24 sm:pt-28">
+        {renderView()}
+
+        {/* спільні блоки (завжди внизу головної) */}
+        {view === "home" && (
+          <>
+            <StudentsWorksCarousel />
+            <CourseStart />
+            <PreEnrollPopup />
+            <PromoPopup lang={i18n.language} onVisibleChange={setPopupVisible} />
+          </>
         )}
       </main>
 
       <Footer />
 
-      {/* Кнопка догори */}
+      {/* кнопка догори */}
       {showScrollTop && !menuOpen && !popupVisible && (
         <button
           onClick={scrollToTop}
