@@ -14,7 +14,7 @@ import {
   Globe,
 } from "lucide-react";
 
-export default function Header({ onMenuToggle }) {
+export default function Header({ onMenuToggle, setView }) {
   const { i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
@@ -54,6 +54,7 @@ export default function Header({ onMenuToggle }) {
     onMenuToggle?.(false);
   };
 
+  // ефект при прокрутці
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
@@ -64,22 +65,33 @@ export default function Header({ onMenuToggle }) {
     typeof window !== "undefined" && window.location.hostname.includes("about.");
   if (isAboutPage) return null;
 
+  // 🩷 елементи меню
   const menuItems =
     i18n.language === "ru"
       ? [
-          { icon: Home, label: "Главная", id: "home" },
-          { icon: Sparkles, label: "Модули", id: "modules" },
+          { icon: Home, label: "Главная", action: () => setView("master") },
+          { icon: Sparkles, label: "Модули", action: () => setView("modules") },
           { icon: Star, label: "Для кого курс", id: "forwhom" },
           { icon: Gift, label: "Тарифы", id: "tariffs" },
           { icon: HelpCircle, label: "FAQ", id: "faq" },
         ]
       : [
-          { icon: Home, label: "Головна", id: "home" },
-          { icon: Sparkles, label: "Модулі", id: "modules" },
+          { icon: Home, label: "Головна", action: () => setView("master") },
+          { icon: Sparkles, label: "Модулі", action: () => setView("modules") },
           { icon: Star, label: "Для кого курс", id: "forwhom" },
           { icon: Gift, label: "Тарифи", id: "tariffs" },
           { icon: HelpCircle, label: "FAQ", id: "faq" },
         ];
+
+  const handleItemClick = (item) => {
+    if (item.action) {
+      item.action();
+    } else if (item.id) {
+      scrollToSection(item.id);
+    }
+    setMenuOpen(false);
+    onMenuToggle?.(false);
+  };
 
   return (
     <header
@@ -138,10 +150,10 @@ export default function Header({ onMenuToggle }) {
               : "bg-white/70 border border-pink-200/40 shadow-[0_0_50px_rgba(255,182,193,0.4)]"
             }`}
           >
-            {menuItems.map(({ icon: Icon, label, id }) => (
+            {menuItems.map(({ icon: Icon, label, id, action }) => (
               <button
-                key={id}
-                onClick={() => scrollToSection(id)}
+                key={label}
+                onClick={() => handleItemClick({ id, action })}
                 className={`flex items-center justify-start gap-4 w-full py-4 px-5 text-lg font-semibold rounded-2xl border transition-all duration-300 hover:scale-[1.02]
                   ${
                     darkMode
