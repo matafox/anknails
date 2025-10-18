@@ -7,22 +7,28 @@ export default function Footer() {
   const acceptedText =
     i18n.language === "ru" ? "Мы принимаем" : "Ми приймаємо";
 
+  // 🔍 перевіряємо, чи ми на сторінці "about"
+  const isAboutPage =
+    typeof window !== "undefined" && window.location.hostname.includes("about.");
+
   return (
     <footer className="relative w-full z-10 py-8 px-4 flex flex-col items-center justify-center text-center text-xs sm:text-sm">
       {/* Розділова лінія зверху */}
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-pink-300/40 to-transparent dark:via-pink-700/30" />
 
-      {/* 💳 Ми приймаємо */}
-      <div className="flex items-center justify-center gap-4 mb-4">
-        <span className="text-gray-700 dark:text-gray-200 font-medium text-sm sm:text-base">
-          {acceptedText}:
-        </span>
-        <div className="flex items-center gap-3 opacity-90">
-          <img src="/applepay.svg" alt="Apple Pay" className="h-6 w-auto" />
-          <img src="/visa.svg" alt="Visa" className="h-6 w-auto" />
-          <img src="/mastercard.svg" alt="Mastercard" className="h-6 w-auto" />
+      {/* 💳 Ми приймаємо — ❌ не показуємо на сторінці about */}
+      {!isAboutPage && (
+        <div className="flex items-center justify-center gap-4 mb-4">
+          <span className="text-gray-700 dark:text-gray-200 font-medium text-sm sm:text-base">
+            {acceptedText}:
+          </span>
+          <div className="flex items-center gap-3 opacity-90">
+            <img src="/applepay.svg" alt="Apple Pay" className="h-6 w-auto" />
+            <img src="/visa.svg" alt="Visa" className="h-6 w-auto" />
+            <img src="/mastercard.svg" alt="Mastercard" className="h-6 w-auto" />
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Основний текст */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 text-gray-600 dark:text-gray-400 leading-relaxed">
