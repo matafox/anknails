@@ -55,7 +55,7 @@ export default function Header() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // на сторінці "About" не показуємо хедер
+  // не показувати хедер на about-сторінці
   const isAboutPage =
     typeof window !== "undefined" && window.location.hostname.includes("about.");
   if (isAboutPage) return null;
@@ -69,6 +69,7 @@ export default function Header() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
+        {/* 🩷 Логотип */}
         <span
           className={`text-2xl sm:text-3xl font-bold tracking-wide transition-all ${
             scrolled
@@ -79,7 +80,7 @@ export default function Header() {
           ANK Studio
         </span>
 
-        {/* кнопка меню */}
+        {/* 🍔 Кнопка меню */}
         <button
           onClick={toggleMenu}
           className={`p-2 rounded-xl transition-all backdrop-blur-md ${
@@ -96,18 +97,23 @@ export default function Header() {
         </button>
       </div>
 
-      {/* меню */}
+      {/* 🌸 Повноекранне меню */}
       {menuOpen && (
         <>
-          {/* затемнення фону */}
+          {/* фоновий градієнт */}
           <div
             onClick={() => setMenuOpen(false)}
-            className="fixed inset-0 bg-black/60 backdrop-blur-lg transition-opacity duration-500 z-40"
+            className="fixed inset-0 bg-gradient-to-b from-[#12001f]/90 via-[#230035]/90 to-[#12001f]/90 backdrop-blur-xl transition-opacity duration-500 z-40"
           ></div>
 
-          {/* центральне скляне меню */}
+          {/* центральне меню */}
           <div
             className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fade-in"
+            style={{
+              height: "100vh",
+              paddingTop: "env(safe-area-inset-top)",
+              paddingBottom: "env(safe-area-inset-bottom)",
+            }}
           >
             <div
               className="w-full max-w-sm bg-white/10 dark:bg-[#1a0a1f]/70 backdrop-blur-2xl
@@ -135,7 +141,7 @@ export default function Header() {
                 </button>
               ))}
 
-              {/* Про мене */}
+              {/* 🔗 Про мене */}
               <a
                 href="https://about.ankstudio.online"
                 target="_blank"
@@ -150,7 +156,7 @@ export default function Header() {
                 </div>
               </a>
 
-              {/* Тема і мова */}
+              {/* ⚙️ Тема + Мова */}
               <div className="mt-6 flex flex-col items-center gap-3 text-fuchsia-200">
                 <button
                   onClick={toggleTheme}
