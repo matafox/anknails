@@ -3,6 +3,7 @@ import Footer from "./components/Footer";
 import PromoPopup from "./components/PromoPopup";
 import MasterSection from "./components/MasterSection";
 import PreorderCourse from "./components/PreorderCourse";
+import PreEnrollButtonSection from "./components/PreEnrollButtonSection";
 import CourseIntro from "./components/CourseIntro";
 import ModulesList from "./components/ModulesList";
 import BookingMessage from "./components/BookingMessage";
@@ -17,11 +18,10 @@ import { useTranslation } from "react-i18next";
 import { useState, useEffect } from "react";
 
 export default function App() {
-  const { t, i18n } = useTranslation();
+  const { t, i18n } = useTranslation(); // 🩷 додано i18n
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
-  const [view, setView] = useState("home"); // 🔹 керування сторінками
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -37,84 +37,6 @@ export default function App() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // 💎 вміст для кожного розділу
-  const renderView = () => {
-    switch (view) {
-      case "home":
-        return (
-          <>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4">
-              <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
-                {t("title")}
-              </h1>
-              <div className="px-4 py-1.5 rounded-full border border-white/40 dark:border-white/10 
-                              bg-white/40 dark:bg-white/10 backdrop-blur-xl shadow-[0_0_20px_rgba(255,0,128,0.2)]
-                              text-sm sm:text-base font-semibold text-fuchsia-600 dark:text-pink-300
-                              flex items-center gap-2 select-none animate-fade-in">
-                <span className="relative flex w-2 h-2">
-                  <span className="absolute inline-flex w-full h-full bg-pink-400 rounded-full opacity-75 animate-ping"></span>
-                  <span className="relative inline-flex w-2 h-2 bg-pink-500 rounded-full"></span>
-                </span>
-                {t("soon_badge", "Скоро")}
-              </div>
-            </div>
-
-            <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-8 sm:mb-10 max-w-md sm:max-w-xl leading-relaxed">
-              {t("subtitle")}
-            </p>
-
-            <MasterSection />
-            <PreorderCourse />
-            <CourseIntro />
-            <BookingMessage />
-          </>
-        );
-
-      case "modules":
-        return (
-          <div className="w-full max-w-6xl px-6 pb-24">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-gray-900 dark:text-white">
-              {i18n.language === "ru" ? "Модули курса" : "Модулі курсу"}
-            </h2>
-            <ModulesList />
-          </div>
-        );
-
-      case "forwhom":
-        return (
-          <div className="w-full max-w-6xl px-6 pb-24">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-gray-900 dark:text-white">
-              {i18n.language === "ru" ? "Для кого курс" : "Для кого курс"}
-            </h2>
-            <ForWhomSection />
-          </div>
-        );
-
-      case "tariffs":
-        return (
-          <div className="w-full max-w-6xl px-6 pb-24">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-gray-900 dark:text-white">
-              {i18n.language === "ru" ? "Тарифы" : "Тарифи"}
-            </h2>
-            <TariffsSection />
-          </div>
-        );
-
-      case "faq":
-        return (
-          <div className="w-full max-w-6xl px-6 pb-24">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-8 text-gray-900 dark:text-white">
-              FAQ
-            </h2>
-            <FaqSection />
-          </div>
-        );
-
-      default:
-        return null;
-    }
-  };
-
   return (
     <div
       className="relative min-h-screen flex flex-col justify-between items-center 
@@ -124,26 +46,81 @@ export default function App() {
     >
       <div className="absolute top-[-200px] left-1/2 -translate-x-1/2 w-[600px] h-[600px] bg-fuchsia-300/30 dark:bg-fuchsia-700/10 rounded-full blur-[140px] -z-10"></div>
 
-      {/* Передаємо setView у Header */}
-      <Header onMenuToggle={(open) => setMenuOpen(open)} setView={setView} />
+      <Header onMenuToggle={(open) => setMenuOpen(open)} />
 
       <main className="flex-grow w-full flex flex-col items-center justify-center px-4 sm:px-6 z-10 pt-24 sm:pt-28">
-        {renderView()}
+        {/* Заголовок + бейдж */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4">
+          <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
+            {t("title")}
+          </h1>
 
-        {/* спільні блоки (завжди внизу головної) */}
-        {view === "home" && (
-          <>
-            <StudentsWorksCarousel />
+          <div className="px-4 py-1.5 rounded-full border border-white/40 dark:border-white/10 
+                          bg-white/40 dark:bg-white/10 backdrop-blur-xl shadow-[0_0_20px_rgba(255,0,128,0.2)]
+                          text-sm sm:text-base font-semibold text-fuchsia-600 dark:text-pink-300
+                          flex items-center gap-2 select-none animate-fade-in">
+            <span className="relative flex w-2 h-2">
+              <span className="absolute inline-flex w-full h-full bg-pink-400 rounded-full opacity-75 animate-ping"></span>
+              <span className="relative inline-flex w-2 h-2 bg-pink-500 rounded-full"></span>
+            </span>
+            {t("soon_badge", "Скоро")}
+          </div>
+        </div>
+
+        <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-8 sm:mb-10 max-w-md sm:max-w-xl leading-relaxed">
+          {t("subtitle")}
+        </p>
+
+        {/* Основний контент */}
+        <div className="space-y-0 sm:space-y-0">
+          <MasterSection />
+          <PreorderCourse />
+          <CourseIntro />
+        </div>
+
+        <div className="space-y-0 sm:space-y-0 mt-0 sm:mt-0">
+          <div id="modules" className="mb-10 sm:mb-16">
+            <ModulesList />
+          </div>
+
+          <div className="space-y-20 sm:space-y-28">
+            <div id="booking" className="mt-16 sm:mt-24 mb-16 sm:mb-28 px-4">
+              <BookingMessage />
+            </div>
+
+            <div id="forwhom" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+              <ForWhomSection />
+            </div>
+          </div>
+
+          <div id="coursestart" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
             <CourseStart />
-            <PreEnrollPopup />
-            <PromoPopup lang={i18n.language} onVisibleChange={setPopupVisible} />
-          </>
-        )}
+          </div>
+
+          <div id="works" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+            <StudentsWorksCarousel />
+          </div>
+
+          <div id="tariffs" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+            <TariffsSection />
+          </div>
+
+          <PreEnrollPopup />
+
+          {/* ✅ тепер передаємо актуальну мову */}
+          <PromoPopup lang={i18n.language} onVisibleChange={setPopupVisible} />
+
+          <BookingMessage />
+
+          <div id="faq" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
+            <FaqSection />
+          </div>
+        </div>
       </main>
 
       <Footer />
 
-      {/* кнопка догори */}
+      {/* Кнопка догори */}
       {showScrollTop && !menuOpen && !popupVisible && (
         <button
           onClick={scrollToTop}
