@@ -47,8 +47,8 @@ export default function TariffsSection() {
     {
       title: t("tariff_basic"),
       desc: t("tariff_basic_desc"),
-      oldPrice: "230 €",
-      newPrice: "160 €",
+      oldPrice: "235 €",
+      newPrice: "165 €",
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
@@ -63,7 +63,7 @@ export default function TariffsSection() {
       title: t("tariff_pro"),
       desc: t("tariff_pro_desc"),
       oldPrice: "320 €",
-      newPrice: "230 €",
+      newPrice: "235 €",
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
