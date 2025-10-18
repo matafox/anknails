@@ -119,32 +119,41 @@ export default function Header({ onMenuToggle }) {
       {/* 🌸 Повноекранне меню */}
       {menuOpen && (
         <div
-          className="fixed inset-0 z-[9998] flex items-center justify-center animate-fade-in"
+          className={`fixed inset-0 z-[9998] flex items-center justify-center animate-fade-in ${
+            darkMode
+              ? "bg-[#0c0016]/90 text-fuchsia-100"
+              : "bg-white/95 text-gray-800"
+          }`}
           style={{
             height: "100vh",
             width: "100vw",
             backdropFilter: "blur(80px) saturate(250%) brightness(1.1)",
             WebkitBackdropFilter: "blur(80px) saturate(250%) brightness(1.1)",
-            background: darkMode
-              ? "rgba(10, 0, 20, 0.88)"
-              : "rgba(255, 255, 255, 0.85)",
           }}
         >
           <div
-            className="w-full max-w-md bg-white/20 dark:bg-[#1a0a1f]/70 backdrop-blur-3xl
-            border border-pink-500/20 shadow-[0_0_60px_rgba(255,0,128,0.3)] 
-            rounded-3xl p-10 flex flex-col items-center text-center space-y-6"
+            className={`w-full max-w-md rounded-3xl p-10 flex flex-col items-center text-center space-y-6 
+            ${darkMode
+              ? "bg-[#1a0a1f]/70 border border-pink-500/30 shadow-[0_0_60px_rgba(255,0,128,0.25)]"
+              : "bg-white/70 border border-pink-200/40 shadow-[0_0_50px_rgba(255,182,193,0.4)]"
+            }`}
           >
             {menuItems.map(({ icon: Icon, label, id }) => (
               <button
                 key={id}
                 onClick={() => scrollToSection(id)}
-                className="flex items-center justify-center gap-3 w-full py-4 text-lg font-semibold
-                  text-fuchsia-100 bg-gradient-to-r from-[#2a0f3a]/50 to-[#3b174c]/40 
-                  hover:from-pink-700/40 hover:to-rose-600/40 border border-fuchsia-500/20 rounded-2xl
-                  transition-all duration-300 hover:scale-[1.03] hover:border-fuchsia-400/40"
+                className={`flex items-center justify-center gap-3 w-full py-4 text-lg font-semibold rounded-2xl border transition-all duration-300 hover:scale-[1.03]
+                  ${
+                    darkMode
+                      ? "text-fuchsia-100 bg-gradient-to-r from-[#2a0f3a]/50 to-[#3b174c]/40 border-fuchsia-500/20 hover:border-fuchsia-400/40 hover:from-pink-700/40 hover:to-rose-600/40"
+                      : "text-gray-800 bg-white border-pink-200 hover:bg-pink-50 hover:border-pink-300"
+                  }`}
               >
-                <Icon className="w-5 h-5 text-pink-400" />
+                <Icon
+                  className={`w-5 h-5 ${
+                    darkMode ? "text-pink-400" : "text-pink-500"
+                  }`}
+                />
                 {label}
               </button>
             ))}
@@ -154,9 +163,7 @@ export default function Header({ onMenuToggle }) {
               href="https://about.ankstudio.online"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-4 mt-3 text-lg font-semibold rounded-2xl
-                bg-gradient-to-r from-pink-500 to-rose-500 text-white 
-                shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
+              className="w-full py-4 mt-3 text-lg font-semibold rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
             >
               <div className="flex justify-center items-center gap-2">
                 <User className="w-5 h-5" />
@@ -165,10 +172,14 @@ export default function Header({ onMenuToggle }) {
             </a>
 
             {/* ⚙️ Тема + Мова */}
-            <div className="mt-6 flex flex-col items-center gap-3 text-fuchsia-100">
+            <div
+              className={`mt-6 flex flex-col items-center gap-3 ${
+                darkMode ? "text-fuchsia-100" : "text-gray-700"
+              }`}
+            >
               <button
                 onClick={toggleTheme}
-                className="flex items-center gap-2 hover:text-white transition"
+                className="flex items-center gap-2 hover:text-pink-500 transition"
               >
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                 <span className="text-sm font-medium">
@@ -191,7 +202,9 @@ export default function Header({ onMenuToggle }) {
                     className={`px-3 py-1 text-sm rounded-md transition-all font-medium ${
                       i18n.language === lng
                         ? "bg-pink-500 text-white shadow-[0_0_10px_rgba(255,0,128,0.4)]"
-                        : "bg-white/10 text-fuchsia-200 hover:bg-pink-500/30"
+                        : darkMode
+                        ? "bg-white/10 text-fuchsia-200 hover:bg-pink-500/30"
+                        : "bg-pink-50 text-gray-700 border border-pink-200 hover:bg-pink-100"
                     }`}
                   >
                     {lng.toUpperCase()}
