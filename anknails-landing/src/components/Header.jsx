@@ -17,7 +17,7 @@ import {
 export default function Header() {
   const { i18n } = useTranslation();
   const [menuOpen, setMenuOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState(false); // ✅ дефолт — світла тема
   const [scrolled, setScrolled] = useState(false);
 
   // 🌓 Ініціалізація теми
@@ -42,29 +42,46 @@ export default function Header() {
   };
 
   const toggleMenu = () => setMenuOpen(!menuOpen);
+
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth" });
     setMenuOpen(false);
   };
 
-  // ефект при прокрутці
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // не показувати хедер на about-сторінці
   const isAboutPage =
     typeof window !== "undefined" && window.location.hostname.includes("about.");
   if (isAboutPage) return null;
+
+  // 🈳 Переклад кнопок меню
+  const menuItems =
+    i18n.language === "ru"
+      ? [
+          { icon: Home, label: "Главная", id: "home" },
+          { icon: Sparkles, label: "Модули", id: "modules" },
+          { icon: Star, label: "Для кого курс", id: "forwhom" },
+          { icon: Gift, label: "Тарифы", id: "tariffs" },
+          { icon: HelpCircle, label: "FAQ", id: "faq" },
+        ]
+      : [
+          { icon: Home, label: "Головна", id: "home" },
+          { icon: Sparkles, label: "Модулі", id: "modules" },
+          { icon: Star, label: "Для кого курс", id: "forwhom" },
+          { icon: Gift, label: "Тарифи", id: "tariffs" },
+          { icon: HelpCircle, label: "FAQ", id: "faq" },
+        ];
 
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-700 ${
         scrolled
-          ? "backdrop-blur-xl bg-white/70 dark:bg-black/30 shadow-[0_0_25px_rgba(255,0,128,0.15)] border-b border-pink-400/10"
+          ? "backdrop-blur-xl bg-white/80 dark:bg-black/30 shadow-[0_0_25px_rgba(255,0,128,0.15)] border-b border-pink-400/10"
           : "bg-transparent backdrop-blur-0 border-transparent"
       }`}
     >
@@ -74,19 +91,21 @@ export default function Header() {
           className={`text-2xl sm:text-3xl font-bold tracking-wide transition-all ${
             scrolled
               ? "text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-pink-400"
-              : "text-white dark:text-fuchsia-100 drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]"
+              : darkMode
+              ? "text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]"
+              : "text-black"
           }`}
         >
           ANK Studio
         </span>
 
-        {/* 🍔 Кнопка меню */}
+        {/* 🍔 Меню */}
         <button
           onClick={toggleMenu}
           className={`p-2 rounded-xl transition-all backdrop-blur-md ${
             scrolled
               ? "bg-white/70 dark:bg-white/10 border border-pink-400/20 shadow-md"
-              : "bg-white/20 dark:bg-white/10 border border-white/30"
+              : "bg-white/40 dark:bg-white/10 border border-white/30"
           } hover:scale-105`}
         >
           {menuOpen ? (
@@ -97,16 +116,16 @@ export default function Header() {
         </button>
       </div>
 
-      {/* 🌸 Повноекранне меню */}
+      {/* 🌸 Меню */}
       {menuOpen && (
         <>
-          {/* фоновий градієнт */}
+          {/* фон */}
           <div
             onClick={() => setMenuOpen(false)}
             className="fixed inset-0 bg-gradient-to-b from-[#12001f]/90 via-[#230035]/90 to-[#12001f]/90 backdrop-blur-xl transition-opacity duration-500 z-40"
           ></div>
 
-          {/* центральне меню */}
+          {/* контент */}
           <div
             className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fade-in"
             style={{
@@ -120,13 +139,7 @@ export default function Header() {
               border border-pink-500/20 rounded-3xl shadow-[0_0_40px_rgba(255,0,128,0.25)]
               flex flex-col items-center text-center p-8 space-y-5"
             >
-              {[
-                { icon: Home, label: "Головна", id: "home" },
-                { icon: Sparkles, label: "Модулі", id: "modules" },
-                { icon: Star, label: "Для кого курс", id: "forwhom" },
-                { icon: Gift, label: "Тарифи", id: "tariffs" },
-                { icon: HelpCircle, label: "FAQ", id: "faq" },
-              ].map(({ icon: Icon, label, id }) => (
+              {menuItems.map(({ icon: Icon, label, id }) => (
                 <button
                   key={id}
                   onClick={() => scrollToSection(id)}
@@ -152,7 +165,7 @@ export default function Header() {
               >
                 <div className="flex justify-center items-center gap-2">
                   <User className="w-5 h-5" />
-                  Про мене
+                  {i18n.language === "ru" ? "Обо мне" : "Про мене"}
                 </div>
               </a>
 
@@ -164,7 +177,13 @@ export default function Header() {
                 >
                   {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
                   <span className="text-sm font-medium">
-                    {darkMode ? "Світла тема" : "Темна тема"}
+                    {darkMode
+                      ? i18n.language === "ru"
+                        ? "Светлая тема"
+                        : "Світла тема"
+                      : i18n.language === "ru"
+                      ? "Тёмная тема"
+                      : "Темна тема"}
                   </span>
                 </button>
 
