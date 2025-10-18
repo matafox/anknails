@@ -36,7 +36,6 @@ export default function Header() {
     localStorage.setItem("theme", newTheme ? "dark" : "light");
   };
 
-  // 🌍 Мова
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
     localStorage.setItem("lang", lng);
@@ -49,14 +48,14 @@ export default function Header() {
     setMenuOpen(false);
   };
 
-  // 💫 Прозорий до скролу
+  // ефект при прокрутці
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // 🧠 Вимикаємо хедер на сторінці “About”
+  // на сторінці "About" не показуємо хедер
   const isAboutPage =
     typeof window !== "undefined" && window.location.hostname.includes("about.");
   if (isAboutPage) return null;
@@ -69,9 +68,7 @@ export default function Header() {
           : "bg-transparent backdrop-blur-0 border-transparent"
       }`}
     >
-      {/* Контейнер */}
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        {/* 🌸 Логотип */}
         <span
           className={`text-2xl sm:text-3xl font-bold tracking-wide transition-all ${
             scrolled
@@ -82,7 +79,7 @@ export default function Header() {
           ANK Studio
         </span>
 
-        {/* 🍔 Меню-кнопка */}
+        {/* кнопка меню */}
         <button
           onClick={toggleMenu}
           className={`p-2 rounded-xl transition-all backdrop-blur-md ${
@@ -99,18 +96,24 @@ export default function Header() {
         </button>
       </div>
 
-      {/* 🔮 Повноекранне меню */}
+      {/* меню */}
       {menuOpen && (
         <>
-          {/* затемнення */}
+          {/* затемнення фону */}
           <div
             onClick={() => setMenuOpen(false)}
-            className="fixed inset-0 bg-gradient-to-br from-[#0b0411]/90 via-[#150825]/90 to-[#0b0411]/90 backdrop-blur-sm transition-opacity duration-500 z-40"
+            className="fixed inset-0 bg-black/60 backdrop-blur-lg transition-opacity duration-500 z-40"
           ></div>
 
-          {/* панель */}
-          <div className="fixed inset-0 z-50 flex flex-col items-center justify-center text-center p-6 animate-fade-in">
-            <div className="space-y-6 sm:space-y-8">
+          {/* центральне скляне меню */}
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center px-4 animate-fade-in"
+          >
+            <div
+              className="w-full max-w-sm bg-white/10 dark:bg-[#1a0a1f]/70 backdrop-blur-2xl
+              border border-pink-500/20 rounded-3xl shadow-[0_0_40px_rgba(255,0,128,0.25)]
+              flex flex-col items-center text-center p-8 space-y-5"
+            >
               {[
                 { icon: Home, label: "Головна", id: "home" },
                 { icon: Sparkles, label: "Модулі", id: "modules" },
@@ -121,58 +124,60 @@ export default function Header() {
                 <button
                   key={id}
                   onClick={() => scrollToSection(id)}
-                  className="flex items-center justify-center gap-3 text-2xl sm:text-3xl font-semibold text-fuchsia-200 hover:text-white transition-all"
+                  className="flex items-center justify-center gap-3 w-full py-3 text-lg font-semibold
+                    text-fuchsia-100 bg-gradient-to-r from-[#2a0f3a]/60 to-[#3b174c]/50 
+                    hover:from-fuchsia-700/30 hover:to-pink-600/30
+                    border border-fuchsia-500/20 rounded-xl
+                    transition-all duration-300 hover:scale-[1.02] hover:border-fuchsia-400/40"
                 >
-                  <Icon className="w-6 h-6 text-fuchsia-400" />
+                  <Icon className="w-5 h-5 text-pink-400" />
                   {label}
                 </button>
               ))}
 
-              {/* 📖 Про мене */}
+              {/* Про мене */}
               <a
                 href="https://about.ankstudio.online"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="mt-4 inline-flex items-center gap-3 px-6 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-[0_0_20px_rgba(255,0,128,0.4)] hover:scale-105 transition-all"
+                className="w-full py-3 mt-2 text-lg font-semibold rounded-xl
+                  bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_25px_rgba(255,0,128,0.4)]
+                  hover:scale-[1.03] transition-all duration-300"
               >
-                <User className="w-5 h-5" />
-                Про мене
+                <div className="flex justify-center items-center gap-2">
+                  <User className="w-5 h-5" />
+                  Про мене
+                </div>
               </a>
-            </div>
 
-            {/* низ меню */}
-            <div className="mt-12 space-y-4 flex flex-col items-center text-fuchsia-300">
-              {/* Тема */}
-              <button
-                onClick={toggleTheme}
-                className="flex items-center gap-2 hover:text-white transition"
-              >
-                {darkMode ? (
-                  <Sun className="w-5 h-5" />
-                ) : (
-                  <Moon className="w-5 h-5" />
-                )}
-                <span className="text-sm font-medium">
-                  {darkMode ? "Світла тема" : "Темна тема"}
-                </span>
-              </button>
+              {/* Тема і мова */}
+              <div className="mt-6 flex flex-col items-center gap-3 text-fuchsia-200">
+                <button
+                  onClick={toggleTheme}
+                  className="flex items-center gap-2 hover:text-white transition"
+                >
+                  {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                  <span className="text-sm font-medium">
+                    {darkMode ? "Світла тема" : "Темна тема"}
+                  </span>
+                </button>
 
-              {/* Мова */}
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4" />
-                {["ru", "uk"].map((lng) => (
-                  <button
-                    key={lng}
-                    onClick={() => changeLanguage(lng)}
-                    className={`px-3 py-1 text-sm rounded-md transition-all font-medium ${
-                      i18n.language === lng
-                        ? "bg-pink-500 text-white shadow-[0_0_10px_rgba(255,0,128,0.4)]"
-                        : "bg-white/10 text-fuchsia-200 hover:bg-pink-500/30"
-                    }`}
-                  >
-                    {lng.toUpperCase()}
-                  </button>
-                ))}
+                <div className="flex items-center gap-2">
+                  <Globe className="w-4 h-4" />
+                  {["ru", "uk"].map((lng) => (
+                    <button
+                      key={lng}
+                      onClick={() => changeLanguage(lng)}
+                      className={`px-3 py-1 text-sm rounded-md transition-all font-medium ${
+                        i18n.language === lng
+                          ? "bg-pink-500 text-white shadow-[0_0_10px_rgba(255,0,128,0.4)]"
+                          : "bg-white/10 text-fuchsia-200 hover:bg-pink-500/30"
+                      }`}
+                    >
+                      {lng.toUpperCase()}
+                    </button>
+                  ))}
+                </div>
               </div>
             </div>
           </div>
@@ -181,8 +186,8 @@ export default function Header() {
 
       <style>{`
         @keyframes fade-in {
-          from { opacity: 0; transform: scale(0.97); }
-          to { opacity: 1; transform: scale(1); }
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
         }
         .animate-fade-in {
           animation: fade-in 0.4s ease-out both;
