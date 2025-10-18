@@ -132,7 +132,7 @@ export default function Header({ onMenuToggle }) {
           }}
         >
           <div
-            className={`w-full max-w-md rounded-3xl p-10 flex flex-col items-center text-center space-y-6 
+            className={`w-full max-w-md rounded-3xl p-10 flex flex-col items-stretch space-y-6 
             ${darkMode
               ? "bg-[#1a0a1f]/70 border border-pink-500/30 shadow-[0_0_60px_rgba(255,0,128,0.25)]"
               : "bg-white/70 border border-pink-200/40 shadow-[0_0_50px_rgba(255,182,193,0.4)]"
@@ -142,7 +142,7 @@ export default function Header({ onMenuToggle }) {
               <button
                 key={id}
                 onClick={() => scrollToSection(id)}
-                className={`flex items-center justify-center gap-3 w-full py-4 text-lg font-semibold rounded-2xl border transition-all duration-300 hover:scale-[1.03]
+                className={`flex items-center justify-start gap-4 w-full py-4 px-5 text-lg font-semibold rounded-2xl border transition-all duration-300 hover:scale-[1.02]
                   ${
                     darkMode
                       ? "text-fuchsia-100 bg-gradient-to-r from-[#2a0f3a]/50 to-[#3b174c]/40 border-fuchsia-500/20 hover:border-fuchsia-400/40 hover:from-pink-700/40 hover:to-rose-600/40"
@@ -154,7 +154,7 @@ export default function Header({ onMenuToggle }) {
                     darkMode ? "text-pink-400" : "text-pink-500"
                   }`}
                 />
-                {label}
+                <span>{label}</span>
               </button>
             ))}
 
@@ -163,12 +163,10 @@ export default function Header({ onMenuToggle }) {
               href="https://about.ankstudio.online"
               target="_blank"
               rel="noopener noreferrer"
-              className="w-full py-4 mt-3 text-lg font-semibold rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
+              className="flex items-center justify-center gap-3 w-full py-4 mt-3 text-lg font-semibold rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
             >
-              <div className="flex justify-center items-center gap-2">
-                <User className="w-5 h-5" />
-                {i18n.language === "ru" ? "Обо мне" : "Про мене"}
-              </div>
+              <User className="w-5 h-5" />
+              {i18n.language === "ru" ? "Обо мне" : "Про мене"}
             </a>
 
             {/* ⚙️ Тема + Мова */}
