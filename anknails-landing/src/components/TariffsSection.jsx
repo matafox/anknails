@@ -9,7 +9,6 @@ export default function TariffsSection() {
   useEffect(() => {
     const updateTimer = () => {
       const now = new Date();
-      // наступна північ (00:00)
       const nextMidnight = new Date(
         now.getFullYear(),
         now.getMonth(),
@@ -44,12 +43,13 @@ export default function TariffsSection() {
     return () => clearInterval(interval);
   }, []);
 
+  // 💶 Ціни перераховані з PLN → EUR (~4.3 zł = 1 €)
   const tariffs = [
     {
       title: t("tariff_basic"),
       desc: t("tariff_basic_desc"),
-      oldPrice: "990 zł",
-      newPrice: "700 zł",
+      oldPrice: "230 €",
+      newPrice: "160 €",
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
@@ -63,8 +63,8 @@ export default function TariffsSection() {
     {
       title: t("tariff_pro"),
       desc: t("tariff_pro_desc"),
-      oldPrice: "1390 zł",
-      newPrice: "1000 zł",
+      oldPrice: "320 €",
+      newPrice: "230 €",
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
