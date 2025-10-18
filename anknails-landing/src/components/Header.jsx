@@ -41,12 +41,6 @@ export default function Header() {
     localStorage.setItem("lang", lng);
   };
 
-  // 🔗 Перехід на сторінку "Про мене"
-  const goToAbout = () => {
-    const lang = localStorage.getItem("lang") || i18n.language || "ru";
-    window.location.href = `https://about.ankstudio.online?lang=${lang}`;
-  };
-
   const toggleMenu = () => setMenuOpen(!menuOpen);
   const scrollToSection = (id) => {
     const el = document.getElementById(id);
@@ -54,24 +48,29 @@ export default function Header() {
     setMenuOpen(false);
   };
 
+  // 🧠 Перевіряємо, чи це сторінка About
+  const isAboutPage =
+    typeof window !== "undefined" && window.location.hostname.includes("about.");
+
+  if (isAboutPage) return null; // ❌ На сторінці About не рендеримо меню взагалі
+
   return (
-    <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 flex justify-between items-center 
-      bg-[#1b0f25]/95 backdrop-blur-lg border-b border-fuchsia-500/10 shadow-[0_0_25px_rgba(217,70,239,0.15)]">
-      
-      {/* 🔮 Логотип */}
-      <div className="flex items-center gap-2 select-none">
-        <div className="w-7 h-7 rounded-xl bg-gradient-to-br from-fuchsia-500 to-purple-700 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_15px_rgba(217,70,239,0.6)]">
-          A
-        </div>
-        <span className="text-lg font-semibold text-fuchsia-300 tracking-wide">
-          ANK Studio
-        </span>
-      </div>
+    <header
+      className="fixed top-0 left-0 right-0 z-50 px-4 py-3 flex justify-between items-center 
+      bg-[#1b0f25]/95 backdrop-blur-lg border-b border-fuchsia-500/10 
+      shadow-[0_0_25px_rgba(217,70,239,0.15)]"
+    >
+      {/* 🔮 Тільки текстовий логотип */}
+      <span className="text-lg font-bold text-fuchsia-300 tracking-wide select-none">
+        ANK Studio
+      </span>
 
       {/* 🍔 Кнопка меню */}
       <button
         onClick={toggleMenu}
-        className="p-2 rounded-xl bg-[#2a163a] border border-fuchsia-400/30 hover:border-fuchsia-400/50 transition-all shadow-[0_0_10px_rgba(217,70,239,0.3)]"
+        className="p-2 rounded-xl bg-[#2a163a] border border-fuchsia-400/30 
+                   hover:border-fuchsia-400/50 transition-all 
+                   shadow-[0_0_10px_rgba(217,70,239,0.3)]"
       >
         {menuOpen ? (
           <X className="w-6 h-6 text-fuchsia-300" />
@@ -82,14 +81,23 @@ export default function Header() {
 
       {/* 💫 Меню */}
       {menuOpen && (
-        <div className="fixed inset-0 bg-[#12071b] z-40 flex justify-end">
-          <div className="w-[270px] sm:w-[320px] h-full bg-gradient-to-b from-[#1b0f2a] to-[#0d0614] 
-            border-l border-fuchsia-500/20 shadow-[0_0_30px_rgba(217,70,239,0.25)] 
-            flex flex-col justify-between p-6 animate-slide-left">
-            
+        <>
+          {/* 🩶 BACKDROP */}
+          <div
+            onClick={() => setMenuOpen(false)}
+            className="fixed inset-0 bg-gradient-to-br from-[#0b0411]/90 via-[#150825]/90 to-[#0b0411]/90 
+                       backdrop-blur-sm transition-opacity duration-500 z-40"
+          />
+
+          {/* 🟣 ПАНЕЛЬ */}
+          <div
+            className="fixed right-0 top-0 bottom-0 w-[280px] sm:w-[320px] bg-gradient-to-b 
+                       from-[#1b0f2a] to-[#0d0614] z-50 border-l border-fuchsia-500/20 
+                       shadow-[0_0_30px_rgba(217,70,239,0.3)] p-6 flex flex-col justify-between 
+                       animate-slide-left"
+          >
             {/* 🔹 Верх */}
             <div>
-              {/* 📋 Основні кнопки */}
               <nav className="flex flex-col gap-3 mt-4">
                 {[
                   { icon: Home, label: "Головна", id: "home" },
@@ -118,18 +126,21 @@ export default function Header() {
               </nav>
 
               {/* 📖 Про мене */}
-              <button
-                onClick={goToAbout}
+              <a
+                href="https://about.ankstudio.online"
+                target="_blank"
+                rel="noopener noreferrer"
                 className="mt-6 flex items-center justify-between px-4 py-2.5 rounded-xl 
                            bg-gradient-to-r from-fuchsia-700/50 to-pink-600/40 border border-fuchsia-500/40 
-                           hover:border-fuchsia-400 text-white transition-all shadow-[0_0_15px_rgba(217,70,239,0.3)]"
+                           hover:border-fuchsia-400 text-white transition-all 
+                           shadow-[0_0_15px_rgba(217,70,239,0.3)]"
               >
                 <div className="flex items-center gap-3">
                   <User className="w-5 h-5 text-fuchsia-300" />
                   <span className="text-sm font-medium">Про мене</span>
                 </div>
                 <span className="text-xs text-fuchsia-300">→</span>
-              </button>
+              </a>
             </div>
 
             {/* 🌙 Низ меню */}
@@ -163,15 +174,15 @@ export default function Header() {
                 ))}
               </div>
 
-      
+              <p className="text-xs text-fuchsia-500/60 mt-3">v1.0</p>
             </div>
           </div>
-        </div>
+        </>
       )}
 
       <style>{`
         @keyframes slide-left {
-          from { transform: translateX(100%); opacity: 0.4; }
+          from { transform: translateX(100%); opacity: 0.3; }
           to { transform: translateX(0); opacity: 1; }
         }
         .animate-slide-left {
