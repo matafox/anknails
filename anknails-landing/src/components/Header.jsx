@@ -56,7 +56,7 @@ export default function Header() {
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 px-4 py-3 flex justify-between items-center 
-      bg-[#1b0f25]/90 backdrop-blur-lg border-b border-fuchsia-500/10 shadow-[0_0_25px_rgba(217,70,239,0.15)]">
+      bg-[#1b0f25]/95 backdrop-blur-lg border-b border-fuchsia-500/10 shadow-[0_0_25px_rgba(217,70,239,0.15)]">
       
       {/* 🔮 Логотип */}
       <div className="flex items-center gap-2 select-none">
@@ -71,7 +71,7 @@ export default function Header() {
       {/* 🍔 Кнопка меню */}
       <button
         onClick={toggleMenu}
-        className="p-2 rounded-xl bg-[#2a163a]/60 border border-fuchsia-400/20 hover:border-fuchsia-400/40 transition-all"
+        className="p-2 rounded-xl bg-[#2a163a] border border-fuchsia-400/30 hover:border-fuchsia-400/50 transition-all shadow-[0_0_10px_rgba(217,70,239,0.3)]"
       >
         {menuOpen ? (
           <X className="w-6 h-6 text-fuchsia-300" />
@@ -80,27 +80,17 @@ export default function Header() {
         )}
       </button>
 
-      {/* 💫 Повноекранне меню */}
+      {/* 💫 Меню */}
       {menuOpen && (
-        <div className="fixed inset-0 bg-black/60 backdrop-blur-lg z-40 flex justify-end">
-          <div className="w-[270px] sm:w-[320px] h-full bg-[#140a1e]/95 border-l border-fuchsia-500/20 
-            shadow-[0_0_30px_rgba(217,70,239,0.15)] flex flex-col justify-between p-6 animate-slide-left">
+        <div className="fixed inset-0 bg-[#12071b] z-40 flex justify-end">
+          <div className="w-[270px] sm:w-[320px] h-full bg-gradient-to-b from-[#1b0f2a] to-[#0d0614] 
+            border-l border-fuchsia-500/20 shadow-[0_0_30px_rgba(217,70,239,0.25)] 
+            flex flex-col justify-between p-6 animate-slide-left">
             
             {/* 🔹 Верх */}
             <div>
-              {/* 👤 Профіль */}
-              <div className="flex items-center gap-3 mb-8">
-                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-fuchsia-500 to-pink-600 flex items-center justify-center text-white font-bold text-lg shadow-[0_0_10px_rgba(217,70,239,0.5)]">
-                  P
-                </div>
-                <div>
-                  <p className="text-white font-semibold">Paul</p>
-                  <p className="text-sm text-fuchsia-400/70">ID 335297143</p>
-                </div>
-              </div>
-
               {/* 📋 Основні кнопки */}
-              <nav className="flex flex-col gap-3">
+              <nav className="flex flex-col gap-3 mt-4">
                 {[
                   { icon: Home, label: "Головна", id: "home" },
                   { icon: Sparkles, label: "Модулі", id: "modules" },
@@ -111,15 +101,18 @@ export default function Header() {
                   <button
                     key={id}
                     onClick={() => scrollToSection(id)}
-                    className="flex items-center justify-between px-3 py-2 rounded-xl 
-                               bg-[#1e0f2a]/70 hover:bg-fuchsia-600/20 transition-all border border-transparent 
-                               hover:border-fuchsia-400/20 shadow-[inset_0_0_10px_rgba(217,70,239,0.15)]"
+                    className="flex items-center justify-between px-4 py-2.5 rounded-xl 
+                               bg-[#251034] hover:bg-fuchsia-600/20 transition-all 
+                               border border-fuchsia-800/40 hover:border-fuchsia-500/50 
+                               shadow-[inset_0_0_8px_rgba(217,70,239,0.25)] group"
                   >
                     <div className="flex items-center gap-3">
-                      <Icon className="w-5 h-5 text-fuchsia-400" />
-                      <span className="text-sm text-gray-200 font-medium">{label}</span>
+                      <Icon className="w-5 h-5 text-fuchsia-400 group-hover:text-fuchsia-300" />
+                      <span className="text-sm text-gray-200 font-medium group-hover:text-white">
+                        {label}
+                      </span>
                     </div>
-                    <div className="w-2 h-2 rounded-full bg-fuchsia-400/40" />
+                    <div className="w-2 h-2 rounded-full bg-fuchsia-500/40 group-hover:bg-fuchsia-400" />
                   </button>
                 ))}
               </nav>
@@ -127,20 +120,20 @@ export default function Header() {
               {/* 📖 Про мене */}
               <button
                 onClick={goToAbout}
-                className="mt-6 flex items-center justify-between px-3 py-2 rounded-xl 
-                           bg-gradient-to-r from-fuchsia-600/40 to-pink-500/30 border border-fuchsia-400/20 
-                           hover:border-fuchsia-400/40 text-white transition-all"
+                className="mt-6 flex items-center justify-between px-4 py-2.5 rounded-xl 
+                           bg-gradient-to-r from-fuchsia-700/50 to-pink-600/40 border border-fuchsia-500/40 
+                           hover:border-fuchsia-400 text-white transition-all shadow-[0_0_15px_rgba(217,70,239,0.3)]"
               >
                 <div className="flex items-center gap-3">
                   <User className="w-5 h-5 text-fuchsia-300" />
                   <span className="text-sm font-medium">Про мене</span>
                 </div>
-                <span className="text-xs text-fuchsia-400/80">→</span>
+                <span className="text-xs text-fuchsia-300">→</span>
               </button>
             </div>
 
             {/* 🌙 Низ меню */}
-            <div className="flex flex-col gap-4 pt-6 border-t border-fuchsia-500/10">
+            <div className="flex flex-col gap-4 pt-6 border-t border-fuchsia-500/20">
               {/* 🌓 Тема */}
               <button
                 onClick={toggleTheme}
@@ -170,7 +163,7 @@ export default function Header() {
                 ))}
               </div>
 
-              <p className="text-xs text-fuchsia-500/60 mt-3">v1.0</p>
+      
             </div>
           </div>
         </div>
