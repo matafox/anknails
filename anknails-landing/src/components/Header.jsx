@@ -1,11 +1,29 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, X } from "lucide-react";
+import { Menu, X, Sun, Moon } from "lucide-react";
 
 export default function Header() {
   const { i18n } = useTranslation();
   const [fade, setFade] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [darkMode, setDarkMode] = useState(false);
+
+  // 🌓 зчитування теми при завантаженні
+  useEffect(() => {
+    const savedTheme = localStorage.getItem("theme");
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    const isDark = savedTheme === "dark" || (!savedTheme && prefersDark);
+    setDarkMode(isDark);
+    document.documentElement.classList.toggle("dark", isDark);
+  }, []);
+
+  // 🔄 перемикання теми
+  const toggleTheme = () => {
+    const newTheme = !darkMode;
+    setDarkMode(newTheme);
+    document.documentElement.classList.toggle("dark", newTheme);
+    localStorage.setItem("theme", newTheme ? "dark" : "light");
+  };
 
   const changeLanguage = (lng) => {
     if (lng === i18n.language) return;
@@ -17,7 +35,7 @@ export default function Header() {
     }, 200);
   };
 
-  // 🔄 синхронізація між вкладками
+  // 🔄 синхронізація мови між вкладками
   useEffect(() => {
     const syncLang = (e) => {
       if (e.key === "lang" && e.newValue && e.newValue !== i18n.language) {
@@ -32,7 +50,6 @@ export default function Header() {
     typeof window !== "undefined" &&
     window.location.hostname.startsWith("about.");
 
-  // 🔹 переходи між сторінками
   const goToCourse = () => {
     const lang = localStorage.getItem("lang") || i18n.language || "ru";
     window.location.href = `https://ankstudio.online?lang=${lang}`;
@@ -43,14 +60,12 @@ export default function Header() {
     window.location.href = `https://about.ankstudio.online?lang=${lang}`;
   };
 
-  // 🔹 відкриття / закриття меню
   const toggleMenu = () => {
     const newState = !menuOpen;
     setMenuOpen(newState);
     window.dispatchEvent(new CustomEvent("menu-toggle", { detail: newState }));
   };
 
-  // 🔹 прокрутка до секції
   const scrollToSection = (id) => {
     const section = document.getElementById(id);
     if (section) section.scrollIntoView({ behavior: "smooth" });
@@ -58,7 +73,7 @@ export default function Header() {
     window.dispatchEvent(new CustomEvent("menu-toggle", { detail: false }));
   };
 
-  // 🌸 якщо це about-сторінка → показуємо кнопки мов і "курс"
+  // 🌸 About-сторінка
   if (isAbout) {
     return (
       <header className="absolute top-6 right-6 z-20 flex flex-wrap justify-end items-center gap-2">
@@ -90,14 +105,27 @@ export default function Header() {
             {lng.toUpperCase()}
           </button>
         ))}
+
+        {/* 🌓 Тема */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-md bg-white/50 dark:bg-white/10 border border-white/30 hover:bg-white/70 dark:hover:bg-white/20 transition-all"
+          aria-label="Змінити тему"
+        >
+          {darkMode ? (
+            <Sun className="w-5 h-5 text-yellow-400" />
+          ) : (
+            <Moon className="w-5 h-5 text-pink-500" />
+          )}
+        </button>
       </header>
     );
   }
 
-  // 🌷 головна сторінка
+  // 🌷 Головна сторінка
   return (
     <header className="absolute top-6 left-6 right-6 z-50 flex justify-between items-center">
-      {/* кнопка меню зліва */}
+      {/* Меню */}
       <button
         onClick={toggleMenu}
         className="p-2 rounded-md bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-lg
@@ -111,12 +139,26 @@ export default function Header() {
         )}
       </button>
 
-      {/* кнопки мов і “Обо мне” */}
+      {/* Мови + Тема + "Про мене" */}
       <div
         className={`flex gap-2 items-center flex-wrap justify-end transition-opacity duration-300 ${
           fade ? "opacity-0" : "opacity-100"
         }`}
       >
+        {/* Тема */}
+        <button
+          onClick={toggleTheme}
+          className="p-2 rounded-md bg-white/50 dark:bg-white/10 border border-white/30 hover:bg-white/70 dark:hover:bg-white/20 transition-all"
+          aria-label="Змінити тему"
+        >
+          {darkMode ? (
+            <Sun className="w-5 h-5 text-yellow-400" />
+          ) : (
+            <Moon className="w-5 h-5 text-pink-500" />
+          )}
+        </button>
+
+        {/* Кнопка "Про мене" */}
         <button
           onClick={goToAbout}
           className="px-3 py-1 text-sm rounded-md border border-pink-200 dark:border-neutral-700 
@@ -132,6 +174,7 @@ export default function Header() {
             : "Про мене"}
         </button>
 
+        {/* Мови */}
         {["ru", "uk"].map((lng) => (
           <button
             key={lng}
@@ -147,7 +190,7 @@ export default function Header() {
         ))}
       </div>
 
-      {/* скляне меню */}
+      {/* Скляне повноекранне меню */}
       {menuOpen && (
         <div
           className="fixed inset-0 bg-white/50 dark:bg-black/50 backdrop-blur-2xl z-40 flex flex-col items-center justify-center 
