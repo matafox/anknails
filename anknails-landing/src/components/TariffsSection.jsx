@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Check, X, FileText, Sparkles, Tag, Clock } from "lucide-react";
+import { Check, X, FileText, Sparkles, Clock } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function TariffsSection() {
@@ -43,13 +43,12 @@ export default function TariffsSection() {
     return () => clearInterval(interval);
   }, []);
 
-  // 💶 Ціни перераховані з PLN → EUR (~4.3 zł = 1 €)
   const tariffs = [
     {
       title: t("tariff_basic"),
       desc: t("tariff_basic_desc"),
       oldPrice: "230 €",
-      newPrice: "165 €",
+      newPrice: "160 €",
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
@@ -64,7 +63,7 @@ export default function TariffsSection() {
       title: t("tariff_pro"),
       desc: t("tariff_pro_desc"),
       oldPrice: "320 €",
-      newPrice: "235 €",
+      newPrice: "230 €",
       features: [
         { label: t("feature_theory"), included: true },
         { label: t("feature_practice"), included: true },
@@ -130,30 +129,28 @@ export default function TariffsSection() {
 
               <p className="text-gray-600 dark:text-gray-300 mb-6">{plan.desc}</p>
 
-              {/* 💰 Ціна + таймер */}
-              <div className="relative inline-flex items-end gap-3 mb-8">
-                <div className="flex flex-col items-center">
-                  <span className="text-gray-400 dark:text-gray-500 text-sm line-through select-none">
-                    {plan.oldPrice}
-                  </span>
-                  <span
-                    className={`text-3xl font-extrabold tracking-tight ${
-                      plan.highlight
-                        ? "text-rose-600 dark:text-pink-300"
-                        : "text-pink-600 dark:text-pink-400"
-                    } animate-pulse-slow`}
-                  >
-                    {plan.newPrice}
-                  </span>
-                </div>
+              {/* 💰 Ціна по центру */}
+              <div className="flex flex-col items-center mb-6">
+                <span className="text-gray-400 dark:text-gray-500 text-sm line-through select-none mb-1">
+                  {plan.oldPrice}
+                </span>
+                <span
+                  className={`text-5xl sm:text-6xl font-extrabold tracking-tight ${
+                    plan.highlight
+                      ? "text-rose-600 dark:text-pink-300"
+                      : "text-pink-600 dark:text-pink-400"
+                  } animate-pulse-slow`}
+                >
+                  {plan.newPrice}
+                </span>
+              </div>
 
-                {/* 🕒 Таймер */}
-                <div className="flex items-center gap-1 text-xs px-3 py-1 rounded-full border bg-white/60 dark:bg-white/10 border-pink-200/40 dark:border-pink-500/30 text-pink-600 dark:text-pink-300 font-medium backdrop-blur-sm shadow-sm">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>
-                    {t("discount_timer", "Акція закінчиться через")} {remainingTime}
-                  </span>
-                </div>
+              {/* 🕒 Таймер нижче суми */}
+              <div className="flex items-center justify-center gap-2 text-xs sm:text-sm px-4 py-2 rounded-full border bg-white/60 dark:bg-white/10 border-pink-200/40 dark:border-pink-500/30 text-pink-600 dark:text-pink-300 font-medium backdrop-blur-sm shadow-sm mb-8 max-w-fit mx-auto">
+                <Clock className="w-4 h-4" />
+                <span>
+                  {t("discount_timer", "Акція закінчиться через")} {remainingTime}
+                </span>
               </div>
 
               <ul className="space-y-3 text-left mb-6">
