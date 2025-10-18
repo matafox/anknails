@@ -1,6 +1,6 @@
 /** @type {import('tailwindcss').Config} */
 export default {
-  darkMode: "class", // 🩶 увімкни режим через клас
+  darkMode: "class", // media - системний
   content: [
     "./index.html",
     "./src/**/*.{js,jsx,ts,tsx}",
