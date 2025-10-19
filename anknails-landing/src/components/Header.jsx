@@ -89,17 +89,20 @@ export default function Header({ onMenuToggle }) {
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* 🩷 Логотип */}
-        <span
-          className={`text-2xl sm:text-3xl font-bold tracking-wide transition-all ${
-            scrolled
-              ? "text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-pink-400"
-              : darkMode
-              ? "text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]"
-              : "text-black"
-          }`}
-        >
-          ANK Studio
-        </span>
+        <button
+  onClick={() => (window.location.href = "https://ankstudio.online")}
+  className={`text-2xl sm:text-3xl font-bold tracking-wide transition-all 
+              focus:outline-none active:scale-95
+              ${
+                scrolled
+                  ? "text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-pink-400"
+                  : darkMode
+                  ? "text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]"
+                  : "text-black"
+              }`}
+>
+  ANK Studio
+</button>
 
         {/* 🍔 Меню */}
         <button
