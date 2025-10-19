@@ -135,25 +135,25 @@ export default function Header({ onMenuToggle }) {
               : "bg-white/70 border border-pink-200/40 shadow-[0_0_50px_rgba(255,182,193,0.4)]"
             }`}
           >
-            {menuItems.map(({ icon: Icon, label, id }) => (
-              <button
-                key={id}
-                onClick={() => scrollToSection(id)}
-                className={`flex items-center justify-start gap-4 w-full py-4 px-5 text-lg font-semibold rounded-2xl border transition-all duration-300 hover:scale-[1.02]
-                  ${
-                    darkMode
-                      ? "text-fuchsia-100 bg-gradient-to-r from-[#2a0f3a]/50 to-[#3b174c]/40 border-fuchsia-500/20 hover:border-fuchsia-400/40 hover:from-pink-700/40 hover:to-rose-600/40"
-                      : "text-gray-800 bg-white border-pink-200 hover:bg-pink-50 hover:border-pink-300"
-                  }`}
-              >
-                <Icon
-                  className={`w-5 h-5 ${
-                    darkMode ? "text-pink-400" : "text-pink-500"
-                  }`}
-                />
-                <span>{label}</span>
-              </button>
-            ))}
+{menuItems.map(({ icon: Icon, label, id }) => (
+  <button
+    key={id}
+    onClick={() => scrollToSection(id)}
+    className={`flex items-center justify-start gap-4 w-full py-4 px-5 text-lg font-semibold rounded-2xl border transition-all duration-300 hover:scale-[1.02]
+      ${
+        darkMode
+          ? "bg-gradient-to-r from-[#2a0f3a]/50 to-[#3b174c]/40 border-fuchsia-500/20 hover:border-fuchsia-400/40 hover:from-pink-700/40 hover:to-rose-600/40"
+          : "bg-white border-pink-200 hover:bg-pink-50 hover:border-pink-300"
+      }`}
+  >
+    <Icon
+      className="w-5 h-5 text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400"
+    />
+    <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
+      {label}
+    </span>
+  </button>
+))}
 
             {/* 🔗 Про мене */}
             <a
