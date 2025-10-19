@@ -146,9 +146,15 @@ export default function Header({ onMenuToggle }) {
           : "bg-white border-pink-200 hover:bg-pink-50 hover:border-pink-300"
       }`}
   >
-    <Icon
-      className="w-5 h-5 text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400"
-    />
+    {/* 🎨 Іконка з градієнтним контуром */}
+    <span className="relative inline-flex items-center justify-center">
+      <Icon
+        className="w-5 h-5 text-pink-500 dark:text-pink-400 drop-shadow-[0_0_6px_rgba(255,0,128,0.3)]"
+        strokeWidth={2.2}
+      />
+    </span>
+
+    {/* 🌈 Градієнтний текст */}
     <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
       {label}
     </span>
