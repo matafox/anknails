@@ -67,14 +67,12 @@ export default function Header({ onMenuToggle }) {
   const menuItems =
     i18n.language === "ru"
       ? [
-          { icon: Home, label: "Главная", id: "home" },
           { icon: Sparkles, label: "Модули", id: "modules" },
           { icon: Star, label: "Для кого курс", id: "forwhom" },
           { icon: Gift, label: "Тарифы", id: "tariffs" },
           { icon: HelpCircle, label: "FAQ", id: "faq" },
         ]
       : [
-          { icon: Home, label: "Головна", id: "home" },
           { icon: Sparkles, label: "Модулі", id: "modules" },
           { icon: Star, label: "Для кого курс", id: "forwhom" },
           { icon: Gift, label: "Тарифи", id: "tariffs" },
