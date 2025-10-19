@@ -100,17 +100,24 @@ export default function Header({ onMenuToggle }) {
   ANK Studio
 </button>
 
-        {/* 🍔 Меню */}
-        <button
-          onClick={toggleMenu}
-          className="p-2 rounded-xl bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-md hover:scale-105 transition-all"
-        >
-          {menuOpen ? (
-            <X className="w-6 h-6 text-pink-500" />
-          ) : (
-            <Menu className="w-6 h-6 text-pink-400" />
-          )}
-        </button>
+{/* 🍔 Меню / ❌ Закрити */}
+<button
+  onClick={toggleMenu}
+  className="p-2 rounded-xl bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-md 
+             hover:scale-105 transition-all shadow-md focus:outline-none"
+>
+  {menuOpen ? (
+    <X
+      className="w-6 h-6 text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 drop-shadow-[0_0_8px_rgba(255,0,128,0.4)]"
+      strokeWidth={2.3}
+    />
+  ) : (
+    <Menu
+      className="w-6 h-6 text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 drop-shadow-[0_0_8px_rgba(255,0,128,0.4)]"
+      strokeWidth={2.3}
+    />
+  )}
+</button>
       </div>
 
       {/* 🌸 Повноекранне меню */}
