@@ -89,17 +89,13 @@ export default function Header({ onMenuToggle }) {
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* 🩷 Логотип */}
-        <button
+<button
   onClick={() => (window.location.href = "https://ankstudio.online")}
   className={`text-2xl sm:text-3xl font-bold tracking-wide transition-all 
-              focus:outline-none active:scale-95
-              ${
-                scrolled
-                  ? "text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 to-pink-400"
-                  : darkMode
-                  ? "text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.3)]"
-                  : "text-black"
-              }`}
+              focus:outline-none active:scale-95 
+              text-transparent bg-clip-text bg-gradient-to-r 
+              from-fuchsia-500 via-pink-500 to-rose-400
+              hover:opacity-90`}
 >
   ANK Studio
 </button>
