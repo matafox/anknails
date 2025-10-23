@@ -50,7 +50,7 @@ export default function LoginPage() {
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 bg-clip-text text-transparent">
-            {i18n.language === "ru" ? "Вход для администратора" : "Вхід для адміністратора"}
+            {i18n.language === "ru" ? "Вход" : "Вхід"}
           </h1>
           <p className="mt-2 text-sm opacity-70">
             {i18n.language === "ru"
