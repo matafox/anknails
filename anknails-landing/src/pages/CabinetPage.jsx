@@ -1,6 +1,40 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LogOut, User, Menu, X, BookOpen, Clock, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  LogOut,
+  User,
+  Menu,
+  X,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-react";
+
+// 🎥 Безпечний компонент YouTube (no-cookie)
+const SafeYoutube = ({ url }) => {
+  if (!url) return null;
+
+  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+  const videoId = match ? match[1] : null;
+
+  if (!videoId)
+    return (
+      <p className="text-sm text-gray-500 text-center py-4">
+        ❌ Невірне посилання на YouTube
+      </p>
+    );
+
+  return (
+    <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
+      <iframe
+        src={`https://www.youtube-nocookie.com/embed/${videoId}?modestbranding=1&rel=0&showinfo=0`}
+        allowFullScreen
+        loading="lazy"
+        className="w-full h-full"
+      />
+    </div>
+  );
+};
 
 export default function CabinetPage() {
   const { i18n } = useTranslation();
@@ -221,33 +255,40 @@ export default function CabinetPage() {
                             key={l.id}
                             className="p-4 rounded-xl border border-pink-200/50 bg-white/50 shadow-sm"
                           >
-                            <h4 className="font-semibold text-pink-600 mb-2">{l.title}</h4>
-                            {l.youtube && (
+                            <h4 className="font-semibold text-pink-600 mb-2">
+                              {l.title}
+                            </h4>
+
+                            {/* 🎥 YouTube відео */}
+                            {l.youtube || l.embed_url ? (
                               <div className="mb-3">
-                                <iframe
-                                  className="w-full aspect-video rounded-xl"
-                                  src={l.youtube.replace("watch?v=", "embed/")}
-                                  allowFullScreen
-                                ></iframe>
+                                <SafeYoutube url={l.youtube || l.embed_url} />
                               </div>
-                            )}
+                            ) : null}
+
                             {l.description && (
-                              <p className="text-sm opacity-80 mb-2">{l.description}</p>
+                              <p className="text-sm opacity-80 mb-2">
+                                {l.description}
+                              </p>
                             )}
+
                             {l.homework && (
                               <p className="text-sm mt-2">
                                 <span className="font-semibold text-pink-500">
-                                  📝 {i18n.language === "ru"
+                                  📝{" "}
+                                  {i18n.language === "ru"
                                     ? "Домашнее задание:"
                                     : "Домашнє завдання:"}
                                 </span>{" "}
                                 {l.homework}
                               </p>
                             )}
+
                             {l.materials && (
                               <p className="text-sm mt-2">
                                 <span className="font-semibold text-pink-500">
-                                  📚 {i18n.language === "ru"
+                                  📚{" "}
+                                  {i18n.language === "ru"
                                     ? "Материалы:"
                                     : "Матеріали:"}
                                 </span>{" "}
