@@ -20,7 +20,7 @@ export default function CabinetPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  // 🧠 Авторизація + отримання даних користувача
+  // 🧠 Авторизація + отримання користувача
   useEffect(() => {
     const token = localStorage.getItem("user_token");
     const email = localStorage.getItem("user_email");
@@ -43,38 +43,28 @@ export default function CabinetPage() {
       return;
     }
 
-    // 👤 Отримати користувача з бекенду
     fetch(`${BACKEND}/api/users`)
       .then((res) => res.json())
       .then((data) => {
         const found = data.users?.find((u) => u.email === email);
-        if (found) {
-          setUser({
-            email: found.email,
-            name: found.name || null,
-            expires_at: new Date(found.expires_at).toLocaleDateString(),
-            active: found.active,
-          });
-        } else {
-          setUser({
-            email,
-            name: null,
-            expires_at: expiryDate.toLocaleDateString(),
-            active: true,
-          });
-        }
+        setUser({
+          email,
+          name: found?.name || null,
+          expires_at: new Date(found?.expires_at || expires).toLocaleDateString(),
+          active: found?.active ?? true,
+        });
       })
-      .catch(() => {
+      .catch(() =>
         setUser({
           email,
           name: null,
           expires_at: expiryDate.toLocaleDateString(),
           active: true,
-        });
-      });
+        })
+      );
   }, [i18n.language]);
 
-  // 🎀 Банер із бекенду
+  // 🎀 Банер
   useEffect(() => {
     fetch(`${BACKEND}/api/banner`)
       .then((res) => res.json())
@@ -82,7 +72,7 @@ export default function CabinetPage() {
       .catch(() => console.error("Помилка завантаження банера"));
   }, []);
 
-  // 📘 Модулі з бекенду
+  // 📘 Модулі
   useEffect(() => {
     fetch(`${BACKEND}/api/modules`)
       .then((res) => res.json())
@@ -96,7 +86,6 @@ export default function CabinetPage() {
   };
 
   if (!user) return null;
-
   const displayName = user.name?.trim() || user.email;
 
   return (
@@ -123,7 +112,7 @@ export default function CabinetPage() {
         </button>
       </header>
 
-      {/* 🩷 Бокове меню */}
+      {/* 🩷 Меню */}
       <aside
         className={`md:w-72 md:static fixed top-0 left-0 h-full md:h-auto transform ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -166,60 +155,64 @@ export default function CabinetPage() {
       </aside>
 
       {/* 🌸 Контент */}
-      <main className="flex-1 p-5 md:p-10 overflow-y-auto">
-        {/* 🎀 Банер */}
-        {banner && banner.active && (
-          <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-            {banner.image_url && (
-              <img
-                src={banner.image_url}
-                alt="Banner"
-                className="w-full h-48 md:h-64 object-cover"
-              />
-            )}
-            <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
-              {banner.title}
-            </div>
-          </div>
-        )}
-
-        {/* 📘 Модулі */}
-        {modules.length > 0 ? (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            {modules.map((mod) => (
-              <div
-                key={mod.id}
-                className={`p-5 rounded-2xl border transition-all hover:shadow-[0_0_20px_rgba(255,0,128,0.2)] ${
-                  darkMode
-                    ? "border-fuchsia-900/30 bg-[#1a0a1f]/70"
-                    : "border-pink-200 bg-white/80"
-                }`}
-              >
-                <div className="flex items-center gap-3 mb-3">
-                  <BookOpen className="w-6 h-6 text-pink-500" />
-                  <h3 className="text-lg font-semibold">{mod.title}</h3>
-                </div>
-                <p className="text-sm opacity-80 mb-3">{mod.description}</p>
-                <div className="flex items-center gap-2 text-sm opacity-70">
-                  <Clock className="w-4 h-4" />
-                  {i18n.language === "ru" ? "Уроков" : "Уроків"}: {mod.lessons}
-                </div>
+      <main className="flex-1 flex flex-col p-5 md:p-10">
+        <div className="flex-grow">
+          {/* 🎀 Банер */}
+          {banner && banner.active && (
+            <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+              {banner.image_url && (
+                <img
+                  src={banner.image_url}
+                  alt="Banner"
+                  className="w-full h-48 md:h-64 object-cover"
+                />
+              )}
+              <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
+                {banner.title}
               </div>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20 opacity-70">
-            <p className="text-lg">
-              {i18n.language === "ru"
-                ? "Модули пока не добавлены"
-                : "Модулі ще не додані"}
-            </p>
-          </div>
-        )}
+            </div>
+          )}
 
-        <p className="mt-10 text-sm opacity-60 text-center">
+          {/* 📘 Модулі */}
+          {modules.length > 0 ? (
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+              {modules.map((mod) => (
+                <div
+                  key={mod.id}
+                  className={`p-5 rounded-2xl border transition-all hover:shadow-[0_0_20px_rgba(255,0,128,0.2)] ${
+                    darkMode
+                      ? "border-fuchsia-900/30 bg-[#1a0a1f]/70"
+                      : "border-pink-200 bg-white/80"
+                  }`}
+                >
+                  <div className="flex items-center gap-3 mb-3">
+                    <BookOpen className="w-6 h-6 text-pink-500" />
+                    <h3 className="text-lg font-semibold">{mod.title}</h3>
+                  </div>
+                  <p className="text-sm opacity-80 mb-3">{mod.description}</p>
+                  <div className="flex items-center gap-2 text-sm opacity-70">
+                    <Clock className="w-4 h-4" />
+                    {i18n.language === "ru" ? "Уроков" : "Уроків"}:{" "}
+                    {mod.lessons}
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="text-center py-20 opacity-70">
+              <p className="text-lg">
+                {i18n.language === "ru"
+                  ? "Модули пока не добавлены"
+                  : "Модулі ще не додані"}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* 🩶 Футер завжди знизу */}
+        <footer className="mt-auto text-sm opacity-60 text-center py-6">
           ANK Studio LMS © {new Date().getFullYear()}
-        </p>
+        </footer>
       </main>
     </div>
   );
