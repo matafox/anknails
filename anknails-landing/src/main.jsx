@@ -7,35 +7,18 @@ import NotFound from "./pages/NotFound.jsx";
 import "./index.css";
 import "./i18n/i18n.js";
 
-const host = window.location.hostname;
-const isAboutPage = host.includes("about.");
-
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter basename="/">
+    <BrowserRouter>
       <Routes>
-        {isAboutPage ? (
-          <>
-            <Route path="/" element={<AboutApp />} />
-            <Route path="*" element={<NotFound />} />
-          </>
-        ) : (
-          <>
-            <Route path="/" element={<App />} />
-            <Route path="/about" element={<AboutApp />} />
-            <Route path="*" element={<NotFound />} />
-          </>
-        )}
+        <Route path="/" element={<App />} />
+        <Route path="/about" element={<AboutApp />} />
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
 );
 
-// 👇 Пінг до Railway бекенду
 try {
-  fetch("https://anknails-production.up.railway.app/ping")
-    .then(() => console.log("Analytics ping sent"))
-    .catch(() => {});
-} catch (e) {
-  console.warn("Ping error:", e);
-}
+  fetch("https://anknails-production.up.railway.app/ping").catch(() => {});
+} catch {}
