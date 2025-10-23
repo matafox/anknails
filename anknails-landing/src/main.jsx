@@ -18,7 +18,3 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     </BrowserRouter>
   </React.StrictMode>
 );
-
-try {
-  fetch("https://anknails-production.up.railway.app/ping").catch(() => {});
-} catch {}
