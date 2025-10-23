@@ -4,7 +4,7 @@ import { Edit3, PlusCircle, Trash2, Save, FolderMinus } from "lucide-react";
 export default function ModulesTab({ darkMode, i18n }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
   const [modules, setModules] = useState([]);
-  const [form, setForm] = useState({ title: "", description: "", lessons: 0 });
+  const [form, setForm] = useState({ title: "", description: "", lessons: "" });
   const [editId, setEditId] = useState(null);
   const [expanded, setExpanded] = useState(null);
   const [lessonForm, setLessonForm] = useState({
@@ -24,6 +24,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     setModules(data.modules || []);
   };
 
+  // 🧠 Завантаження уроків
   const fetchLessons = async (moduleId) => {
     const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
     const data = await res.json();
@@ -44,10 +45,14 @@ export default function ModulesTab({ darkMode, i18n }) {
     await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: "anka12341", ...form }),
+      body: JSON.stringify({
+        token: "anka12341",
+        ...form,
+        lessons: form.lessons === "" ? 0 : Number(form.lessons),
+      }),
     });
 
-    setForm({ title: "", description: "", lessons: 0 });
+    setForm({ title: "", description: "", lessons: "" });
     setEditId(null);
     fetchModules();
   };
@@ -57,7 +62,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     setForm({
       title: mod.title,
       description: mod.description,
-      lessons: mod.lessons || 0,
+      lessons: mod.lessons ?? "",
     });
     setEditId(mod.id);
   };
@@ -134,6 +139,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     fetchLessons(moduleId);
   };
 
+  // 🎞️ Безпечний YouTube iFrame
   const SafeYoutube = ({ embedUrl }) =>
     embedUrl ? (
       <iframe
@@ -163,10 +169,15 @@ export default function ModulesTab({ darkMode, i18n }) {
         />
         <input
           type="number"
-          value={form.lessons}
-          onChange={(e) =>
-            setForm({ ...form, lessons: parseInt(e.target.value) || 0 })
-          }
+          value={form.lessons === null ? "" : form.lessons}
+          onChange={(e) => {
+            const val = e.target.value;
+            setForm({
+              ...form,
+              lessons: val === "" ? "" : Number(val),
+            });
+          }}
+          onFocus={(e) => e.target.select()} // 💡 виділяє все число при фокусі
           placeholder={i18n.language === "ru" ? "Количество уроков" : "Кількість уроків"}
           className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:ring-1 focus:ring-pink-500 outline-none"
         />
