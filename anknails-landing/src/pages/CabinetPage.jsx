@@ -61,13 +61,12 @@ export default function CabinetPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  // 🧠 Авторизація
+  // 🧠 Авторизація і користувач
   useEffect(() => {
-    const token = localStorage.getItem("user_token");
     const email = localStorage.getItem("user_email");
     const expires = localStorage.getItem("expires_at");
 
-    if (!token || !email || !expires) {
+    if (!email || !expires) {
       window.location.href = "/login";
       return;
     }
@@ -75,51 +74,49 @@ export default function CabinetPage() {
     const expiryDate = new Date(expires);
     if (expiryDate < new Date()) {
       localStorage.clear();
-      alert(
-        i18n.language === "ru"
-          ? "Срок действия аккаунта истек"
-          : "Термін дії акаунта минув"
-      );
+      alert("Термін дії акаунта минув");
       window.location.href = "/login";
       return;
     }
 
+    // 🧾 Отримати користувача і course_id
     fetch(`${BACKEND}/api/users`)
       .then((res) => res.json())
       .then((data) => {
         const found = data.users?.find((u) => u.email === email);
+        if (!found) {
+          window.location.href = "/login";
+          return;
+        }
         setUser({
+          id: found.id,
           email,
-          name: found?.name || null,
-          expires_at: new Date(found?.expires_at || expires).toLocaleDateString(),
-          active: found?.active ?? true,
+          name: found.name || null,
+          expires_at: new Date(found.expires_at).toLocaleDateString(),
+          course_id: found.course_id || null,
         });
       })
-      .catch(() =>
-        setUser({
-          email,
-          name: null,
-          expires_at: expiryDate.toLocaleDateString(),
-          active: true,
-        })
-      );
-  }, [i18n.language]);
+      .catch(() => {
+        window.location.href = "/login";
+      });
+  }, []);
 
   // 🎀 Банер
   useEffect(() => {
     fetch(`${BACKEND}/api/banner`)
       .then((res) => res.json())
       .then((data) => setBanner(data))
-      .catch(() => console.error("Помилка завантаження банера"));
+      .catch(() => {});
   }, []);
 
-  // 📘 Модулі
+  // 📘 Модулі користувача (за course_id)
   useEffect(() => {
-    fetch(`${BACKEND}/api/modules`)
+    if (!user?.course_id) return;
+    fetch(`${BACKEND}/api/modules/${user.course_id}`)
       .then((res) => res.json())
       .then((data) => setModules(data.modules || []))
-      .catch(() => console.error("Помилка модулів"));
-  }, []);
+      .catch(() => console.error("Помилка завантаження модулів"));
+  }, [user]);
 
   // 📚 Уроки
   const fetchLessons = async (moduleId) => {
@@ -184,7 +181,7 @@ export default function CabinetPage() {
         </button>
       </header>
 
-      {/* 📚 Меню з модулями */}
+      {/* 📚 Меню */}
       <aside
         className={`w-72 flex-shrink-0 fixed md:static top-0 h-screen md:h-auto overflow-y-auto transition-transform duration-300 z-10 md:z-0 border-r backdrop-blur-xl ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -202,68 +199,72 @@ export default function CabinetPage() {
               {user.name || user.email.split("@")[0]}
             </h2>
             <p className="text-sm opacity-70">
-              {i18n.language === "ru" ? "Доступ до:" : "Доступ до:"}{" "}
-              {user.expires_at}
+              Доступ до: {user.expires_at}
             </p>
           </div>
 
-          {/* 📘 Модулі з кількістю уроків */}
-          <div className="space-y-2">
-            {modules.map((mod) => (
-              <div key={mod.id}>
-                <button
-                  onClick={() => toggleModule(mod.id)}
-                  className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
-                >
-                  <span className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4" />
-                    {mod.title}
-                  </span>
+          {/* 📘 Модулі */}
+          {modules.length === 0 ? (
+            <p className="text-center text-sm opacity-70">
+              {i18n.language === "ru"
+                ? "Модулей нет или курс не назначен"
+                : "Модулів ще немає або курс не призначено"}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {modules.map((mod) => (
+                <div key={mod.id}>
+                  <button
+                    onClick={() => toggleModule(mod.id)}
+                    className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
+                  >
+                    <span className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4" />
+                      {mod.title}
+                    </span>
 
-                  {/* 🧮 Кількість уроків */}
-                  <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
-                    {mod.lessons || 0}
-                  </span>
+                    <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
+                      {mod.lessons || 0}
+                    </span>
 
-                  {expanded === mod.id ? (
-                    <ChevronUp className="w-4 h-4" />
-                  ) : (
-                    <ChevronDown className="w-4 h-4" />
+                    {expanded === mod.id ? (
+                      <ChevronUp className="w-4 h-4" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4" />
+                    )}
+                  </button>
+
+                  {expanded === mod.id && (
+                    <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
+                      {lessons[mod.id]?.map((l) => (
+                        <button
+                          key={l.id}
+                          onClick={() => {
+                            setSelectedLesson(l);
+                            setMenuOpen(false);
+                          }}
+                          className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
+                            selectedLesson?.id === l.id
+                              ? "bg-pink-500/20 text-pink-600"
+                              : "opacity-80"
+                          }`}
+                        >
+                          <PlayCircle className="w-3 h-3" /> {l.title}
+                        </button>
+                      ))}
+                    </div>
                   )}
-                </button>
-
-                {/* 📖 Уроки */}
-                {expanded === mod.id && (
-                  <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
-                    {lessons[mod.id]?.map((l) => (
-                      <button
-                        key={l.id}
-                        onClick={() => {
-                          setSelectedLesson(l);
-                          setMenuOpen(false);
-                        }}
-                        className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
-                          selectedLesson?.id === l.id
-                            ? "bg-pink-500/20 text-pink-600"
-                            : "opacity-80"
-                        }`}
-                      >
-                        <PlayCircle className="w-3 h-3" /> {l.title}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* 🚪 Вихід */}
           <button
             onClick={handleLogout}
             className="mt-8 w-full py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all"
           >
-            <LogOut className="inline w-4 h-4 mr-1" />
-            {i18n.language === "ru" ? "Выйти" : "Вийти"}
+            <LogOut className="inline w-4 h-4 mr-1" /> Вийти
           </button>
         </div>
       </aside>
@@ -312,9 +313,7 @@ export default function CabinetPage() {
             {/* 📄 Опис */}
             {selectedLesson.description && (
               <div className="mt-4">
-                <h4 className="font-semibold mb-1">
-                  {i18n.language === "ru" ? "Описание" : "Опис"}
-                </h4>
+                <h4 className="font-semibold mb-1">Опис</h4>
                 <p>{selectedLesson.description}</p>
               </div>
             )}
@@ -323,10 +322,7 @@ export default function CabinetPage() {
             {selectedLesson.homework && (
               <div className="mt-4">
                 <h4 className="font-semibold text-pink-500 mb-1">
-                  📝{" "}
-                  {i18n.language === "ru"
-                    ? "Домашнее задание"
-                    : "Домашнє завдання"}
+                  📝 Домашнє завдання
                 </h4>
                 <p>{selectedLesson.homework}</p>
               </div>
@@ -336,8 +332,7 @@ export default function CabinetPage() {
             {selectedLesson.materials && (
               <div className="mt-4">
                 <h4 className="font-semibold text-pink-500 mb-1">
-                  📚{" "}
-                  {i18n.language === "ru" ? "Материалы" : "Матеріали"}
+                  📚 Матеріали
                 </h4>
                 <p>{selectedLesson.materials}</p>
               </div>
