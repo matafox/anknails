@@ -116,6 +116,7 @@ export default function ModulesTab({ darkMode, i18n }) {
       youtube: "",
       homework: "",
       materials: "",
+      type: "theory",
     });
     setEditingLessonId(null);
     fetchLessons(moduleId);
@@ -143,6 +144,7 @@ export default function ModulesTab({ darkMode, i18n }) {
         : "",
       homework: lesson.homework || "",
       materials: lesson.materials || "",
+      type: lesson.type || "theory",
     });
   };
 
@@ -412,6 +414,7 @@ export default function ModulesTab({ darkMode, i18n }) {
                             youtube: "",
                             homework: "",
                             materials: "",
+                            type: "theory",
                           });
                         }}
                         className="px-4 py-2 bg-gray-300 rounded-lg text-sm flex items-center gap-1"
