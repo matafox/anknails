@@ -1,21 +1,19 @@
-# 🐍 Офіційний Python образ
+# 🐍 Python base image
 FROM python:3.11-slim
 
-# 📂 Робоча директорія
+# 📂 Workdir
 WORKDIR /app
 
-# 🔧 Скопіюємо залежності
+# 🔧 Copy dependencies
 COPY backend/requirements.txt ./requirements.txt
-
-# 📦 Встановимо залежності
 RUN pip install --no-cache-dir -r requirements.txt
 
-# 📂 Скопіюємо код бекенду
+# 📦 Copy backend code
 COPY backend ./backend
 
-# 🌍 Змінна середовища для Railway
-ENV PORT=8000
-EXPOSE 8000
+# 🌍 Railway sets PORT automatically
+ENV PORT=${PORT:-8000}
+EXPOSE $PORT
 
-# 🚀 Запускаємо uvicorn
-CMD ["python", "-m", "uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000"]
+# 🚀 Start FastAPI with dynamic port
+CMD ["sh", "-c", "python -m uvicorn backend.app:app --host 0.0.0.0 --port $PORT"]
