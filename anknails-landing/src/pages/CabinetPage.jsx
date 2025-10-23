@@ -203,7 +203,7 @@ export default function CabinetPage() {
             : "border-pink-200 bg-white/80"
         }`}
       >
-        <div className="p-6">
+        <div className="p-6 flex-1 overflow-y-auto">
           {/* 👩‍🎓 Профіль */}
           <div className="flex flex-col items-center text-center mb-6">
             <User className="w-16 h-16 text-pink-500 mb-2" />
@@ -216,13 +216,13 @@ export default function CabinetPage() {
           </div>
 
           {/* 📘 Модулі */}
-          <div className="space-y-2">
-            {modules.length === 0 ? (
-              <p className="text-center text-sm opacity-70">
-                {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
-              </p>
-            ) : (
-              modules.map((mod) => (
+          {modules.length === 0 ? (
+            <p className="text-center text-sm opacity-70">
+              {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {modules.map((mod) => (
                 <div key={mod.id}>
                   <button
                     onClick={() => toggleModule(mod.id)}
@@ -258,53 +258,41 @@ export default function CabinetPage() {
                           }`}
                         >
                           <PlayCircle className="w-3 h-3" /> {l.title}
-                          {l.type && (
-                            <span
-                              className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
-                                l.type === "practice"
-                                  ? "bg-purple-100 text-purple-700"
-                                  : "bg-pink-100 text-pink-700"
-                              }`}
-                            >
-                              {l.type === "practice"
-                                ? t("Практика", "Практика")
-                                : t("Теорія", "Теория")}
-                            </span>
-                          )}
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
-              ))
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
 
-        {/* 🔧 Низ меню: тема, мова, вихід */}
+        {/* ⚙️ Низ меню */}
         <div className="p-6 border-t border-pink-200/30 space-y-5">
-          {/* 🌗 Перемикач теми */}
+          {/* 🌗 Тема */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Moon className="w-4 h-4 text-pink-500" />
               <span>{t("Темна тема", "Тёмная тема")}</span>
             </div>
-            <label className="inline-flex items-center cursor-pointer">
-              <input
-                type="checkbox"
-                checked={darkMode}
-                onChange={() => {
-                  const newMode = !darkMode;
-                  setDarkMode(newMode);
-                  document.documentElement.classList.toggle("dark", newMode);
-                  localStorage.setItem("theme", newMode ? "dark" : "light");
-                }}
-                className="sr-only peer"
-              />
-              <div className="relative w-10 h-5 bg-pink-200 rounded-full peer peer-checked:bg-pink-500 transition">
-                <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
-              </div>
-            </label>
+            <div
+              onClick={() => {
+                const newMode = !darkMode;
+                setDarkMode(newMode);
+                document.documentElement.classList.toggle("dark", newMode);
+                localStorage.setItem("theme", newMode ? "dark" : "light");
+              }}
+              className={`relative w-10 h-5 rounded-full cursor-pointer transition-colors ${
+                darkMode ? "bg-pink-500" : "bg-pink-200"
+              }`}
+            >
+              <div
+                className={`absolute top-[2px] left-[2px] w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${
+                  darkMode ? "translate-x-5" : "translate-x-0"
+                }`}
+              ></div>
+            </div>
           </div>
 
           {/* 🌍 Мова */}
@@ -360,7 +348,7 @@ export default function CabinetPage() {
           </div>
         )}
 
-        {/* 📖 Контент уроку */}
+        {/* 📖 Контент */}
         {!selectedLesson ? (
           <div className="flex items-center justify-center flex-1 text-center opacity-70">
             <p className="text-lg">
@@ -379,7 +367,10 @@ export default function CabinetPage() {
               {selectedLesson.title}
             </h2>
 
-            <SafeYoutube url={selectedLesson.videoUrl} videoId={selectedLesson.videoId} />
+            <SafeYoutube
+              url={selectedLesson.videoUrl}
+              videoId={selectedLesson.videoId}
+            />
 
             {selectedLesson.description && (
               <div className="mt-4">
@@ -418,7 +409,9 @@ export default function CabinetPage() {
             <span className="font-medium tracking-wide">
               © {new Date().getFullYear()} ANK Studio LMS
             </span>
-            <span className="hidden sm:inline text-gray-400 dark:text-gray-600">•</span>
+            <span className="hidden sm:inline text-gray-400 dark:text-gray-600">
+              •
+            </span>
             <span className="flex items-center gap-1.5">
               <span className="text-gray-500 dark:text-gray-400">Made with</span>
               <Heart
@@ -436,4 +429,9 @@ export default function CabinetPage() {
               </a>
             </span>
           </div>
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-rose-300/40 to-transparent blur-sm dark:via-rose-600
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-rose-300/40 to-transparent blur-sm dark:via-rose-600/30" />
+        </footer>
+      </main>
+    </div>
+  );
+}
