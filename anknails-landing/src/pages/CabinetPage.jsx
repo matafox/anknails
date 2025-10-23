@@ -63,6 +63,14 @@ export default function CabinetPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
+  // 🌍 Мова
+  useEffect(() => {
+    const savedLang = localStorage.getItem("lang");
+    if (savedLang && savedLang !== i18n.language) {
+      i18n.changeLanguage(savedLang);
+    }
+  }, []);
+
   // 🧠 Авторизація і користувач
   useEffect(() => {
     const email = localStorage.getItem("user_email");
@@ -233,17 +241,6 @@ export default function CabinetPage() {
                     )}
                   </button>
 
-                  {/* 🧾 Опис модуля */}
-                  {mod.description && (
-                    <p
-                      className={`mt-1 text-xs italic leading-snug ${
-                        darkMode ? "text-fuchsia-200/70" : "text-gray-600/80"
-                      }`}
-                    >
-                      {mod.description}
-                    </p>
-                  )}
-
                   {expanded === mod.id && (
                     <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
                       {lessons[mod.id]?.map((l) => (
@@ -281,6 +278,61 @@ export default function CabinetPage() {
               ))}
             </div>
           )}
+
+          {/* 🌗 Перемикач теми + Мова */}
+          <div className="mt-8 space-y-4 text-sm">
+            {/* 🌙 Тема */}
+            <div className="flex items-center gap-2">
+              <span className="text-lg">🌙</span>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <span>{t("Темна тема", "Тёмная тема")}</span>
+                <input
+                  type="checkbox"
+                  checked={darkMode}
+                  onChange={() => {
+                    const newMode = !darkMode;
+                    setDarkMode(newMode);
+                    document.documentElement.classList.toggle("dark", newMode);
+                    localStorage.setItem("theme", newMode ? "dark" : "light");
+                  }}
+                  className="w-4 h-4 accent-pink-500"
+                />
+              </label>
+            </div>
+
+            {/* 🌍 Мова */}
+            <div className="flex items-center gap-3">
+              <span className="text-lg">🌍</span>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => {
+                    i18n.changeLanguage("ru");
+                    localStorage.setItem("lang", "ru");
+                  }}
+                  className={`px-3 py-1 rounded-lg font-medium border transition ${
+                    i18n.language === "ru"
+                      ? "bg-pink-500 text-white border-pink-500"
+                      : "bg-white text-pink-600 border-pink-300"
+                  }`}
+                >
+                  RU
+                </button>
+                <button
+                  onClick={() => {
+                    i18n.changeLanguage("uk");
+                    localStorage.setItem("lang", "uk");
+                  }}
+                  className={`px-3 py-1 rounded-lg font-medium border transition ${
+                    i18n.language === "uk"
+                      ? "bg-pink-500 text-white border-pink-500"
+                      : "bg-white text-pink-600 border-pink-300"
+                  }`}
+                >
+                  UK
+                </button>
+              </div>
+            </div>
+          </div>
 
           {/* 🚪 Вихід */}
           <button
