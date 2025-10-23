@@ -5,13 +5,15 @@ import {
   X,
   Sun,
   Moon,
-  Home,
   Sparkles,
   Gift,
   Star,
   HelpCircle,
   User,
   Globe,
+  LogIn,
+  LogOut,
+  Settings,
 } from "lucide-react";
 
 export default function Header({ onMenuToggle }) {
@@ -19,6 +21,18 @@ export default function Header({ onMenuToggle }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  // 🔑 Перевірка входу
+  useEffect(() => {
+    setIsAdmin(localStorage.getItem("admin_token") === "true");
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("admin_token");
+    setIsAdmin(false);
+    window.location.href = "/";
+  };
 
   // 🌓 Тема
   useEffect(() => {
@@ -60,10 +74,6 @@ export default function Header({ onMenuToggle }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const isAboutPage =
-    typeof window !== "undefined" && window.location.hostname.includes("about.");
-  if (isAboutPage) return null;
-
   const menuItems =
     i18n.language === "ru"
       ? [
@@ -89,16 +99,16 @@ export default function Header({ onMenuToggle }) {
     >
       <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
         {/* 🩷 Логотип */}
-<button
-  onClick={() => (window.location.href = "https://ankstudio.online")}
-  className={`text-2xl sm:text-3xl font-bold tracking-wide transition-all 
+        <button
+          onClick={() => (window.location.href = "https://ankstudio.online")}
+          className={`text-2xl sm:text-3xl font-bold tracking-wide transition-all 
               focus:outline-none active:scale-95 
               text-transparent bg-clip-text bg-gradient-to-r 
               from-fuchsia-500 via-pink-500 to-rose-400
               hover:opacity-90`}
->
-  ANK Studio
-</button>
+        >
+          ANK Studio
+        </button>
 
         {/* 🍔 Меню */}
         <button
@@ -130,54 +140,61 @@ export default function Header({ onMenuToggle }) {
         >
           <div
             className={`w-full max-w-md rounded-3xl p-10 flex flex-col items-stretch space-y-6 
-            ${darkMode
-              ? "bg-[#1a0a1f]/70 border border-pink-500/30 shadow-[0_0_60px_rgba(255,0,128,0.25)]"
-              : "bg-white/70 border border-pink-200/40 shadow-[0_0_50px_rgba(255,182,193,0.4)]"
+            ${
+              darkMode
+                ? "bg-[#1a0a1f]/70 border border-pink-500/30 shadow-[0_0_60px_rgba(255,0,128,0.25)]"
+                : "bg-white/70 border border-pink-200/40 shadow-[0_0_50px_rgba(255,182,193,0.4)]"
             }`}
           >
-{menuItems.map(({ icon: Icon, label, id }) => (
-  <button
-    key={id}
-    onClick={() => scrollToSection(id)}
-    className={`flex items-center justify-start gap-4 w-full py-4 px-5 text-lg font-semibold rounded-2xl border transition-all duration-300 hover:scale-[1.02]
+            {menuItems.map(({ icon: Icon, label, id }) => (
+              <button
+                key={id}
+                onClick={() => scrollToSection(id)}
+                className={`flex items-center justify-start gap-4 w-full py-4 px-5 text-lg font-semibold rounded-2xl border transition-all duration-300 hover:scale-[1.02]
       ${
         darkMode
           ? "bg-gradient-to-r from-[#2a0f3a]/50 to-[#3b174c]/40 border-fuchsia-500/20 hover:border-fuchsia-400/40 hover:from-pink-700/40 hover:to-rose-600/40"
           : "bg-white border-pink-200 hover:bg-pink-50 hover:border-pink-300"
       }`}
+              >
+                <Icon className="w-5 h-5 text-pink-500 dark:text-pink-400" strokeWidth={2.2} />
+                <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
+                  {label}
+                </span>
+              </button>
+            ))}
+
+          {/* 🔐 Авторизація */}
+{!isAdmin ? (
+  <a
+    href="/login"
+    className="flex items-center justify-center gap-3 w-full py-4 mt-3 text-lg font-semibold rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
   >
-    {/* 🎨 Іконка з градієнтним контуром */}
-    <span className="relative inline-flex items-center justify-center">
-      <Icon
-        className="w-5 h-5 text-pink-500 dark:text-pink-400 drop-shadow-[0_0_6px_rgba(255,0,128,0.3)]"
-        strokeWidth={2.2}
-      />
-    </span>
+    <LogIn className="w-5 h-5" />
+    {i18n.language === "ru" ? "Войти" : "Увійти"}
+  </a>
+) : (
+  <>
+    <a
+      href="/admin"
+      className="flex items-center justify-center gap-3 w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
+    >
+      <Settings className="w-5 h-5" />
+      {i18n.language === "ru" ? "Админ панель" : "Адмін панель"}
+    </a>
 
-    {/* 🌈 Градієнтний текст */}
-    <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
-      {label}
-    </span>
-  </button>
-))}
-
-            {/* 🔗 Про мене */}
-            <a
-              href="https://about.ankstudio.online"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center justify-center gap-3 w-full py-4 mt-3 text-lg font-semibold rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
-            >
-              <User className="w-5 h-5" />
-              {i18n.language === "ru" ? "Обо мне" : "Про мене"}
-            </a>
+    <button
+      onClick={handleLogout}
+      className="flex items-center justify-center gap-3 w-full py-3 rounded-xl text-sm font-semibold text-pink-500 hover:text-rose-500 transition-all"
+    >
+      <LogOut className="w-4 h-4" />
+      {i18n.language === "ru" ? "Выйти" : "Вийти"}
+    </button>
+  </>
+)}
 
             {/* ⚙️ Тема + Мова */}
-            <div
-              className={`mt-6 flex flex-col items-center gap-3 ${
-                darkMode ? "text-fuchsia-100" : "text-gray-700"
-              }`}
-            >
+            <div className="mt-6 flex flex-col items-center gap-3">
               <button
                 onClick={toggleTheme}
                 className="flex items-center gap-2 hover:text-pink-500 transition"
@@ -203,8 +220,6 @@ export default function Header({ onMenuToggle }) {
                     className={`px-3 py-1 text-sm rounded-md transition-all font-medium ${
                       i18n.language === lng
                         ? "bg-pink-500 text-white shadow-[0_0_10px_rgba(255,0,128,0.4)]"
-                        : darkMode
-                        ? "bg-white/10 text-fuchsia-200 hover:bg-pink-500/30"
                         : "bg-pink-50 text-gray-700 border border-pink-200 hover:bg-pink-100"
                     }`}
                   >
@@ -216,16 +231,6 @@ export default function Header({ onMenuToggle }) {
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes fade-in {
-          from { opacity: 0; transform: translateY(15px); }
-          to { opacity: 1; transform: translateY(0); }
-        }
-        .animate-fade-in {
-          animation: fade-in 0.4s ease-out both;
-        }
-      `}</style>
     </header>
   );
 }
