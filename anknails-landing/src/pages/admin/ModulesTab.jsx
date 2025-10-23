@@ -21,7 +21,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     youtube: "",
     homework: "",
     materials: "",
-    type: "theory",
+    type: "",
   });
   const [editingLessonId, setEditingLessonId] = useState(null);
   const [expanded, setExpanded] = useState(null);
