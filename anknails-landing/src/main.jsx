@@ -20,7 +20,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/login" element={<LoginPage />} /> 
         <Route path="*" element={<NotFound />} />
         <Route path="/admin" element={<AdminPage />} />
-        <Route path="/cabinet" element={<CabinetPage />} />
+        <Route path="/profile" element={<CabinetPage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
