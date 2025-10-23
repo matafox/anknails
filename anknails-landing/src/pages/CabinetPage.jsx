@@ -9,9 +9,8 @@ import {
   ChevronDown,
   ChevronUp,
   PlayCircle,
-  Moon,
+  Moon, 
   Globe,
-  Heart,
 } from "lucide-react";
 
 // 🎥 Безпечний YouTube
@@ -195,7 +194,7 @@ export default function CabinetPage() {
 
       {/* 📚 Меню */}
       <aside
-        className={`w-72 flex flex-col justify-between fixed md:static top-0 h-screen overflow-y-auto transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
+        className={`w-72 flex-shrink-0 fixed md:static top-0 h-screen md:h-auto overflow-y-auto transition-transform duration-300 z-10 md:z-0 border-r backdrop-blur-xl ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } ${
           darkMode
@@ -216,13 +215,13 @@ export default function CabinetPage() {
           </div>
 
           {/* 📘 Модулі */}
-          <div className="space-y-2">
-            {modules.length === 0 ? (
-              <p className="text-center text-sm opacity-70">
-                {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
-              </p>
-            ) : (
-              modules.map((mod) => (
+          {modules.length === 0 ? (
+            <p className="text-center text-sm opacity-70">
+              {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
+            </p>
+          ) : (
+            <div className="space-y-2">
+              {modules.map((mod) => (
                 <div key={mod.id}>
                   <button
                     onClick={() => toggleModule(mod.id)}
@@ -232,9 +231,11 @@ export default function CabinetPage() {
                       <BookOpen className="w-4 h-4" />
                       {mod.title}
                     </span>
+
                     <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
                       {mod.lessons || 0}
                     </span>
+
                     {expanded === mod.id ? (
                       <ChevronUp className="w-4 h-4" />
                     ) : (
@@ -276,12 +277,11 @@ export default function CabinetPage() {
                     </div>
                   )}
                 </div>
-              ))
-            )}
-          </div>
-        </div>
+              ))}
+            </div>
+          )}
 
-{/* 🔧 Низ меню */}
+      {/* 🔧 Низ меню */}
 <div className="mt-auto p-6 border-t border-pink-200/30 space-y-6">
   {/* 🌗 Перемикач теми */}
   <div className="flex items-center justify-between">
@@ -348,7 +348,7 @@ export default function CabinetPage() {
       </aside>
 
       {/* 🌸 Контент */}
-      <main className="flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0">
+      <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
             {banner.image_url && (
@@ -364,16 +364,15 @@ export default function CabinetPage() {
           </div>
         )}
 
-        {/* 📖 Контент уроку */}
         {!selectedLesson ? (
-          <div className="flex items-center justify-center flex-1 text-center opacity-70">
+          <div className="flex items-center justify-center h-full text-center opacity-70">
             <p className="text-lg">
               {t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}
             </p>
           </div>
         ) : (
           <div
-            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg flex-1 ${
+            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
               darkMode
                 ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
                 : "bg-white/80 border border-pink-200"
@@ -412,32 +411,10 @@ export default function CabinetPage() {
           </div>
         )}
 
-        {/* 💖 Футер */}
-        <footer
-          className={`relative mt-auto py-6 text-center ${
-            darkMode ? "text-fuchsia-100/80" : "text-gray-600"
-          }`}
-        >
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 leading-relaxed">
-            <span className="font-medium tracking-wide">
-              © {new Date().getFullYear()} ANK Studio LMS
-            </span>
-            <span className="hidden sm:inline text-gray-400 dark:text-gray-600">•</span>
-            <span className="flex items-center gap-1.5">
-              <span className="text-gray-500 dark:text-gray-400">Made with</span>
-              <Heart
-                className="w-4 h-4 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.4)] animate-pulse"
-                fill="currentColor"
-              />
-              <span className="text-gray-500 dark:text-gray-400">by</span>
-              <a
-                href="https://t.me/mosaert"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="font-semibold text-pink-500 hover:text-rose-600 transition-colors hover:underline underline-offset-2"
-              >
-                @mosaert
-              </a>
-            </span>
-          </div>
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-rose-300/40 to-transparent blur-sm dark:via-rose-600
+        <footer className="mt-10 text-sm opacity-60 text-center py-6">
+          ANK Studio LMS © {new Date().getFullYear()}
+        </footer>
+      </main>
+    </div>
+  );
+}
