@@ -1,4 +1,3 @@
-// ✅ anknails-landing/src/pages/AdminPage.jsx
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -8,15 +7,17 @@ import {
   Settings,
   Menu,
   X,
+  Layers,
 } from "lucide-react";
 
 import ModulesTab from "./admin/ModulesTab";
 import BannerTab from "./admin/BannerTab";
 import SettingsTab from "./admin/SettingsTab";
+import CoursesTab from "./admin/CoursesTab"; // ✅ новий компонент
 
 export default function AdminPage() {
   const { i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState("modules");
+  const [activeTab, setActiveTab] = useState("courses"); // ✅ стартова вкладка — Курси
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -40,7 +41,13 @@ export default function AdminPage() {
     window.location.href = "/";
   };
 
+  // 🧭 Навігаційні вкладки
   const tabs = [
+    {
+      id: "courses",
+      label: i18n.language === "ru" ? "Курсы" : "Курси",
+      icon: Layers,
+    },
     {
       id: "modules",
       label: i18n.language === "ru" ? "Модули курса" : "Модулі курсу",
@@ -132,6 +139,7 @@ export default function AdminPage() {
 
       {/* 🌸 Контент */}
       <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
+        {activeTab === "courses" && <CoursesTab darkMode={darkMode} i18n={i18n} />}
         {activeTab === "modules" && <ModulesTab darkMode={darkMode} i18n={i18n} />}
         {activeTab === "banner" && <BannerTab darkMode={darkMode} i18n={i18n} />}
         {activeTab === "settings" && <SettingsTab darkMode={darkMode} i18n={i18n} />}
