@@ -9,12 +9,13 @@ import {
   ChevronDown,
   ChevronUp,
   PlayCircle,
+  Moon,
+  Globe,
 } from "lucide-react";
 
 // 🎥 Безпечний YouTube
 const SafeYoutube = ({ url, videoId }) => {
   let id = videoId || null;
-
   if (!id && url) {
     const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
     id = match ? match[1] : null;
@@ -71,16 +72,14 @@ export default function CabinetPage() {
     }
   }, []);
 
-  // 🧠 Авторизація і користувач
+  // 🧠 Авторизація
   useEffect(() => {
     const email = localStorage.getItem("user_email");
     const expires = localStorage.getItem("expires_at");
-
     if (!email || !expires) {
       window.location.href = "/login";
       return;
     }
-
     const expiryDate = new Date(expires);
     if (expiryDate < new Date()) {
       localStorage.clear();
@@ -88,7 +87,6 @@ export default function CabinetPage() {
       window.location.href = "/login";
       return;
     }
-
     fetch(`${BACKEND}/api/users`)
       .then((res) => res.json())
       .then((data) => {
@@ -105,9 +103,7 @@ export default function CabinetPage() {
           course_id: found.course_id || null,
         });
       })
-      .catch(() => {
-        window.location.href = "/login";
-      });
+      .catch(() => window.location.href = "/login");
   }, []);
 
   // 🎀 Банер
@@ -127,7 +123,6 @@ export default function CabinetPage() {
       .catch(() => console.error("Помилка завантаження модулів"));
   }, [user]);
 
-  // 📚 Уроки
   const fetchLessons = async (moduleId) => {
     try {
       const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
@@ -137,17 +132,11 @@ export default function CabinetPage() {
           l.youtube_id ||
           (l.embed_url && (l.embed_url.match(/embed\/([a-zA-Z0-9_-]{11})/) || [])[1]) ||
           null;
-        return {
-          ...l,
-          videoId: id,
-          videoUrl:
-            l.embed_url ||
-            (id ? `https://www.youtube-nocookie.com/embed/${id}` : null),
-        };
+        return { ...l, videoId: id, videoUrl: id ? `https://www.youtube-nocookie.com/embed/${id}` : null };
       });
       setLessons((prev) => ({ ...prev, [moduleId]: normalized }));
     } catch (e) {
-      console.error("Помилка завантаження уроків:", e);
+      console.error(e);
     }
   };
 
@@ -192,7 +181,7 @@ export default function CabinetPage() {
 
       {/* 📚 Меню */}
       <aside
-        className={`w-72 flex-shrink-0 fixed md:static top-0 h-screen md:h-auto overflow-y-auto transition-transform duration-300 z-10 md:z-0 border-r backdrop-blur-xl ${
+        className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } ${
           darkMode
@@ -200,13 +189,11 @@ export default function CabinetPage() {
             : "border-pink-200 bg-white/80"
         }`}
       >
-        <div className="p-6">
+        <div className="p-6 flex-1 overflow-y-auto">
           {/* 👩‍🎓 Профіль */}
           <div className="flex flex-col items-center text-center mb-6">
             <User className="w-16 h-16 text-pink-500 mb-2" />
-            <h2 className="font-bold text-lg">
-              {user.name || user.email.split("@")[0]}
-            </h2>
+            <h2 className="font-bold text-lg">{user.name || user.email.split("@")[0]}</h2>
             <p className="text-sm opacity-70">
               {t("Доступ до", "Доступ до")}: {user.expires_at}
             </p>
@@ -226,19 +213,12 @@ export default function CabinetPage() {
                     className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
                   >
                     <span className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" />
-                      {mod.title}
+                      <BookOpen className="w-4 h-4" /> {mod.title}
                     </span>
-
                     <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
                       {mod.lessons || 0}
                     </span>
-
-                    {expanded === mod.id ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
+                    {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
 
                   {expanded === mod.id && (
@@ -251,25 +231,10 @@ export default function CabinetPage() {
                             setMenuOpen(false);
                           }}
                           className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
-                            selectedLesson?.id === l.id
-                              ? "bg-pink-500/20 text-pink-600"
-                              : "opacity-80"
+                            selectedLesson?.id === l.id ? "bg-pink-500/20 text-pink-600" : "opacity-80"
                           }`}
                         >
                           <PlayCircle className="w-3 h-3" /> {l.title}
-                          {l.type && (
-                            <span
-                              className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
-                                l.type === "practice"
-                                  ? "bg-purple-100 text-purple-700"
-                                  : "bg-pink-100 text-pink-700"
-                              }`}
-                            >
-                              {l.type === "practice"
-                                ? t("Практика", "Практика")
-                                : t("Теорія", "Теория")}
-                            </span>
-                          )}
                         </button>
                       ))}
                     </div>
@@ -278,68 +243,69 @@ export default function CabinetPage() {
               ))}
             </div>
           )}
+        </div>
 
-          {/* 🌗 Перемикач теми + Мова */}
-          <div className="mt-8 space-y-4 text-sm">
-            {/* 🌙 Тема */}
+        {/* 🔧 Низ меню */}
+        <div className="p-6 border-t border-pink-200/30 space-y-6 mt-auto">
+          {/* 🌗 Темна тема */}
+          <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <span className="text-lg">🌙</span>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <span>{t("Темна тема", "Тёмная тема")}</span>
-                <input
-                  type="checkbox"
-                  checked={darkMode}
-                  onChange={() => {
-                    const newMode = !darkMode;
-                    setDarkMode(newMode);
-                    document.documentElement.classList.toggle("dark", newMode);
-                    localStorage.setItem("theme", newMode ? "dark" : "light");
-                  }}
-                  className="w-4 h-4 accent-pink-500"
-                />
-              </label>
+              <Moon className="w-4 h-4 text-pink-500" />
+              <span>{t("Темна тема", "Тёмная тема")}</span>
             </div>
+            <button
+              onClick={() => {
+                const newMode = !darkMode;
+                setDarkMode(newMode);
+                document.documentElement.classList.toggle("dark", newMode);
+                localStorage.setItem("theme", newMode ? "dark" : "light");
+              }}
+              className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
+                darkMode
+                  ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]"
+                  : "bg-pink-200"
+              }`}
+            >
+              <span
+                className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${
+                  darkMode ? "translate-x-6" : "translate-x-0"
+                }`}
+              ></span>
+            </button>
+          </div>
 
-            {/* 🌍 Мова */}
-            <div className="flex items-center gap-3">
-              <span className="text-lg">🌍</span>
-              <div className="flex gap-2">
+          {/* 🌍 Мова */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-pink-500" />
+              <span>{t("Мова", "Язык")}</span>
+            </div>
+            <div className="flex gap-2">
+              {["uk", "ru"].map((lang) => (
                 <button
+                  key={lang}
                   onClick={() => {
-                    i18n.changeLanguage("ru");
-                    localStorage.setItem("lang", "ru");
+                    i18n.changeLanguage(lang);
+                    localStorage.setItem("lang", lang);
                   }}
-                  className={`px-3 py-1 rounded-lg font-medium border transition ${
-                    i18n.language === "ru"
+                  className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
+                    i18n.language === lang
                       ? "bg-pink-500 text-white border-pink-500"
-                      : "bg-white text-pink-600 border-pink-300"
+                      : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
                   }`}
                 >
-                  RU
+                  {lang.toUpperCase()}
                 </button>
-                <button
-                  onClick={() => {
-                    i18n.changeLanguage("uk");
-                    localStorage.setItem("lang", "uk");
-                  }}
-                  className={`px-3 py-1 rounded-lg font-medium border transition ${
-                    i18n.language === "uk"
-                      ? "bg-pink-500 text-white border-pink-500"
-                      : "bg-white text-pink-600 border-pink-300"
-                  }`}
-                >
-                  UK
-                </button>
-              </div>
+              ))}
             </div>
           </div>
 
           {/* 🚪 Вихід */}
           <button
             onClick={handleLogout}
-            className="mt-8 w-full py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all"
+            className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
           >
-            <LogOut className="inline w-4 h-4 mr-1" /> {t("Вийти", "Выйти")}
+            <LogOut className="w-4 h-4" /> {t("Вийти", "Выйти")}
           </button>
         </div>
       </aside>
@@ -349,11 +315,7 @@ export default function CabinetPage() {
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
             {banner.image_url && (
-              <img
-                src={banner.image_url}
-                alt="Banner"
-                className="w-full h-48 md:h-64 object-cover"
-              />
+              <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />
             )}
             <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
               {banner.title}
@@ -363,9 +325,7 @@ export default function CabinetPage() {
 
         {!selectedLesson ? (
           <div className="flex items-center justify-center h-full text-center opacity-70">
-            <p className="text-lg">
-              {t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}
-            </p>
+            <p className="text-lg">{t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}</p>
           </div>
         ) : (
           <div
@@ -375,34 +335,12 @@ export default function CabinetPage() {
                 : "bg-white/80 border border-pink-200"
             }`}
           >
-            <h2 className="text-2xl font-bold text-pink-600 mb-4">
-              {selectedLesson.title}
-            </h2>
-
+            <h2 className="text-2xl font-bold text-pink-600 mb-4">{selectedLesson.title}</h2>
             <SafeYoutube url={selectedLesson.videoUrl} videoId={selectedLesson.videoId} />
-
             {selectedLesson.description && (
               <div className="mt-4">
                 <h4 className="font-semibold mb-1">{t("Опис", "Описание")}</h4>
                 <p>{selectedLesson.description}</p>
-              </div>
-            )}
-
-            {selectedLesson.homework && (
-              <div className="mt-4">
-                <h4 className="font-semibold text-pink-500 mb-1">
-                  📝 {t("Домашнє завдання", "Домашнее задание")}
-                </h4>
-                <p>{selectedLesson.homework}</p>
-              </div>
-            )}
-
-            {selectedLesson.materials && (
-              <div className="mt-4">
-                <h4 className="font-semibold text-pink-500 mb-1">
-                  📚 {t("Матеріали", "Материалы")}
-                </h4>
-                <p>{selectedLesson.materials}</p>
               </div>
             )}
           </div>
