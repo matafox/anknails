@@ -107,14 +107,15 @@ export default function ModulesTab({ darkMode, i18n }) {
   };
 
   // 🎞️ Безпечний iframe-компонент
-  const SafeYoutube = ({ embedUrl }) =>
-    embedUrl ? (
-      <iframe
-        src={`${embedUrl}?modestbranding=1&rel=0&showinfo=0`}
-        className="w-full aspect-video rounded-xl border border-pink-300"
-        allowFullScreen
-      />
-    ) : null;
+const SafeYoutube = ({ embedUrl }) =>
+  embedUrl ? (
+    <iframe
+      src={`${embedUrl}?modestbranding=1&rel=0&showinfo=0&controls=0&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0&mute=1`}
+      className="w-full aspect-video rounded-xl border border-pink-300"
+      allow="autoplay; fullscreen"
+      allowFullScreen
+    />
+  ) : null;
 
   return (
     <div className="space-y-10">
