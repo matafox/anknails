@@ -226,6 +226,44 @@ export default function AdminPage() {
     </button>
   </form>
 </div>
+            <div className="mt-8">
+  <button
+    onClick={async () => {
+      const res = await fetch("https://anknails-backend-production.up.railway.app/api/users");
+      const data = await res.json();
+      setUsers(data.users);
+    }}
+    className="mb-4 px-5 py-2 bg-pink-500 text-white rounded-lg font-medium hover:bg-rose-500 transition"
+  >
+    {i18n.language === "ru" ? "Обновить список" : "Оновити список"}
+  </button>
+
+  {users.length > 0 && (
+    <table className="w-full border border-pink-200 rounded-xl overflow-hidden">
+      <thead className="bg-pink-100">
+        <tr>
+          <th className="py-2 px-3 text-left">ID</th>
+          <th className="py-2 px-3 text-left">Email</th>
+          <th className="py-2 px-3 text-left">Пароль</th>
+          <th className="py-2 px-3 text-left">Доступ до</th>
+        </tr>
+      </thead>
+      <tbody>
+        {users.map((u) => (
+          <tr key={u.id} className="border-t hover:bg-pink-50">
+            <td className="py-2 px-3">{u.id}</td>
+            <td className="py-2 px-3">{u.email}</td>
+            <td className="py-2 px-3 font-mono">{u.password}</td>
+            <td className="py-2 px-3">
+              {new Date(u.expires_at).toLocaleDateString()}
+            </td>
+          </tr>
+        ))}
+      </tbody>
+    </table>
+  )}
+</div>
+
           </section>
         )}
       </main>
