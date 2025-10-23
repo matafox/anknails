@@ -14,20 +14,20 @@ import {
 } from "lucide-react";
 
 // 🎥 Безпечний YouTube
-const SafeYoutube = ({ url, videoId }) => {
+const SafeYoutube = ({ url, videoId, t }) => {
   let id = videoId || null;
+
   if (!id && url) {
     const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
     id = match ? match[1] : null;
   }
 
-if (!id)
-  return (
-    <p className="text-sm text-gray-500 text-center py-4">
-      ❌ {t("Неверная ссылка или видео не найдено", "Невірне посилання або відео не знайдено")}
-    </p>
-  );
-
+  if (!id)
+    return (
+      <p className="text-sm text-gray-500 text-center py-4">
+        ❌ {t("Неверная ссылка или видео не найдено", "Невірне посилання або відео не знайдено")}
+      </p>
+    );
 
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
@@ -352,7 +352,7 @@ export default function CabinetPage() {
             }`}
           >
             <h2 className="text-2xl font-bold text-pink-600 mb-4">{selectedLesson.title}</h2>
-            <SafeYoutube url={selectedLesson.videoUrl} videoId={selectedLesson.videoId} />
+            <SafeYoutube url={selectedLesson.videoUrl} videoId={selectedLesson.videoId} t={t} />
             {selectedLesson.description && (
               <div className="mt-4">
                 <h4 className="font-semibold mb-1">{t("Опис", "Описание")}</h4>
