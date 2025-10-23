@@ -12,22 +12,26 @@ const isAboutPage = host.includes("about.");
 
 ReactDOM.createRoot(document.getElementById("root")).render(
   <React.StrictMode>
-    <BrowserRouter>
+    <BrowserRouter basename="/">
       <Routes>
-        {/* 🏠 Головна сторінка */}
-        <Route path="/" element={isAboutPage ? <AboutApp /> : <App />} />
-
-        {/* ⚡ Проєкт "About" (якщо відкрити напряму) */}
-        <Route path="/about" element={<AboutApp />} />
-
-        {/* ❌ 404 */}
-        <Route path="*" element={<NotFound />} />
+        {isAboutPage ? (
+          <>
+            <Route path="/" element={<AboutApp />} />
+            <Route path="*" element={<NotFound />} />
+          </>
+        ) : (
+          <>
+            <Route path="/" element={<App />} />
+            <Route path="/about" element={<AboutApp />} />
+            <Route path="*" element={<NotFound />} />
+          </>
+        )}
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
 );
 
-// ---- 👇 Пінг для аналітики (Railway backend) ----
+// 👇 Пінг до Railway бекенду
 try {
   fetch("https://anknails-production.up.railway.app/ping")
     .then(() => console.log("Analytics ping sent"))
