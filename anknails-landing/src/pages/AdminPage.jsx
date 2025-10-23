@@ -13,6 +13,7 @@ export default function AdminPage() {
   const { i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("modules");
   const [darkMode, setDarkMode] = useState(false);
+  const [users, setUsers] = useState([]); // ✅ додано
 
   // 🔐 Перевірка доступу
   useEffect(() => {
@@ -30,32 +31,26 @@ export default function AdminPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
+  // 🔁 Автоматичне завантаження користувачів при переході у вкладку “settings”
+  useEffect(() => {
+    if (activeTab === "settings") {
+      fetch("https://anknails-backend-production.up.railway.app/api/users")
+        .then((res) => res.json())
+        .then((data) => setUsers(data.users))
+        .catch((err) => console.error("Помилка завантаження користувачів:", err));
+    }
+  }, [activeTab]);
+
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
     window.location.href = "/";
   };
 
   const tabs = [
-    {
-      id: "modules",
-      label: i18n.language === "ru" ? "Модули курса" : "Модулі курсу",
-      icon: BookOpen,
-    },
-    {
-      id: "students",
-      label: i18n.language === "ru" ? "Студенты" : "Студенти",
-      icon: Users,
-    },
-    {
-      id: "banner",
-      label: i18n.language === "ru" ? "Баннер" : "Банер",
-      icon: Image,
-    },
-    {
-      id: "settings",
-      label: i18n.language === "ru" ? "Настройки" : "Налаштування",
-      icon: Settings,
-    },
+    { id: "modules", label: i18n.language === "ru" ? "Модули курса" : "Модулі курсу", icon: BookOpen },
+    { id: "students", label: i18n.language === "ru" ? "Студенты" : "Студенти", icon: Users },
+    { id: "banner", label: i18n.language === "ru" ? "Баннер" : "Банер", icon: Image },
+    { id: "settings", label: i18n.language === "ru" ? "Настройки" : "Налаштування", icon: Settings },
   ];
 
   return (
@@ -117,43 +112,10 @@ export default function AdminPage() {
             <h2 className="text-2xl font-bold mb-6">
               {i18n.language === "ru" ? "Модули курса" : "Модулі курсу"}
             </h2>
-            <button
-              className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold hover:scale-[1.03] transition-all shadow-[0_0_20px_rgba(255,0,128,0.3)]"
-            >
+            <button className="flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold hover:scale-[1.03] transition-all shadow-[0_0_20px_rgba(255,0,128,0.3)]">
               <PlusCircle className="w-5 h-5" />
               {i18n.language === "ru" ? "Добавить модуль" : "Додати модуль"}
             </button>
-            <p className="mt-6 opacity-70">
-              {i18n.language === "ru"
-                ? "Здесь появится список всех учебных модулей после интеграции базы данных."
-                : "Тут з’явиться список усіх навчальних модулів після підключення бази даних."}
-            </p>
-          </section>
-        )}
-
-        {activeTab === "students" && (
-          <section>
-            <h2 className="text-2xl font-bold mb-6">
-              {i18n.language === "ru" ? "Студенты курса" : "Студенти курсу"}
-            </h2>
-            <p className="opacity-70">
-              {i18n.language === "ru"
-                ? "Позже здесь будет список студентов с доступом к курсу."
-                : "Пізніше тут буде список студентів із доступом до курсу."}
-            </p>
-          </section>
-        )}
-
-        {activeTab === "banner" && (
-          <section>
-            <h2 className="text-2xl font-bold mb-6">
-              {i18n.language === "ru" ? "Редактирование баннера" : "Редагування банера"}
-            </h2>
-            <p className="opacity-70">
-              {i18n.language === "ru"
-                ? "Позже добавим форму для загрузки баннера и текста акции."
-                : "Пізніше додамо форму для завантаження банера й тексту акції."}
-            </p>
           </section>
         )}
 
@@ -162,108 +124,106 @@ export default function AdminPage() {
             <h2 className="text-2xl font-bold mb-6">
               {i18n.language === "ru" ? "Настройки" : "Налаштування"}
             </h2>
-<div className="max-w-md space-y-5">
-  <h3 className="text-xl font-semibold mb-4">
-    {i18n.language === "ru"
-      ? "Создать временный аккаунт"
-      : "Створити тимчасовий акаунт"}
-  </h3>
 
-  <form
-    onSubmit={async (e) => {
-      e.preventDefault();
-      const email = e.target.email.value;
-      const days = e.target.days.value;
+            <div className="max-w-md space-y-5">
+              <h3 className="text-xl font-semibold mb-4">
+                {i18n.language === "ru"
+                  ? "Создать временный аккаунт"
+                  : "Створити тимчасовий акаунт"}
+              </h3>
 
-      const res = await fetch(
-        "https://anknails-backend-production.up.railway.app/api/users/create",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: "anka12341",
-            email,
-            days: parseInt(days),
-          }),
-        }
-      );
+              <form
+                onSubmit={async (e) => {
+                  e.preventDefault();
+                  const email = e.target.email.value;
+                  const days = e.target.days.value;
 
-      const data = await res.json();
-      alert(JSON.stringify(data, null, 2));
-    }}
-    className="space-y-4"
-  >
-    <div>
-      <label className="block text-sm font-medium mb-1">
-        Email користувача
-      </label>
-      <input
-        name="email"
-        type="email"
-        required
-        placeholder="user@example.com"
-        className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
-      />
-    </div>
+                  const res = await fetch(
+                    "https://anknails-backend-production.up.railway.app/api/users/create",
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        token: "anka12341",
+                        email,
+                        days: parseInt(days),
+                      }),
+                    }
+                  );
 
-    <div>
-      <label className="block text-sm font-medium mb-1">
-        Днів доступу
-      </label>
-      <input
-        name="days"
-        type="number"
-        defaultValue="7"
-        className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
-      />
-    </div>
+                  const data = await res.json();
+                  alert(JSON.stringify(data, null, 2));
+                  setUsers((prev) => [...prev, data.user]); // ✅ додаємо нового користувача у таблицю
+                }}
+                className="space-y-4"
+              >
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Email користувача
+                  </label>
+                  <input
+                    name="email"
+                    type="email"
+                    required
+                    placeholder="user@example.com"
+                    className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
+                  />
+                </div>
 
-    <button
-      type="submit"
-      className="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-[0_0_20px_rgba(255,0,128,0.3)]"
-    >
-      {i18n.language === "ru" ? "Создать" : "Створити"}
-    </button>
-  </form>
-</div>
+                <div>
+                  <label className="block text-sm font-medium mb-1">
+                    Днів доступу
+                  </label>
+                  <input
+                    name="days"
+                    type="number"
+                    defaultValue="7"
+                    className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
+                  />
+                </div>
+
+                <button
+                  type="submit"
+                  className="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-[0_0_20px_rgba(255,0,128,0.3)]"
+                >
+                  {i18n.language === "ru" ? "Создать" : "Створити"}
+                </button>
+              </form>
+            </div>
+
+            {/* 📋 Таблиця користувачів */}
             <div className="mt-8">
-  <button
-    onClick={async () => {
-      const res = await fetch("https://anknails-backend-production.up.railway.app/api/users");
-      const data = await res.json();
-      setUsers(data.users);
-    }}
-    className="mb-4 px-5 py-2 bg-pink-500 text-white rounded-lg font-medium hover:bg-rose-500 transition"
-  >
-    {i18n.language === "ru" ? "Обновить список" : "Оновити список"}
-  </button>
-
-  {users.length > 0 && (
-    <table className="w-full border border-pink-200 rounded-xl overflow-hidden">
-      <thead className="bg-pink-100">
-        <tr>
-          <th className="py-2 px-3 text-left">ID</th>
-          <th className="py-2 px-3 text-left">Email</th>
-          <th className="py-2 px-3 text-left">Пароль</th>
-          <th className="py-2 px-3 text-left">Доступ до</th>
-        </tr>
-      </thead>
-      <tbody>
-        {users.map((u) => (
-          <tr key={u.id} className="border-t hover:bg-pink-50">
-            <td className="py-2 px-3">{u.id}</td>
-            <td className="py-2 px-3">{u.email}</td>
-            <td className="py-2 px-3 font-mono">{u.password}</td>
-            <td className="py-2 px-3">
-              {new Date(u.expires_at).toLocaleDateString()}
-            </td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
-  )}
-</div>
-
+              {users.length > 0 ? (
+                <table className="w-full border border-pink-200 rounded-xl overflow-hidden">
+                  <thead className="bg-pink-100">
+                    <tr>
+                      <th className="py-2 px-3 text-left">ID</th>
+                      <th className="py-2 px-3 text-left">Email</th>
+                      <th className="py-2 px-3 text-left">Пароль</th>
+                      <th className="py-2 px-3 text-left">Доступ до</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {users.map((u) => (
+                      <tr key={u.id} className="border-t hover:bg-pink-50">
+                        <td className="py-2 px-3">{u.id}</td>
+                        <td className="py-2 px-3">{u.email}</td>
+                        <td className="py-2 px-3 font-mono">{u.password}</td>
+                        <td className="py-2 px-3">
+                          {new Date(u.expires_at).toLocaleDateString()}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p className="opacity-70 mt-4">
+                  {i18n.language === "ru"
+                    ? "Пользователи не найдены"
+                    : "Користувачів ще немає"}
+                </p>
+              )}
+            </div>
           </section>
         )}
       </main>
