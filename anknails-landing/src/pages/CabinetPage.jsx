@@ -52,6 +52,8 @@ export default function CabinetPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
+
   // 🌓 Тема
   useEffect(() => {
     const saved = localStorage.getItem("theme");
@@ -74,12 +76,11 @@ export default function CabinetPage() {
     const expiryDate = new Date(expires);
     if (expiryDate < new Date()) {
       localStorage.clear();
-      alert("Термін дії акаунта минув");
+      alert(t("Термін дії акаунта минув", "Срок действия аккаунта истек"));
       window.location.href = "/login";
       return;
     }
 
-    // 🧾 Отримати користувача і course_id
     fetch(`${BACKEND}/api/users`)
       .then((res) => res.json())
       .then((data) => {
@@ -109,7 +110,7 @@ export default function CabinetPage() {
       .catch(() => {});
   }, []);
 
-  // 📘 Модулі користувача (за course_id)
+  // 📘 Модулі користувача
   useEffect(() => {
     if (!user?.course_id) return;
     fetch(`${BACKEND}/api/modules/${user.course_id}`)
@@ -199,16 +200,14 @@ export default function CabinetPage() {
               {user.name || user.email.split("@")[0]}
             </h2>
             <p className="text-sm opacity-70">
-              Доступ до: {user.expires_at}
+              {t("Доступ до", "Доступ до")}: {user.expires_at}
             </p>
           </div>
 
           {/* 📘 Модулі */}
           {modules.length === 0 ? (
             <p className="text-center text-sm opacity-70">
-              {i18n.language === "ru"
-                ? "Модулей нет или курс не назначен"
-                : "Модулів ще немає або курс не призначено"}
+              {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
             </p>
           ) : (
             <div className="space-y-2">
@@ -233,6 +232,17 @@ export default function CabinetPage() {
                       <ChevronDown className="w-4 h-4" />
                     )}
                   </button>
+
+                  {/* 🧾 Опис модуля */}
+                  {mod.description && (
+                    <p
+                      className={`mt-1 text-xs italic leading-snug ${
+                        darkMode ? "text-fuchsia-200/70" : "text-gray-600/80"
+                      }`}
+                    >
+                      {mod.description}
+                    </p>
+                  )}
 
                   {expanded === mod.id && (
                     <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
@@ -264,7 +274,7 @@ export default function CabinetPage() {
             onClick={handleLogout}
             className="mt-8 w-full py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all"
           >
-            <LogOut className="inline w-4 h-4 mr-1" /> Вийти
+            <LogOut className="inline w-4 h-4 mr-1" /> {t("Вийти", "Выйти")}
           </button>
         </div>
       </aside>
@@ -290,9 +300,7 @@ export default function CabinetPage() {
         {!selectedLesson ? (
           <div className="flex items-center justify-center h-full text-center opacity-70">
             <p className="text-lg">
-              {i18n.language === "ru"
-                ? "Выберите урок в меню слева"
-                : "Оберіть урок у меню зліва"}
+              {t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}
             </p>
           </div>
         ) : (
@@ -313,7 +321,7 @@ export default function CabinetPage() {
             {/* 📄 Опис */}
             {selectedLesson.description && (
               <div className="mt-4">
-                <h4 className="font-semibold mb-1">Опис</h4>
+                <h4 className="font-semibold mb-1">{t("Опис", "Описание")}</h4>
                 <p>{selectedLesson.description}</p>
               </div>
             )}
@@ -322,7 +330,7 @@ export default function CabinetPage() {
             {selectedLesson.homework && (
               <div className="mt-4">
                 <h4 className="font-semibold text-pink-500 mb-1">
-                  📝 Домашнє завдання
+                  📝 {t("Домашнє завдання", "Домашнее задание")}
                 </h4>
                 <p>{selectedLesson.homework}</p>
               </div>
@@ -332,7 +340,7 @@ export default function CabinetPage() {
             {selectedLesson.materials && (
               <div className="mt-4">
                 <h4 className="font-semibold text-pink-500 mb-1">
-                  📚 Матеріали
+                  📚 {t("Матеріали", "Материалы")}
                 </h4>
                 <p>{selectedLesson.materials}</p>
               </div>
