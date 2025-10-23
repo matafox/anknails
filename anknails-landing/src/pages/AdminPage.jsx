@@ -64,18 +64,18 @@ export default function AdminPage() {
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
-      {/* ☰ Бургер-кнопка */}
+      {/* ☰ Бургер-кнопка справа */}
       <button
         onClick={() => setMenuOpen(true)}
-        className="md:hidden fixed top-4 left-4 z-50 bg-pink-500 text-white p-2 rounded-lg shadow-lg"
+        className="md:hidden fixed top-4 right-4 z-50 bg-pink-500 text-white p-2 rounded-lg shadow-lg"
       >
         <Menu className="w-5 h-5" />
       </button>
 
-      {/* 🩷 Бокове меню */}
+      {/* 🩷 Бокове меню (відкривається з правого краю) */}
       <aside
-        className={`fixed md:static top-0 left-0 h-full md:h-auto w-64 p-6 flex flex-col justify-between border-r z-40 transition-transform duration-300 ${
-          menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        className={`fixed md:static top-0 right-0 h-full md:h-auto w-64 p-6 flex flex-col justify-between border-l z-40 transition-transform duration-300 ease-in-out ${
+          menuOpen ? "translate-x-0" : "translate-x-full md:translate-x-0"
         } ${
           darkMode
             ? "border-fuchsia-900/30 bg-[#1a0a1f]/80"
