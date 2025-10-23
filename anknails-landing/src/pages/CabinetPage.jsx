@@ -21,12 +21,13 @@ const SafeYoutube = ({ url, videoId }) => {
     id = match ? match[1] : null;
   }
 
-  if (!id)
-    return (
-      <p className="text-sm text-gray-500 text-center py-4">
-        ❌ Невірне посилання або відео не знайдено
-      </p>
-    );
+if (!id)
+  return (
+    <p className="text-sm text-gray-500 text-center py-4">
+      ❌ {t("Неверная ссылка или видео не найдено", "Невірне посилання або відео не знайдено")}
+    </p>
+  );
+
 
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
@@ -293,10 +294,10 @@ export default function CabinetPage() {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-pink-500" />
-              <span>{t("Мова", "Язык")}</span>
+              <span>{t("Язык", "Мова" )}</span>
             </div>
             <div className="flex gap-2">
-              {["uk", "ru"].map((lang) => (
+              {["ru", "uk"].map((lang) => (
                 <button
                   key={lang}
                   onClick={() => {
