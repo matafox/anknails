@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Edit3, PlusCircle, Trash2, Save, XCircle } from "lucide-react";
+import { Edit3, PlusCircle, XCircle, Trash2, Video } from "lucide-react";
 
 export default function ModulesTab({ darkMode, i18n }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
@@ -15,16 +15,22 @@ export default function ModulesTab({ darkMode, i18n }) {
     materials: "",
   });
   const [lessons, setLessons] = useState({});
-  const [editLessonId, setEditLessonId] = useState(null);
 
-  // 📦 Отримання модулів
+  // 🎥 Витяг ID з YouTube URL
+  const extractId = (url) => {
+    if (!url) return null;
+    const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+    return match ? match[1] : null;
+  };
+
+  // 🔹 Завантаження модулів
   const fetchModules = async () => {
     const res = await fetch(`${BACKEND}/api/modules`);
     const data = await res.json();
     setModules(data.modules || []);
   };
 
-  // 📦 Отримання уроків певного модуля
+  // 🔹 Завантаження уроків
   const fetchLessons = async (moduleId) => {
     const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
     const data = await res.json();
@@ -35,7 +41,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     fetchModules();
   }, []);
 
-  // 🔹 Створення / редагування модуля
+  // 🧩 Створення / редагування модуля
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editId
@@ -71,23 +77,20 @@ export default function ModulesTab({ darkMode, i18n }) {
     fetchModules();
   };
 
-  // 🔹 Створення або оновлення уроку
+  // 🧾 Створення уроку
   const handleLessonSubmit = async (e, moduleId) => {
     e.preventDefault();
-    const url = editLessonId
-      ? `${BACKEND}/api/lessons/update/${editLessonId}`
-      : `${BACKEND}/api/lessons/create`;
-
-    await fetch(url, {
+    const youtubeId = extractId(lessonForm.youtube);
+    await fetch(`${BACKEND}/api/lessons/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         module_id: moduleId,
         token: "anka12341",
         ...lessonForm,
+        youtube: youtubeId ? `https://www.youtube-nocookie.com/embed/${youtubeId}` : "",
       }),
     });
-
     setLessonForm({
       title: "",
       description: "",
@@ -95,47 +98,18 @@ export default function ModulesTab({ darkMode, i18n }) {
       homework: "",
       materials: "",
     });
-    setEditLessonId(null);
     fetchLessons(moduleId);
   };
 
-  // ✏️ Почати редагування уроку
-  const handleEditLesson = (lesson) => {
-    setLessonForm({
-      title: lesson.title,
-      description: lesson.description,
-      youtube: lesson.youtube,
-      homework: lesson.homework,
-      materials: lesson.materials,
-    });
-    setEditLessonId(lesson.id);
-  };
-
-  // ❌ Видалити урок
-  const handleDeleteLesson = async (id, moduleId) => {
-    if (!window.confirm(i18n.language === "ru" ? "Удалить урок?" : "Видалити урок?"))
-      return;
-
-    await fetch(`${BACKEND}/api/lessons/delete/${id}`, {
+  // 🗑️ Видалення уроку
+  const handleDeleteLesson = async (lessonId, moduleId) => {
+    if (!window.confirm("Видалити цей урок?")) return;
+    await fetch(`${BACKEND}/api/lessons/delete/${lessonId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token: "anka12341" }),
     });
-
     fetchLessons(moduleId);
-  };
-
-  // 🔁 YouTube embed helper
-  const getEmbedUrl = (url) => {
-    if (!url) return null;
-    try {
-      const videoId = url.match(
-        /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/))([\w-]{11})/
-      )?.[1];
-      return videoId ? `https://www.youtube.com/embed/${videoId}` : null;
-    } catch {
-      return null;
-    }
   };
 
   return (
@@ -239,58 +213,44 @@ export default function ModulesTab({ darkMode, i18n }) {
                   {lessons[mod.id]?.map((l) => (
                     <div
                       key={l.id}
-                      className="p-3 rounded-lg border border-pink-200/50 text-sm bg-white/40 relative"
+                      className="p-3 rounded-lg border border-pink-200/50 text-sm bg-white/40"
                     >
-                      <div className="flex justify-between items-center mb-2">
-                        <p className="font-semibold">{l.title}</p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditLesson(l)}
-                            className="text-pink-500 hover:scale-110 transition"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteLesson(l.id, mod.id)}
-                            className="text-red-500 hover:scale-110 transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
+                      <div className="flex justify-between items-start">
+                        <p className="font-semibold text-pink-600">{l.title}</p>
+                        <button
+                          onClick={() => handleDeleteLesson(l.id, mod.id)}
+                          className="text-red-500 hover:scale-110 transition"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
                       </div>
 
-                      {/* 🎥 Відео */}
-                      {l.youtube && getEmbedUrl(l.youtube) && (
-                        <iframe
-                          src={getEmbedUrl(l.youtube)}
-                          title="YouTube"
-                          className="w-full aspect-video rounded-lg mb-2"
-                          allowFullScreen
-                        ></iframe>
+                      {l.youtube && (
+                        <div className="mt-2">
+                          <iframe
+                            src={l.youtube}
+                            className="w-full aspect-video rounded-xl border border-pink-200"
+                            allowFullScreen
+                          ></iframe>
+                        </div>
                       )}
 
-                      {l.description && (
-                        <p className="text-xs opacity-80 mb-1">{l.description}</p>
-                      )}
                       {l.homework && (
-                        <p className="text-xs mt-1">📝 {l.homework}</p>
-                      )}
-                      {l.materials && (
-                        <p className="text-xs mt-1">📚 {l.materials}</p>
+                        <p className="text-xs opacity-70 mt-1">
+                          📝 {l.homework}
+                        </p>
                       )}
                     </div>
                   ))}
                 </div>
 
-                {/* ➕ Форма додавання / редагування уроку */}
+                {/* ➕ Форма додавання уроку */}
                 <form
                   onSubmit={(e) => handleLessonSubmit(e, mod.id)}
                   className="space-y-2"
                 >
                   <input
-                    placeholder={
-                      i18n.language === "ru" ? "Название урока" : "Назва уроку"
-                    }
+                    placeholder={i18n.language === "ru" ? "Название урока" : "Назва уроку"}
                     value={lessonForm.title}
                     onChange={(e) =>
                       setLessonForm({ ...lessonForm, title: e.target.value })
@@ -307,30 +267,20 @@ export default function ModulesTab({ darkMode, i18n }) {
                     className="w-full px-3 py-2 rounded-lg border border-pink-300"
                   />
                   <textarea
-                    placeholder={
-                      i18n.language === "ru" ? "Описание урока" : "Опис уроку"
-                    }
+                    placeholder={i18n.language === "ru" ? "Описание урока" : "Опис уроку"}
                     value={lessonForm.description}
                     onChange={(e) =>
-                      setLessonForm({
-                        ...lessonForm,
-                        description: e.target.value,
-                      })
+                      setLessonForm({ ...lessonForm, description: e.target.value })
                     }
                     className="w-full px-3 py-2 rounded-lg border border-pink-300"
                   />
                   <textarea
                     placeholder={
-                      i18n.language === "ru"
-                        ? "Домашнее задание"
-                        : "Домашнє завдання"
+                      i18n.language === "ru" ? "Домашнее задание" : "Домашнє завдання"
                     }
                     value={lessonForm.homework}
                     onChange={(e) =>
-                      setLessonForm({
-                        ...lessonForm,
-                        homework: e.target.value,
-                      })
+                      setLessonForm({ ...lessonForm, homework: e.target.value })
                     }
                     className="w-full px-3 py-2 rounded-lg border border-pink-300"
                   />
@@ -342,48 +292,17 @@ export default function ModulesTab({ darkMode, i18n }) {
                     }
                     value={lessonForm.materials}
                     onChange={(e) =>
-                      setLessonForm({
-                        ...lessonForm,
-                        materials: e.target.value,
-                      })
+                      setLessonForm({ ...lessonForm, materials: e.target.value })
                     }
                     className="w-full px-3 py-2 rounded-lg border border-pink-300"
                   />
-
-                  <div className="flex gap-2">
-                    <button
-                      type="submit"
-                      className="flex items-center gap-2 px-4 py-2 rounded-lg bg-pink-500 text-white font-medium hover:scale-105 transition"
-                    >
-                      {editLessonId ? <Save className="w-4 h-4" /> : <PlusCircle className="w-4 h-4" />}
-                      {editLessonId
-                        ? i18n.language === "ru"
-                          ? "Сохранить"
-                          : "Зберегти"
-                        : i18n.language === "ru"
-                        ? "Добавить урок"
-                        : "Додати урок"}
-                    </button>
-                    {editLessonId && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditLessonId(null);
-                          setLessonForm({
-                            title: "",
-                            description: "",
-                            youtube: "",
-                            homework: "",
-                            materials: "",
-                          });
-                        }}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-gray-300 text-gray-700 font-medium hover:scale-105 transition"
-                      >
-                        <XCircle className="w-4 h-4" />
-                        {i18n.language === "ru" ? "Отмена" : "Скасувати"}
-                      </button>
-                    )}
-                  </div>
+                  <button
+                    type="submit"
+                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-pink-500 text-white font-medium hover:scale-105 transition"
+                  >
+                    <PlusCircle className="w-4 h-4" />
+                    {i18n.language === "ru" ? "Добавить урок" : "Додати урок"}
+                  </button>
                 </form>
               </div>
             )}
