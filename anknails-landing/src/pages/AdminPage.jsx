@@ -8,6 +8,8 @@ import {
   PlusCircle,
   Settings,
   UploadCloud,
+  Menu,
+  X,
 } from "lucide-react";
 
 export default function AdminPage() {
@@ -15,6 +17,7 @@ export default function AdminPage() {
   const [activeTab, setActiveTab] = useState("modules");
   const [darkMode, setDarkMode] = useState(false);
   const [users, setUsers] = useState([]);
+  const [menuOpen, setMenuOpen] = useState(false);
 
   // 🔐 Перевірка доступу
   useEffect(() => {
@@ -55,22 +58,40 @@ export default function AdminPage() {
 
   return (
     <div
-      className={`min-h-screen flex ${
+      className={`min-h-screen flex flex-col md:flex-row ${
         darkMode
           ? "bg-gradient-to-br from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
+      {/* ☰ Бургер-кнопка */}
+      <button
+        onClick={() => setMenuOpen(true)}
+        className="md:hidden fixed top-4 left-4 z-50 bg-pink-500 text-white p-2 rounded-lg shadow-lg"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
       {/* 🩷 Бокове меню */}
       <aside
-        className={`w-64 p-6 flex flex-col justify-between border-r ${
+        className={`fixed md:static top-0 left-0 h-full md:h-auto w-64 p-6 flex flex-col justify-between border-r z-40 transition-transform duration-300 ${
+          menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+        } ${
           darkMode
-            ? "border-fuchsia-900/30 bg-[#1a0a1f]/70"
-            : "border-pink-200 bg-white/70"
+            ? "border-fuchsia-900/30 bg-[#1a0a1f]/80"
+            : "border-pink-200 bg-white/80"
         } backdrop-blur-xl`}
       >
         <div>
-          <h2 className="text-2xl font-bold bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 text-transparent bg-clip-text mb-6">
+          {/* ✕ Кнопка закриття */}
+          <button
+            onClick={() => setMenuOpen(false)}
+            className="md:hidden text-pink-400 mb-4 self-end"
+          >
+            <X className="w-5 h-5" />
+          </button>
+
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 text-transparent bg-clip-text mb-6 text-center md:text-left">
             ANK Studio LMS
           </h2>
 
@@ -78,7 +99,10 @@ export default function AdminPage() {
             {tabs.map(({ id, label, icon: Icon }) => (
               <button
                 key={id}
-                onClick={() => setActiveTab(id)}
+                onClick={() => {
+                  setActiveTab(id);
+                  setMenuOpen(false);
+                }}
                 className={`flex items-center gap-3 w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                   activeTab === id
                     ? darkMode
@@ -106,7 +130,7 @@ export default function AdminPage() {
       </aside>
 
       {/* 🌸 Контент */}
-      <main className="flex-1 p-8 overflow-y-auto">
+      <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
         {activeTab === "modules" && (
           <section>
             <h2 className="text-2xl font-bold mb-6">
@@ -201,9 +225,9 @@ export default function AdminPage() {
             </div>
 
             {/* 📋 Таблиця користувачів */}
-            <div className="mt-8">
+            <div className="mt-8 overflow-x-auto">
               {users.length > 0 ? (
-                <table className="w-full border border-pink-200 rounded-xl overflow-hidden">
+                <table className="min-w-[600px] w-full border border-pink-200 rounded-xl overflow-hidden">
                   <thead className="bg-pink-100">
                     <tr>
                       <th className="py-2 px-3 text-left">ID</th>
@@ -259,9 +283,7 @@ function BannerEditor({ darkMode, i18n }) {
     formData.append("image", file);
     const res = await fetch("https://api.imgur.com/3/image", {
       method: "POST",
-      headers: {
-        Authorization: "Client-ID 8f3cb6e4c248b26",
-      },
+      headers: { Authorization: "Client-ID 8f3cb6e4c248b26" },
       body: formData,
     });
     const data = await res.json();
@@ -313,6 +335,7 @@ function BannerEditor({ darkMode, i18n }) {
           type="file"
           accept="image/*"
           onChange={(e) => setFile(e.target.files[0])}
+          className="text-sm"
         />
         {file && <p className="text-sm opacity-80">{file.name}</p>}
       </div>
