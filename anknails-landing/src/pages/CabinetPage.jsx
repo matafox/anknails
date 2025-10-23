@@ -246,40 +246,35 @@ export default function CabinetPage() {
 
                   {expanded === mod.id && (
                     <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
-{lessons[mod.id]?.map((l) => (
-  <button
-    key={l.id}
-    onClick={() => {
-      setSelectedLesson(l);
-      setMenuOpen(false);
-    }}
-    className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
-      selectedLesson?.id === l.id
-        ? "bg-pink-500/20 text-pink-600"
-        : "opacity-80"
-    }`}
-  >
-    <PlayCircle className="w-3 h-3" /> {l.title}
-    {/* 🟣 Плашка типу уроку */}
-    {l.type && (
-      <span
-        className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
-          l.type === "practice"
-            ? "bg-purple-100 text-purple-700"
-            : "bg-pink-100 text-pink-700"
-        }`}
-      >
-        {l.type === "practice"
-          ? i18n.language === "ru"
-            ? "Практика"
-            : "Практика"
-          : i18n.language === "ru"
-          ? "Теория"
-          : "Теорія"}
-      </span>
-    )}
-  </button>
-))}
+                      {lessons[mod.id]?.map((l) => (
+                        <button
+                          key={l.id}
+                          onClick={() => {
+                            setSelectedLesson(l);
+                            setMenuOpen(false);
+                          }}
+                          className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
+                            selectedLesson?.id === l.id
+                              ? "bg-pink-500/20 text-pink-600"
+                              : "opacity-80"
+                          }`}
+                        >
+                          <PlayCircle className="w-3 h-3" /> {l.title}
+                          {l.type && (
+                            <span
+                              className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
+                                l.type === "practice"
+                                  ? "bg-purple-100 text-purple-700"
+                                  : "bg-pink-100 text-pink-700"
+                              }`}
+                            >
+                              {l.type === "practice"
+                                ? t("Практика", "Практика")
+                                : t("Теорія", "Теория")}
+                            </span>
+                          )}
+                        </button>
+                      ))}
                     </div>
                   )}
                 </div>
@@ -299,7 +294,6 @@ export default function CabinetPage() {
 
       {/* 🌸 Контент */}
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
-        {/* 🎀 Банер */}
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
             {banner.image_url && (
@@ -333,10 +327,8 @@ export default function CabinetPage() {
               {selectedLesson.title}
             </h2>
 
-            {/* 🎥 Відео */}
             <SafeYoutube url={selectedLesson.videoUrl} videoId={selectedLesson.videoId} />
 
-            {/* 📄 Опис */}
             {selectedLesson.description && (
               <div className="mt-4">
                 <h4 className="font-semibold mb-1">{t("Опис", "Описание")}</h4>
@@ -344,7 +336,6 @@ export default function CabinetPage() {
               </div>
             )}
 
-            {/* 📝 ДЗ */}
             {selectedLesson.homework && (
               <div className="mt-4">
                 <h4 className="font-semibold text-pink-500 mb-1">
@@ -354,7 +345,6 @@ export default function CabinetPage() {
               </div>
             )}
 
-            {/* 📚 Матеріали */}
             {selectedLesson.materials && (
               <div className="mt-4">
                 <h4 className="font-semibold text-pink-500 mb-1">
