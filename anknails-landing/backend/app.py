@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from datetime import datetime, timedelta
-import pathlib, os
+import pathlib, os, uvicorn
 
 app = FastAPI(title="ANK Studio Backend")
 
@@ -114,3 +114,11 @@ async def get_users():
 @app.get("/")
 def root():
     return {"status": "ok", "msg": "ANK Studio LMS backend is running 💅"}
+
+
+# ============================================================
+# 🩷 MAIN ENTRY (для Railway)
+# ============================================================
+if __name__ == "__main__":
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("backend.app:app", host="0.0.0.0", port=port, reload=False)
