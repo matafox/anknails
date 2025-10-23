@@ -1,163 +1,116 @@
-from fastapi import FastAPI, Request
-from fastapi.responses import HTMLResponse, JSONResponse
-from sqlalchemy import create_engine, Column, Integer, String, DateTime, func, distinct
-from sqlalchemy.orm import declarative_base, sessionmaker
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+from pydantic import BaseModel
 from datetime import datetime, timedelta
-import requests, os, pathlib
-from collections import defaultdict
+import pathlib, os
 
-app = FastAPI(title="ANK Analytics")
+app = FastAPI(title="ANK Studio Backend")
 
 # ================== CONFIG ==================
-SECRET_PATH = os.getenv("ADMIN_SECRET", "anksecret2025")
+SECRET_TOKEN = os.getenv("ADMIN_SECRET", "anka12341")
 
-# ✅ зберігаємо базу в /data (Railway не чистить цю теку)
+# ✅ база поки що не використовується, але готуємо /data (Railway-friendly)
 DATA_DIR = pathlib.Path("/data")
 DATA_DIR.mkdir(exist_ok=True)
-DATABASE_URL = f"sqlite:///{DATA_DIR}/visits.db"
 
-engine = create_engine(DATABASE_URL, connect_args={"check_same_thread": False})
-SessionLocal = sessionmaker(bind=engine)
-Base = declarative_base()
-
-# ================== MODEL ==================
-class Visit(Base):
-    __tablename__ = "visits"
-    id = Column(Integer, primary_key=True)
-    ip = Column(String)
-    country = Column(String)
-    path = Column(String)
-    created_at = Column(DateTime, default=datetime.utcnow)
-
-Base.metadata.create_all(bind=engine)
-
-# ================== HELPERS ==================
-def get_ip(request: Request):
-    xff = request.headers.get("x-forwarded-for")
-    return xff.split(",")[0].strip() if xff else request.client.host
-
-def get_country(ip):
-    try:
-        if ip.startswith("127.") or ip == "::1":
-            return "local"
-        res = requests.get(f"http://ip-api.com/json/{ip}?fields=country", timeout=2)
-        return res.json().get("country", "unknown")
-    except:
-        return "unknown"
-
-IGNORED_EXTENSIONS = (
-    ".ico", ".png", ".jpg", ".jpeg", ".svg", ".gif",
-    ".webp", ".css", ".js", ".json", ".txt", ".map",
-    ".woff", ".woff2", ".ttf"
+# ================== CORS ==================
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # у продакшні краще ["https://ankstudio.online"]
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
-def is_static_request(path: str) -> bool:
-    return any(path.lower().endswith(ext) for ext in IGNORED_EXTENSIONS)
+# ============================================================
+# 🩷 МОДУЛЬ: Банер (адмін редагує, користувачі бачать)
+# ============================================================
 
-# ================== MIDDLEWARE ==================
-@app.middleware("http")
-async def track(request: Request, call_next):
-    response = await call_next(request)
-    path = request.url.path
+class Banner(BaseModel):
+    title: str
+    image_url: str | None = None
+    active: bool = True
 
-    if (
-        request.method == "GET"
-        and not path.endswith(SECRET_PATH)
-        and not is_static_request(path)
-        and path != "/ping"
-    ):
-        db = SessionLocal()
-        ip = get_ip(request)
-        now = datetime.utcnow()
+# Початковий банер (тимчасово в пам’яті)
+current_banner = Banner(
+    title="Знижка 50% до 10 листопада 🎀",
+    image_url="https://i.imgur.com/yourbanner.png",
+    active=True,
+)
 
-        # не дублюємо протягом 15 хв
-        recent = db.query(Visit).filter(
-            Visit.ip == ip,
-            Visit.created_at > now - timedelta(minutes=15)
-        ).first()
+@app.get("/api/banner")
+async def get_banner():
+    """Отримати активний банер (для користувачів)"""
+    if not current_banner.active:
+        return {"active": False}
+    return current_banner
 
-        if not recent:
-            country = get_country(ip)
-            db.add(Visit(ip=ip, country=country, path=path))
-            db.commit()
-        db.close()
+@app.post("/api/banner")
+async def update_banner(request: Request):
+    """Оновити банер (для адміна)"""
+    data = await request.json()
+    token = data.get("token")
 
-    return response
+    if token != SECRET_TOKEN:
+        raise HTTPException(status_code=403, detail="Access denied")
 
-# ================== /PING (для фронтенду) ==================
-@app.get("/ping")
-def ping(request: Request):
-    db = SessionLocal()
-    ip = get_ip(request)
-    now = datetime.utcnow()
+    global current_banner
+    current_banner = Banner(**data["banner"])
+    return {"success": True, "banner": current_banner}
 
-    # записуємо лише якщо не було за останні 15 хв
-    recent = db.query(Visit).filter(
-        Visit.ip == ip,
-        Visit.created_at > now - timedelta(minutes=15)
-    ).first()
 
-    if not recent:
-        country = get_country(ip)
-        db.add(Visit(ip=ip, country=country, path="/site"))
-        db.commit()
-    db.close()
-    return JSONResponse({"ok": True, "ip": ip})
+# ============================================================
+# 🩷 МОДУЛЬ: Тимчасові акаунти (створює адмін)
+# ============================================================
 
-# ================== ADMIN PANEL ==================
-@app.get(f"/{SECRET_PATH}", response_class=HTMLResponse)
-def admin():
-    db = SessionLocal()
-    total = db.query(func.count(Visit.id)).scalar() or 0
-    unique_ips = db.query(func.count(distinct(Visit.ip))).scalar() or 0
+class User(BaseModel):
+    id: int
+    email: str
+    password: str
+    expires_at: datetime
+    active: bool = True
 
-    today_start = datetime.utcnow().replace(hour=0, minute=0, second=0, microsecond=0)
-    today_visits = db.query(func.count(Visit.id)).filter(Visit.created_at >= today_start).scalar() or 0
+users_db: list[User] = []
+user_counter = 1
 
-    by_country = db.query(Visit.country, func.count(Visit.id)).group_by(Visit.country).all()
-    visits = db.query(Visit).order_by(Visit.created_at.desc()).all()
+@app.post("/api/users/create")
+async def create_user(request: Request):
+    """Створити тимчасовий акаунт"""
+    data = await request.json()
+    token = data.get("token")
 
-    # групування по днях
-    grouped = defaultdict(list)
-    for v in visits:
-        day = v.created_at.strftime("%d.%m.%Y")
-        grouped[day].append(v)
-    db.close()
+    if token != SECRET_TOKEN:
+        raise HTTPException(status_code=403, detail="Access denied")
 
-    html = f"""
-    <html><head><meta charset='utf-8'>
-    <title>ANK Analytics</title>
-    <style>
-      body {{font-family:sans-serif;background:#fff0f7;padding:40px;max-width:1000px;margin:auto;}}
-      h1 {{color:#d63384;}}
-      h3 {{color:#d63384;margin-top:40px;}}
-      table {{width:100%;border-collapse:collapse;margin-top:10px;}}
-      td,th {{border-bottom:1px solid #eee;padding:6px 10px;text-align:left;}}
-      tr:hover {{background:#fff8fc;}}
-      .day-block {{background:#ffeaf5;padding:10px 16px;border-radius:12px;margin-top:30px;}}
-    </style></head><body>
-    <h1>🌸 ANK Analytics</h1>
-    <b>Всього відвідувань:</b> {total}<br/>
-    <b>Унікальних IP:</b> {unique_ips}<br/>
-    <b>Сьогоднішніх:</b> {today_visits}<br/><br/>
-    <h3>📍 Країни</h3>
-    <table>
-      {''.join(f"<tr><td>{c}</td><td>{n}</td></tr>" for c,n in by_country)}
-    </table>
-    """
+    global user_counter
+    email = data["email"]
+    password = data.get("password", f"user{user_counter:04d}")
+    days = data.get("days", 7)
 
-    for day, records in grouped.items():
-        html += f"<div class='day-block'><h3>📅 {day} — {len(records)} візитів</h3>"
-        html += "<table><tr><th>IP</th><th>Країна</th><th>Шлях</th><th>Час</th></tr>"
-        for v in records:
-            time_str = v.created_at.strftime("%H:%M:%S")
-            html += f"<tr><td>{v.ip}</td><td>{v.country}</td><td>{v.path}</td><td>{time_str}</td></tr>"
-        html += "</table></div>"
+    expires_at = datetime.utcnow() + timedelta(days=days)
+    new_user = User(
+        id=user_counter,
+        email=email,
+        password=password,
+        expires_at=expires_at,
+    )
+    users_db.append(new_user)
+    user_counter += 1
 
-    html += "</body></html>"
-    return HTMLResponse(html)
+    return {"success": True, "user": new_user}
 
-# ================== ROOT ==================
+
+@app.get("/api/users")
+async def get_users():
+    """Отримати всіх активних користувачів"""
+    active_users = [u for u in users_db if u.active]
+    return {"users": active_users}
+
+
+# ============================================================
+# 🩷 HEALTHCHECK / ROOT
+# ============================================================
+
 @app.get("/")
-def home():
-    return {"status": "ok", "msg": "ANK backend running"}
+def root():
+    return {"status": "ok", "msg": "ANK Studio LMS backend is running 💅"}
