@@ -162,11 +162,70 @@ export default function AdminPage() {
             <h2 className="text-2xl font-bold mb-6">
               {i18n.language === "ru" ? "Настройки" : "Налаштування"}
             </h2>
-            <p className="opacity-70">
-              {i18n.language === "ru"
-                ? "Тут можно будет создавать временные аккаунты и управлять доступом."
-                : "Тут можна буде створювати тимчасові акаунти та керувати доступом."}
-            </p>
+<div className="max-w-md space-y-5">
+  <h3 className="text-xl font-semibold mb-4">
+    {i18n.language === "ru"
+      ? "Создать временный аккаунт"
+      : "Створити тимчасовий акаунт"}
+  </h3>
+
+  <form
+    onSubmit={async (e) => {
+      e.preventDefault();
+      const email = e.target.email.value;
+      const days = e.target.days.value;
+
+      const res = await fetch(
+        "https://anknails-backend-production.up.railway.app/api/users/create",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            token: "anka12341",
+            email,
+            days: parseInt(days),
+          }),
+        }
+      );
+
+      const data = await res.json();
+      alert(JSON.stringify(data, null, 2));
+    }}
+    className="space-y-4"
+  >
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        Email користувача
+      </label>
+      <input
+        name="email"
+        type="email"
+        required
+        placeholder="user@example.com"
+        className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
+      />
+    </div>
+
+    <div>
+      <label className="block text-sm font-medium mb-1">
+        Днів доступу
+      </label>
+      <input
+        name="days"
+        type="number"
+        defaultValue="7"
+        className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
+      />
+    </div>
+
+    <button
+      type="submit"
+      className="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-[0_0_20px_rgba(255,0,128,0.3)]"
+    >
+      {i18n.language === "ru" ? "Создать" : "Створити"}
+    </button>
+  </form>
+</div>
           </section>
         )}
       </main>
