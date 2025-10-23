@@ -24,7 +24,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 🧩 Якщо це адмін
+      // 🩷 Адмін
       if (email === "annaivanovna1802@gmail.com" && password === "anka12341") {
         localStorage.setItem("admin_token", "true");
         localStorage.removeItem("user_token");
@@ -32,15 +32,12 @@ export default function LoginPage() {
         return;
       }
 
-      // 🧩 Інакше — це користувач з бази
-      const res = await fetch(
-        "https://anknails-production.up.railway.app/api/login",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email, password }),
-        }
-      );
+      // 🩷 Звичайний користувач
+      const res = await fetch("https://anknails-backend-production.up.railway.app/api/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
 
       const data = await res.json();
       setLoading(false);
@@ -49,19 +46,19 @@ export default function LoginPage() {
         throw new Error(
           data.detail ||
             (i18n.language === "ru"
-              ? "Ошибка входа"
-              : "Помилка входу")
+              ? "Ошибка входа. Проверьте данные."
+              : "Помилка входу. Перевірте дані.")
         );
       }
 
-      // ✅ Успішний логін
+      // ✅ Зберегти дані користувача
       localStorage.setItem("user_token", "true");
       localStorage.setItem("user_email", data.user.email);
       localStorage.setItem("expires_at", data.user.expires_at);
       localStorage.removeItem("admin_token");
 
-      // перенаправлення
-      window.location.href = "/cabinet"; // або "/" якщо ще нема кабінету
+      // Перехід до кабінету
+      window.location.href = "/cabinet";
     } catch (err) {
       setLoading(false);
       setError(err.message);
@@ -129,10 +126,12 @@ export default function LoginPage() {
             />
           </div>
 
+          {/* Error */}
           {error && (
             <p className="text-sm text-rose-500 text-center font-medium">{error}</p>
           )}
 
+          {/* Submit */}
           <button
             type="submit"
             disabled={loading}
