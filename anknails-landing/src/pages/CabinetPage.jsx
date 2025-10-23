@@ -203,7 +203,7 @@ export default function CabinetPage() {
             : "border-pink-200 bg-white/80"
         }`}
       >
-        <div className="p-6 flex-1 overflow-y-auto">
+        <div className="p-6">
           {/* 👩‍🎓 Профіль */}
           <div className="flex flex-col items-center text-center mb-6">
             <User className="w-16 h-16 text-pink-500 mb-2" />
@@ -216,29 +216,29 @@ export default function CabinetPage() {
           </div>
 
           {/* 📘 Модулі */}
-          {modules.length === 0 ? (
-            <p className="text-center text-sm opacity-70">
-              {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {modules.map((mod) => (
+          <div className="space-y-2">
+            {modules.length === 0 ? (
+              <p className="text-center text-sm opacity-70">
+                {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
+              </p>
+            ) : (
+              modules.map((mod) => (
                 <div key={mod.id}>
                   <button
                     onClick={() => toggleModule(mod.id)}
-                    className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600"
+                    className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
                   >
                     <span className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4" />
                       {mod.title}
                     </span>
-                    <span className="text-xs bg-pink-500 text-white rounded-full px-2 py-[1px] ml-auto mr-2">
+                    <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
                       {mod.lessons || 0}
                     </span>
                     {expanded === mod.id ? (
-                      <ChevronUp className="w-4 h-4 opacity-70" />
+                      <ChevronUp className="w-4 h-4" />
                     ) : (
-                      <ChevronDown className="w-4 h-4 opacity-70" />
+                      <ChevronDown className="w-4 h-4" />
                     )}
                   </button>
 
@@ -258,87 +258,99 @@ export default function CabinetPage() {
                           }`}
                         >
                           <PlayCircle className="w-3 h-3" /> {l.title}
+                          {l.type && (
+                            <span
+                              className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
+                                l.type === "practice"
+                                  ? "bg-purple-100 text-purple-700"
+                                  : "bg-pink-100 text-pink-700"
+                              }`}
+                            >
+                              {l.type === "practice"
+                                ? t("Практика", "Практика")
+                                : t("Теорія", "Теория")}
+                            </span>
+                          )}
                         </button>
                       ))}
                     </div>
                   )}
                 </div>
-              ))}
-            </div>
-          )}
+              ))
+            )}
+          </div>
         </div>
 
-        {/* ⚙️ Низ меню */}
-        <div className="p-6 border-t border-pink-200/30 space-y-5">
-          {/* 🌗 Тема */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Moon className="w-4 h-4 text-pink-500" />
-              <span>{t("Темна тема", "Тёмная тема")}</span>
-            </div>
-            <div
-              onClick={() => {
-                const newMode = !darkMode;
-                setDarkMode(newMode);
-                document.documentElement.classList.toggle("dark", newMode);
-                localStorage.setItem("theme", newMode ? "dark" : "light");
-              }}
-              className={`relative w-10 h-5 rounded-full cursor-pointer transition-colors ${
-                darkMode ? "bg-pink-500" : "bg-pink-200"
-              }`}
-            >
-              <div
-                className={`absolute top-[2px] left-[2px] w-4 h-4 bg-white rounded-full shadow-md transition-transform duration-300 ${
-                  darkMode ? "translate-x-5" : "translate-x-0"
-                }`}
-              ></div>
-            </div>
-          </div>
+{/* 🔧 Низ меню */}
+<div className="mt-auto p-6 border-t border-pink-200/30 space-y-6">
+  {/* 🌗 Перемикач теми */}
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      <Moon className="w-4 h-4 text-pink-500" />
+      <span>{t("Темна тема", "Тёмная тема")}</span>
+    </div>
 
-          {/* 🌍 Мова */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-pink-500" />
-              <span>{t("Мова", "Язык")}</span>
-            </div>
-            <div className="flex gap-2">
-              {["ru", "uk"].map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => {
-                    i18n.changeLanguage(lang);
-                    localStorage.setItem("lang", lang);
-                  }}
-                  className={`px-3 py-1 rounded-lg font-medium border text-xs transition ${
-                    i18n.language === lang
-                      ? "bg-pink-500 text-white border-pink-500"
-                      : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
-                  }`}
-                >
-                  {lang.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
+    <button
+      onClick={() => {
+        const newMode = !darkMode;
+        setDarkMode(newMode);
+        document.documentElement.classList.toggle("dark", newMode);
+        localStorage.setItem("theme", newMode ? "dark" : "light");
+      }}
+      className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
+        darkMode
+          ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]"
+          : "bg-pink-200"
+      }`}
+    >
+      <span
+        className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${
+          darkMode ? "translate-x-6" : "translate-x-0"
+        }`}
+      ></span>
+    </button>
+  </div>
 
-          {/* 🚪 Вихід */}
-          <button
-            onClick={handleLogout}
-            className="w-full py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all"
-          >
-            <LogOut className="inline w-4 h-4 mr-1" /> {t("Вийти", "Выйти")}
-          </button>
-        </div>
+  {/* 🌍 Мова */}
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      <Globe className="w-4 h-4 text-pink-500" />
+      <span>{t("Мова", "Язык")}</span>
+    </div>
+    <div className="flex gap-2">
+      {["uk", "ru"].map((lang) => (
+        <button
+          key={lang}
+          onClick={() => {
+            i18n.changeLanguage(lang);
+            localStorage.setItem("lang", lang);
+          }}
+          className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
+            i18n.language === lang
+              ? "bg-pink-500 text-white border-pink-500"
+              : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
+          }`}
+        >
+          {lang.toUpperCase()}
+        </button>
+      ))}
+    </div>
+  </div>
+
+  {/* 🚪 Вихід */}
+  <button
+    onClick={handleLogout}
+    className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all"
+  >
+    <LogOut className="inline w-4 h-4 mr-1" /> {t("Вийти", "Выйти")}
+  </button>
+</div>
       </aside>
 
       {/* 🌸 Контент */}
-      <main
-        className={`flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0 transition-all duration-300 ${
-          menuOpen ? "md:ml-0" : "md:ml-72"
-        }`}
-      >
+      <main className="flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0">
         {banner && banner.active && (
-          <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)] max-w-6xl mx-auto">
+          <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
             {banner.image_url && (
               <img
                 src={banner.image_url}
@@ -352,6 +364,7 @@ export default function CabinetPage() {
           </div>
         )}
 
+        {/* 📖 Контент уроку */}
         {!selectedLesson ? (
           <div className="flex items-center justify-center flex-1 text-center opacity-70">
             <p className="text-lg">
@@ -360,7 +373,7 @@ export default function CabinetPage() {
           </div>
         ) : (
           <div
-            className={`max-w-6xl mx-auto p-6 rounded-2xl shadow-lg flex-1 ${
+            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg flex-1 ${
               darkMode
                 ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
                 : "bg-white/80 border border-pink-200"
@@ -370,10 +383,7 @@ export default function CabinetPage() {
               {selectedLesson.title}
             </h2>
 
-            <SafeYoutube
-              url={selectedLesson.videoUrl}
-              videoId={selectedLesson.videoId}
-            />
+            <SafeYoutube url={selectedLesson.videoUrl} videoId={selectedLesson.videoId} />
 
             {selectedLesson.description && (
               <div className="mt-4">
@@ -412,9 +422,7 @@ export default function CabinetPage() {
             <span className="font-medium tracking-wide">
               © {new Date().getFullYear()} ANK Studio LMS
             </span>
-            <span className="hidden sm:inline text-gray-400 dark:text-gray-600">
-              •
-            </span>
+            <span className="hidden sm:inline text-gray-400 dark:text-gray-600">•</span>
             <span className="flex items-center gap-1.5">
               <span className="text-gray-500 dark:text-gray-400">Made with</span>
               <Heart
@@ -432,9 +440,4 @@ export default function CabinetPage() {
               </a>
             </span>
           </div>
-          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-rose-300/40 to-transparent blur-sm dark:via-rose-600/30" />
-        </footer>
-      </main>
-    </div>
-  );
-}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-rose-300/40 to-transparent blur-sm dark:via-rose-600
