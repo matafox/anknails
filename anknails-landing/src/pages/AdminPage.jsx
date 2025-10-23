@@ -168,12 +168,13 @@ export default function AdminPage() {
   );
 }
 
-/* ⚙️ SETTINGS TAB */
+/* ⚙️ SETTINGS TAB (оновлений) */
 function SettingsTab({ i18n, darkMode, users, loadUsers }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
 
   const handleCreate = async (e) => {
     e.preventDefault();
+    const name = e.target.name.value;
     const email = e.target.email.value;
     const days = e.target.days.value;
 
@@ -182,6 +183,7 @@ function SettingsTab({ i18n, darkMode, users, loadUsers }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         token: "anka12341",
+        name,
         email,
         days: parseInt(days),
       }),
@@ -206,8 +208,18 @@ function SettingsTab({ i18n, darkMode, users, loadUsers }) {
         <form onSubmit={handleCreate} className="space-y-4">
           <div>
             <label className="block text-sm font-medium mb-1">
-              Email користувача
+              {i18n.language === "ru" ? "Имя пользователя" : "Ім’я користувача"}
             </label>
+            <input
+              name="name"
+              type="text"
+              placeholder={i18n.language === "ru" ? "Например, Анна" : "Наприклад, Анна"}
+              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Email користувача</label>
             <input
               name="email"
               type="email"
@@ -218,9 +230,7 @@ function SettingsTab({ i18n, darkMode, users, loadUsers }) {
           </div>
 
           <div>
-            <label className="block text-sm font-medium mb-1">
-              Днів доступу
-            </label>
+            <label className="block text-sm font-medium mb-1">Днів доступу</label>
             <input
               name="days"
               type="number"
@@ -241,19 +251,27 @@ function SettingsTab({ i18n, darkMode, users, loadUsers }) {
       {/* 📋 Таблиця користувачів */}
       <div className="mt-8 overflow-x-auto">
         {users.length > 0 ? (
-          <table className="min-w-[600px] w-full border border-pink-200 rounded-xl overflow-hidden">
+          <table className="min-w-[650px] w-full border border-pink-200 rounded-xl overflow-hidden">
             <thead className="bg-pink-100">
               <tr>
                 <th className="py-2 px-3 text-left">ID</th>
+                <th className="py-2 px-3 text-left">
+                  {i18n.language === "ru" ? "Имя" : "Ім’я"}
+                </th>
                 <th className="py-2 px-3 text-left">Email</th>
-                <th className="py-2 px-3 text-left">Пароль</th>
-                <th className="py-2 px-3 text-left">Доступ до</th>
+                <th className="py-2 px-3 text-left">
+                  {i18n.language === "ru" ? "Пароль" : "Пароль"}
+                </th>
+                <th className="py-2 px-3 text-left">
+                  {i18n.language === "ru" ? "Доступ до" : "Доступ до"}
+                </th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
                 <tr key={u.id} className="border-t hover:bg-pink-50">
                   <td className="py-2 px-3">{u.id}</td>
+                  <td className="py-2 px-3">{u.name || "-"}</td>
                   <td className="py-2 px-3">{u.email}</td>
                   <td className="py-2 px-3 font-mono">{u.password}</td>
                   <td className="py-2 px-3">
