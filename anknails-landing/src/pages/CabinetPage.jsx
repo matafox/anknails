@@ -6,6 +6,7 @@ export default function CabinetPage() {
   const { i18n } = useTranslation();
   const [user, setUser] = useState(null);
   const [modules, setModules] = useState([]);
+  const [banner, setBanner] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
 
   // 🌓 Тема
@@ -47,7 +48,15 @@ export default function CabinetPage() {
     });
   }, [i18n.language]);
 
-  // 📚 Псевдо-модулі (пізніше замінимо на fetch)
+  // 🎀 Банер із бекенду
+  useEffect(() => {
+    fetch("https://anknails-backend-production.up.railway.app/api/banner")
+      .then((res) => res.json())
+      .then((data) => setBanner(data))
+      .catch(() => console.error("Помилка завантаження банера"));
+  }, []);
+
+  // 📚 Псевдо-модулі
   useEffect(() => {
     setModules([
       {
@@ -89,99 +98,123 @@ export default function CabinetPage() {
 
   return (
     <div
-      className={`min-h-screen flex flex-col items-center px-6 py-10 ${
+      className={`min-h-screen flex ${
         darkMode
-          ? "bg-gradient-to-b from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
-          : "bg-gradient-to-b from-pink-50 via-rose-50 to-white text-gray-800"
+          ? "bg-gradient-to-br from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
+          : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
-      {/* 🧍‍♀️ Профіль */}
-      <div
-        className={`w-full max-w-3xl rounded-3xl p-8 mb-8 backdrop-blur-xl ${
+      {/* 🩷 Бічне меню */}
+      <aside
+        className={`w-72 p-6 border-r backdrop-blur-xl ${
           darkMode
-            ? "bg-[#1a0a1f]/70 border border-pink-500/30 shadow-[0_0_40px_rgba(255,0,128,0.25)]"
-            : "bg-white/70 border border-pink-200/40 shadow-[0_0_40px_rgba(255,182,193,0.3)]"
+            ? "border-fuchsia-900/30 bg-[#1a0a1f]/60"
+            : "border-pink-200 bg-white/70"
         }`}
       >
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-          <div className="flex items-center gap-4">
-            <User className="w-14 h-14 text-pink-500" />
-            <div>
-              <h1 className="text-2xl font-bold bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 bg-clip-text text-transparent">
-                {i18n.language === "ru"
-                  ? "Добро пожаловать!"
-                  : "Ласкаво просимо!"}
-              </h1>
-              <p className="opacity-80">{user.email}</p>
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2 text-sm">
-            <Clock className="w-4 h-4 text-pink-400" />
-            <span>
-              {i18n.language === "ru" ? "Доступ до:" : "Доступ до:"}{" "}
-              <strong>{user.expires_at}</strong>
-            </span>
-          </div>
+        <div className="flex flex-col items-center text-center">
+          <User className="w-16 h-16 text-pink-500 mb-2" />
+          <h2 className="text-lg font-bold">{user.email}</h2>
+          <p className="text-sm opacity-70">
+            {i18n.language === "ru" ? "Доступ до:" : "Доступ до:"} {user.expires_at}
+          </p>
         </div>
 
         <button
           onClick={handleLogout}
-          className="mt-6 w-full sm:w-auto px-6 py-2.5 flex items-center justify-center gap-2 rounded-2xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all shadow-[0_0_15px_rgba(255,0,128,0.3)]"
+          className="mt-8 w-full flex items-center justify-center gap-2 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all shadow-[0_0_15px_rgba(255,0,128,0.3)]"
         >
           <LogOut className="w-5 h-5" />
           {i18n.language === "ru" ? "Выйти" : "Вийти"}
         </button>
-      </div>
 
-      {/* 📘 Мої модулі */}
-      <div className="w-full max-w-3xl">
-        <h2 className="text-2xl font-bold mb-4 flex items-center gap-2">
-          <BookOpen className="w-6 h-6 text-pink-500" />
-          {i18n.language === "ru" ? "Мои модули" : "Мої модулі"}
-        </h2>
-
-        <div className="space-y-4">
-          {modules.map((mod) => (
-            <div
-              key={mod.id}
-              className={`p-5 rounded-2xl transition border ${
-                darkMode
-                  ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#2a0f3a]/40"
-                  : "border-pink-200 bg-white/70 hover:bg-pink-50"
-              }`}
-            >
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold">{mod.title}</h3>
-                <span className="text-sm opacity-70">
-                  {mod.progress}% • {mod.lessons}{" "}
-                  {i18n.language === "ru" ? "уроков" : "уроків"}
-                </span>
-              </div>
-
-              <div className="h-2 bg-pink-200 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-700"
-                  style={{ width: `${mod.progress}%` }}
-                ></div>
-              </div>
-
-              <button
-                className="mt-4 w-full sm:w-auto px-5 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-fuchsia-500 to-pink-500 hover:scale-[1.03] transition shadow-[0_0_10px_rgba(255,0,128,0.3)]"
-                onClick={() => alert(`🚀 ${i18n.language === "ru" ? "Продолжить модуль" : "Продовжити модуль"}: ${mod.title}`)}
-              >
-                {i18n.language === "ru"
-                  ? "Продолжить обучение"
-                  : "Продовжити навчання"}
-              </button>
-            </div>
-          ))}
+        <div className="mt-10 border-t border-pink-200/30 pt-6">
+          <h3 className="text-sm uppercase font-semibold opacity-70 mb-3">
+            {i18n.language === "ru" ? "Разделы" : "Розділи"}
+          </h3>
+          <ul className="space-y-2 text-sm">
+            <li className="hover:text-pink-500 transition cursor-pointer">
+              {i18n.language === "ru" ? "Мои курсы" : "Мої курси"}
+            </li>
+            <li className="hover:text-pink-500 transition cursor-pointer">
+              {i18n.language === "ru" ? "Помощь" : "Допомога"}
+            </li>
+          </ul>
         </div>
-      </div>
+      </aside>
 
-      <p className="mt-10 text-sm opacity-60">
-        ANK Studio LMS © {new Date().getFullYear()}
-      </p>
+      {/* 🌸 Контент */}
+      <main className="flex-1 p-10 overflow-y-auto">
+        {/* 🎀 Банер */}
+        {banner && banner.active && (
+          <div className="rounded-2xl overflow-hidden mb-10 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+            {banner.image_url && (
+              <img
+                src={banner.image_url}
+                alt="Banner"
+                className="w-full h-52 object-cover"
+              />
+            )}
+            <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-lg">
+              {banner.title}
+            </div>
+          </div>
+        )}
+
+        {/* 📘 Мої модулі */}
+        <section>
+          <h1 className="text-3xl font-bold mb-6 bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 bg-clip-text text-transparent">
+            {i18n.language === "ru" ? "Мои модули" : "Мої модулі"}
+          </h1>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            {modules.map((mod) => (
+              <div
+                key={mod.id}
+                className={`p-6 rounded-2xl transition border ${
+                  darkMode
+                    ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#2a0f3a]/40"
+                    : "border-pink-200 bg-white/70 hover:bg-pink-50"
+                }`}
+              >
+                <h3 className="text-lg font-semibold mb-2">{mod.title}</h3>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-sm opacity-70">
+                    {mod.progress}% • {mod.lessons}{" "}
+                    {i18n.language === "ru" ? "уроков" : "уроків"}
+                  </span>
+                  <button
+                    onClick={() =>
+                      alert(
+                        `🚀 ${
+                          i18n.language === "ru"
+                            ? "Продолжить модуль"
+                            : "Продовжити модуль"
+                        }: ${mod.title}`
+                      )
+                    }
+                    className="px-4 py-1.5 text-sm rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold hover:scale-[1.03] transition"
+                  >
+                    {i18n.language === "ru"
+                      ? "Открыть"
+                      : "Відкрити"}
+                  </button>
+                </div>
+                <div className="h-2 bg-pink-200 rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-700"
+                    style={{ width: `${mod.progress}%` }}
+                  ></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <p className="mt-10 text-sm opacity-60 text-center">
+          ANK Studio LMS © {new Date().getFullYear()}
+        </p>
+      </main>
     </div>
   );
 }
