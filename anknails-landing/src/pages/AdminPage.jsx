@@ -9,9 +9,9 @@ import {
   Menu,
   X,
 } from "lucide-react";
-import ModulesTab from "./ModulesTab";
-import BannerTab from "./BannerTab";
-import SettingsTab from "./SettingsTab";
+import ModulesTab from "./admin/ModulesTab";
+import BannerTab from "./admin/BannerTab";
+import SettingsTab from "./admin/SettingsTab";
 
 export default function AdminPage() {
   const { i18n } = useTranslation();
