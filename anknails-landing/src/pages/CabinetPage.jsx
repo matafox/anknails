@@ -10,7 +10,7 @@ import {
   ChevronUp,
 } from "lucide-react";
 
-// 🎥 Безпечний компонент YouTube (no-cookie)
+// 🎥 Безпечний компонент YouTube (залишена тільки перемотка)
 const SafeYoutube = ({ url }) => {
   if (!url) return null;
 
@@ -26,12 +26,12 @@ const SafeYoutube = ({ url }) => {
 
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
-<iframe
-  src={`https://www.youtube-nocookie.com/embed/${videoId}?autoplay=0&controls=0&modestbranding=1&rel=0&showinfo=0&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0`}
-  allow="autoplay; fullscreen"
-  loading="lazy"
-  className="w-full h-full select-none pointer-events-none"
-/>
+      <iframe
+        src={`https://www.youtube-nocookie.com/embed/${videoId}?controls=1&modestbranding=1&rel=0&showinfo=0&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0`}
+        allow="autoplay; fullscreen"
+        loading="lazy"
+        className="w-full h-full"
+      />
     </div>
   );
 };
