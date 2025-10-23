@@ -20,7 +20,7 @@ export default function CabinetPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  // 🧠 Авторизація
+  // 🧠 Авторизація + дані користувача з бекенду
   useEffect(() => {
     const token = localStorage.getItem("user_token");
     const email = localStorage.getItem("user_email");
@@ -43,11 +43,27 @@ export default function CabinetPage() {
       return;
     }
 
-    setUser({
-      email,
-      expires_at: expiryDate.toLocaleDateString(),
-      active: true,
-    });
+    // 🧾 Отримати ім’я користувача з бекенду
+    fetch(`${BACKEND}/api/users`)
+      .then((res) => res.json())
+      .then((data) => {
+        const found = data.users?.find((u) => u.email === email);
+        setUser({
+          email,
+          name: found?.name || null,
+          expires_at: expiryDate.toLocaleDateString(),
+          active: true,
+        });
+      })
+      .catch(() => {
+        // fallback якщо не вдалося завантажити
+        setUser({
+          email,
+          name: null,
+          expires_at: expiryDate.toLocaleDateString(),
+          active: true,
+        });
+      });
   }, [i18n.language]);
 
   // 🎀 Банер із бекенду
@@ -72,6 +88,8 @@ export default function CabinetPage() {
   };
 
   if (!user) return null;
+
+  const displayName = user.name || user.email;
 
   return (
     <div
@@ -109,7 +127,7 @@ export default function CabinetPage() {
       >
         <div className="flex flex-col items-center text-center md:mt-0 mt-12">
           <User className="w-16 h-16 text-pink-500 mb-2" />
-          <h2 className="text-lg font-bold">{user.email}</h2>
+          <h2 className="text-lg font-bold">{displayName}</h2>
           <p className="text-sm opacity-70">
             {i18n.language === "ru" ? "Доступ до:" : "Доступ до:"}{" "}
             {user.expires_at}
