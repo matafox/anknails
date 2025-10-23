@@ -48,7 +48,7 @@ export default function AdminPage() {
 
   const tabs = [
     { id: "modules", label: i18n.language === "ru" ? "Модули курса" : "Модулі курсу", icon: BookOpen },
-    { id: "students", label: i18n.language === "ru" ? "Студенты" : "Студенти", icon: Users },
+    { id: "students", label: i18n.language === "ru" ? "Ученики" : "Учні", icon: Users },
     { id: "banner", label: i18n.language === "ru" ? "Баннер" : "Банер", icon: Image },
     { id: "settings", label: i18n.language === "ru" ? "Настройки" : "Налаштування", icon: Settings },
   ];
