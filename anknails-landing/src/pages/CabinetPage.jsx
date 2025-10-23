@@ -225,22 +225,22 @@ export default function CabinetPage() {
               {modules.map((mod) => (
                 <div key={mod.id}>
                   <button
-                    onClick={() => toggleModule(mod.id)}
-                    className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
-                  >
-                    <span className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" />
-                      {mod.title}
-                    </span>
-                    <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
-                      {mod.lessons || 0}
-                    </span>
-                    {expanded === mod.id ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
-                  </button>
+  onClick={() => toggleModule(mod.id)}
+  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600"
+>
+  <span className="flex items-center gap-2">
+    <BookOpen className="w-4 h-4" />
+    {mod.title}
+  </span>
+  <span className="text-xs bg-pink-500 text-white rounded-full px-2 py-[1px] ml-auto">
+    {mod.lessons || 0}
+  </span>
+  {expanded === mod.id ? (
+    <ChevronUp className="w-4 h-4 opacity-70" />
+  ) : (
+    <ChevronDown className="w-4 h-4 opacity-70" />
+  )}
+</button>
 
                   {expanded === mod.id && (
                     <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
@@ -332,7 +332,11 @@ export default function CabinetPage() {
       </aside>
 
       {/* 🌸 Контент */}
-      <main className="flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0">
+      <main
+  className={`flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0 transition-all duration-300 ${
+    menuOpen ? "md:ml-0" : "md:ml-72"
+  }`}
+>
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
             {banner.image_url && (
