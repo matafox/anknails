@@ -61,7 +61,7 @@ export default function CabinetPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  // 🧠 Авторизація + користувач
+  // 🧠 Авторизація
   useEffect(() => {
     const token = localStorage.getItem("user_token");
     const email = localStorage.getItem("user_email");
@@ -84,7 +84,6 @@ export default function CabinetPage() {
       return;
     }
 
-    // Отримуємо ім’я користувача з бекенду
     fetch(`${BACKEND}/api/users`)
       .then((res) => res.json())
       .then((data) => {
@@ -208,18 +207,24 @@ export default function CabinetPage() {
             </p>
           </div>
 
-          {/* 📘 Модулі */}
+          {/* 📘 Модулі з кількістю уроків */}
           <div className="space-y-2">
             {modules.map((mod) => (
               <div key={mod.id}>
                 <button
                   onClick={() => toggleModule(mod.id)}
-                  className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600"
+                  className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
                 >
                   <span className="flex items-center gap-2">
                     <BookOpen className="w-4 h-4" />
                     {mod.title}
                   </span>
+
+                  {/* 🧮 Кількість уроків */}
+                  <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
+                    {mod.lessons || 0}
+                  </span>
+
                   {expanded === mod.id ? (
                     <ChevronUp className="w-4 h-4" />
                   ) : (
