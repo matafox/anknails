@@ -58,7 +58,7 @@ export default function LoginPage() {
       localStorage.removeItem("admin_token");
 
       // Перехід до кабінету
-      window.location.href = "/cabinet";
+      window.location.href = "/profile";
     } catch (err) {
       setLoading(false);
       setError(err.message);
