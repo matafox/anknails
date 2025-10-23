@@ -225,22 +225,22 @@ export default function CabinetPage() {
               {modules.map((mod) => (
                 <div key={mod.id}>
                   <button
-  onClick={() => toggleModule(mod.id)}
-  className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600"
->
-  <span className="flex items-center gap-2">
-    <BookOpen className="w-4 h-4" />
-    {mod.title}
-  </span>
-  <span className="text-xs bg-pink-500 text-white rounded-full px-2 py-[1px] ml-auto">
-    {mod.lessons || 0}
-  </span>
-  {expanded === mod.id ? (
-    <ChevronUp className="w-4 h-4 opacity-70" />
-  ) : (
-    <ChevronDown className="w-4 h-4 opacity-70" />
-  )}
-</button>
+                    onClick={() => toggleModule(mod.id)}
+                    className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600"
+                  >
+                    <span className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4" />
+                      {mod.title}
+                    </span>
+                    <span className="text-xs bg-pink-500 text-white rounded-full px-2 py-[1px] ml-auto mr-2">
+                      {mod.lessons || 0}
+                    </span>
+                    {expanded === mod.id ? (
+                      <ChevronUp className="w-4 h-4 opacity-70" />
+                    ) : (
+                      <ChevronDown className="w-4 h-4 opacity-70" />
+                    )}
+                  </button>
 
                   {expanded === mod.id && (
                     <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
@@ -333,12 +333,12 @@ export default function CabinetPage() {
 
       {/* 🌸 Контент */}
       <main
-  className={`flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0 transition-all duration-300 ${
-    menuOpen ? "md:ml-0" : "md:ml-72"
-  }`}
->
+        className={`flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0 transition-all duration-300 ${
+          menuOpen ? "md:ml-0" : "md:ml-72"
+        }`}
+      >
         {banner && banner.active && (
-          <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+          <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)] max-w-6xl mx-auto">
             {banner.image_url && (
               <img
                 src={banner.image_url}
@@ -352,7 +352,6 @@ export default function CabinetPage() {
           </div>
         )}
 
-        {/* 📖 Контент */}
         {!selectedLesson ? (
           <div className="flex items-center justify-center flex-1 text-center opacity-70">
             <p className="text-lg">
@@ -361,7 +360,7 @@ export default function CabinetPage() {
           </div>
         ) : (
           <div
-            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg flex-1 ${
+            className={`max-w-6xl mx-auto p-6 rounded-2xl shadow-lg flex-1 ${
               darkMode
                 ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
                 : "bg-white/80 border border-pink-200"
