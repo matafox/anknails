@@ -4,7 +4,8 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import App from "./App.jsx";
 import AboutApp from "./AboutApp.jsx";
 import NotFound from "./pages/NotFound.jsx";
-import LoginPage from "./pages/LoginPage.jsx"; // 🆕 додаємо імпорт
+import LoginPage from "./pages/LoginPage.jsx"; 
+import AdminPage from "./pages/AdminPage.jsx";
 import "./index.css";
 import "./i18n/i18n.js";
 
@@ -16,6 +17,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
         <Route path="/about" element={<AboutApp />} />
         <Route path="/login" element={<LoginPage />} /> 
         <Route path="*" element={<NotFound />} />
+        <Route path="/admin" element={<AdminPage />} />
       </Routes>
     </BrowserRouter>
   </React.StrictMode>
