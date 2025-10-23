@@ -4,7 +4,6 @@ import {
   PlusCircle,
   Trash2,
   Save,
-  FolderMinus,
   XCircle,
 } from "lucide-react";
 
@@ -25,6 +24,8 @@ export default function ModulesTab({ darkMode, i18n }) {
   });
   const [editingLessonId, setEditingLessonId] = useState(null);
   const [expanded, setExpanded] = useState(null);
+
+  const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
   // 🧩 Завантаження курсів
   const fetchCourses = async () => {
@@ -51,7 +52,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     if (selectedCourse) fetchModules(selectedCourse);
   }, [selectedCourse]);
 
-  // 🧱 Зберегти або створити модуль
+  // 🧱 Створення / редагування модуля
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editId
@@ -75,7 +76,7 @@ export default function ModulesTab({ darkMode, i18n }) {
 
   // 🗑️ Видалити модуль
   const handleDeleteModule = async (id) => {
-    if (!window.confirm("Видалити модуль?")) return;
+    if (!window.confirm(t("Видалити модуль?", "Удалить модуль?"))) return;
     await fetch(`${BACKEND}/api/modules/delete/${id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -121,7 +122,7 @@ export default function ModulesTab({ darkMode, i18n }) {
 
   // 🗑️ Видалення уроку
   const handleDeleteLesson = async (lessonId, moduleId) => {
-    if (!window.confirm("Видалити урок?")) return;
+    if (!window.confirm(t("Видалити урок?", "Удалить урок?"))) return;
     await fetch(`${BACKEND}/api/lessons/delete/${lessonId}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -148,7 +149,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     <div className="space-y-10">
       {/* 🏫 Вибір курсу */}
       <div className="max-w-lg">
-        <label className="block font-medium mb-1">Курс:</label>
+        <label className="block font-medium mb-1">{t("Курс", "Курс")}:</label>
         <select
           value={selectedCourse || ""}
           onChange={(e) => setSelectedCourse(Number(e.target.value))}
@@ -167,21 +168,23 @@ export default function ModulesTab({ darkMode, i18n }) {
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          placeholder="Назва модуля"
+          placeholder={t("Назва модуля", "Название модуля")}
           className="w-full px-4 py-2 rounded-xl border border-pink-300"
           required
         />
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          placeholder="Опис"
+          placeholder={t("Опис модуля", "Описание модуля")}
           className="w-full px-4 py-2 rounded-xl border border-pink-300"
         />
         <button
           type="submit"
           className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold"
         >
-          {editId ? "Зберегти зміни" : "Створити модуль"}
+          {editId
+            ? t("Зберегти зміни", "Сохранить изменения")
+            : t("Створити модуль", "Создать модуль")}
         </button>
       </form>
 
@@ -198,7 +201,9 @@ export default function ModulesTab({ darkMode, i18n }) {
           >
             <h4 className="font-semibold text-lg">{mod.title}</h4>
             <p className="text-sm opacity-70 mb-2">{mod.description}</p>
-            <p className="text-xs opacity-60 mb-4">Уроків: {mod.lessons}</p>
+            <p className="text-xs opacity-60 mb-4">
+              {t("Уроків", "Уроков")}: {mod.lessons}
+            </p>
 
             <div className="flex justify-between mb-2">
               <button
@@ -208,13 +213,13 @@ export default function ModulesTab({ darkMode, i18n }) {
                 }}
                 className="text-blue-500 flex items-center gap-1"
               >
-                <Edit3 className="w-4 h-4" /> Редагувати
+                <Edit3 className="w-4 h-4" /> {t("Редагувати", "Редактировать")}
               </button>
               <button
                 onClick={() => handleDeleteModule(mod.id)}
                 className="text-red-500 flex items-center gap-1"
               >
-                <Trash2 className="w-4 h-4" /> Видалити
+                <Trash2 className="w-4 h-4" /> {t("Видалити", "Удалить")}
               </button>
             </div>
 
@@ -226,7 +231,9 @@ export default function ModulesTab({ darkMode, i18n }) {
               }}
               className="mt-3 text-pink-500 underline text-sm"
             >
-              {expanded === mod.id ? "Сховати уроки" : "Показати уроки"}
+              {expanded === mod.id
+                ? t("Сховати уроки", "Скрыть уроки")
+                : t("Показати уроки", "Показать уроки")}
             </button>
 
             {expanded === mod.id && (
@@ -251,12 +258,13 @@ export default function ModulesTab({ darkMode, i18n }) {
                         )}
                         {l.homework && (
                           <p className="mt-2 text-xs opacity-80">
-                            📝 <b>Завдання:</b> {l.homework}
+                            📝 <b>{t("Завдання", "Задание")}:</b> {l.homework}
                           </p>
                         )}
                         {l.materials && (
                           <p className="mt-1 text-xs opacity-80">
-                            📁 <b>Матеріали:</b> {l.materials}
+                            📁 <b>{t("Матеріали", "Материалы")}:</b>{" "}
+                            {l.materials}
                           </p>
                         )}
                       </div>
@@ -265,13 +273,13 @@ export default function ModulesTab({ darkMode, i18n }) {
                           onClick={() => startEditLesson(l)}
                           className="text-blue-500 text-xs flex items-center gap-1"
                         >
-                          <Edit3 className="w-3 h-3" /> ред.
+                          <Edit3 className="w-3 h-3" /> {t("ред.", "ред.")}
                         </button>
                         <button
                           onClick={() => handleDeleteLesson(l.id, mod.id)}
                           className="text-red-500 text-xs flex items-center gap-1"
                         >
-                          <Trash2 className="w-3 h-3" /> вид.
+                          <Trash2 className="w-3 h-3" /> {t("вид.", "удал.")}
                         </button>
                       </div>
                     </div>
@@ -284,7 +292,7 @@ export default function ModulesTab({ darkMode, i18n }) {
                   className="space-y-2 mt-3"
                 >
                   <input
-                    placeholder="Назва уроку"
+                    placeholder={t("Назва уроку", "Название урока")}
                     value={lessonForm.title}
                     onChange={(e) =>
                       setLessonForm({ ...lessonForm, title: e.target.value })
@@ -293,7 +301,7 @@ export default function ModulesTab({ darkMode, i18n }) {
                     required
                   />
                   <textarea
-                    placeholder="Опис"
+                    placeholder={t("Опис", "Описание")}
                     value={lessonForm.description}
                     onChange={(e) =>
                       setLessonForm({
@@ -312,7 +320,7 @@ export default function ModulesTab({ darkMode, i18n }) {
                     className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                   />
                   <input
-                    placeholder="Завдання"
+                    placeholder={t("Завдання", "Задание")}
                     value={lessonForm.homework}
                     onChange={(e) =>
                       setLessonForm({ ...lessonForm, homework: e.target.value })
@@ -320,7 +328,10 @@ export default function ModulesTab({ darkMode, i18n }) {
                     className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                   />
                   <input
-                    placeholder="Матеріали (посилання або короткий опис)"
+                    placeholder={t(
+                      "Матеріали (посилання або короткий опис)",
+                      "Материалы (ссылка или краткое описание)"
+                    )}
                     value={lessonForm.materials}
                     onChange={(e) =>
                       setLessonForm({
@@ -338,11 +349,13 @@ export default function ModulesTab({ darkMode, i18n }) {
                     >
                       {editingLessonId ? (
                         <>
-                          <Save className="w-4 h-4" /> Зберегти
+                          <Save className="w-4 h-4" />{" "}
+                          {t("Зберегти", "Сохранить")}
                         </>
                       ) : (
                         <>
-                          <PlusCircle className="w-4 h-4" /> Додати урок
+                          <PlusCircle className="w-4 h-4" />{" "}
+                          {t("Додати урок", "Добавить урок")}
                         </>
                       )}
                     </button>
@@ -361,7 +374,8 @@ export default function ModulesTab({ darkMode, i18n }) {
                         }}
                         className="px-4 py-2 bg-gray-300 rounded-lg text-sm flex items-center gap-1"
                       >
-                        <XCircle className="w-4 h-4" /> Скасувати
+                        <XCircle className="w-4 h-4" />{" "}
+                        {t("Скасувати", "Отменить")}
                       </button>
                     )}
                   </div>
