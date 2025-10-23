@@ -21,7 +21,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     youtube: "",
     homework: "",
     materials: "",
-    type: "theory", // 🩷 нове поле
+    type: "theory",
   });
   const [editingLessonId, setEditingLessonId] = useState(null);
   const [expanded, setExpanded] = useState(null);
@@ -116,7 +116,6 @@ export default function ModulesTab({ darkMode, i18n }) {
       youtube: "",
       homework: "",
       materials: "",
-      type: "theory",
     });
     setEditingLessonId(null);
     fetchLessons(moduleId);
@@ -144,7 +143,6 @@ export default function ModulesTab({ darkMode, i18n }) {
         : "",
       homework: lesson.homework || "",
       materials: lesson.materials || "",
-      type: lesson.type || "theory",
     });
   };
 
@@ -251,20 +249,40 @@ export default function ModulesTab({ darkMode, i18n }) {
                     <div className="flex justify-between">
                       <div>
                         <div className="flex items-center gap-2">
-                          <b>{l.title}</b>
-                          <span
-                            className={`text-xs px-2 py-[2px] rounded-full ${
-                              l.type === "practice"
-                                ? "bg-purple-200 text-purple-700"
-                                : "bg-pink-200 text-pink-700"
-                            }`}
-                          >
-                            {l.type === "practice"
-                              ? t("Практика", "Практика")
-                              : t("Теорія", "Теория")}
-                          </span>
-                        </div>
+  <b>{l.title}</b>
+  {l.type && (
+    <span
+      className={`text-xs px-2 py-[2px] rounded-full ${
+        l.type === "practice"
+          ? "bg-purple-200 text-purple-700"
+          : "bg-pink-200 text-pink-700"
+      }`}
+    >
+      {l.type === "practice"
+        ? t("Практика", "Практика")
+        : t("Теорія", "Теория")}
+    </span>
+  )}
+</div>
                         {l.description && <p>{l.description}</p>}
+                        {l.embed_url && (
+                          <iframe
+                            src={l.embed_url}
+                            className="mt-2 w-full aspect-video rounded-lg border border-pink-200"
+                            allowFullScreen
+                          />
+                        )}
+                        {l.homework && (
+                          <p className="mt-2 text-xs opacity-80">
+                            📝 <b>{t("Завдання", "Задание")}:</b> {l.homework}
+                          </p>
+                        )}
+                        {l.materials && (
+                          <p className="mt-1 text-xs opacity-80">
+                            📁 <b>{t("Матеріали", "Материалы")}:</b>{" "}
+                            {l.materials}
+                          </p>
+                        )}
                       </div>
                       <div className="flex flex-col gap-1">
                         <button
@@ -298,33 +316,117 @@ export default function ModulesTab({ darkMode, i18n }) {
                     className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                     required
                   />
-
+                  <textarea
+                    placeholder={t("Опис", "Описание")}
+                    value={lessonForm.description}
+                    onChange={(e) =>
+                      setLessonForm({
+                        ...lessonForm,
+                        description: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                  />
+                  <input
+                    placeholder="YouTube URL"
+                    value={lessonForm.youtube}
+                    onChange={(e) =>
+                      setLessonForm({ ...lessonForm, youtube: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                  />
                   {/* 🩷 Теорія / 💜 Практика */}
+<div className="flex gap-2">
+  <button
+    type="button"
+    onClick={() => setLessonForm({ ...lessonForm, type: "theory" })}
+    className={`flex-1 py-2 rounded-lg font-medium ${
+      lessonForm.type === "theory"
+        ? "bg-pink-500 text-white"
+        : "bg-pink-100 text-pink-600"
+    }`}
+  >
+    🩷 {t("Теорія", "Теория")}
+  </button>
+  <button
+    type="button"
+    onClick={() => setLessonForm({ ...lessonForm, type: "practice" })}
+    className={`flex-1 py-2 rounded-lg font-medium ${
+      lessonForm.type === "practice"
+        ? "bg-purple-500 text-white"
+        : "bg-purple-100 text-purple-600"
+    }`}
+  >
+    💜 {t("Практика", "Практика")}
+  </button>
+</div>
+
+                  <input
+                    placeholder={t("Завдання", "Задание")}
+                    value={lessonForm.homework}
+                    onChange={(e) =>
+                      setLessonForm({ ...lessonForm, homework: e.target.value })
+                    }
+                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                  />
+                  <input
+                    placeholder={t(
+                      "Матеріали (посилання або короткий опис)",
+                      "Материалы (ссылка или краткое описание)"
+                    )}
+                    value={lessonForm.materials}
+                    onChange={(e) =>
+                      setLessonForm({
+                        ...lessonForm,
+                        materials: e.target.value,
+                      })
+                    }
+                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                  />
+
                   <div className="flex gap-2">
                     <button
-                      type="button"
-                      onClick={() =>
-                        setLessonForm({ ...lessonForm, type: "theory" })
-                      }
-                      className={`flex-1 py-2 rounded-lg font-medium ${
-                        lessonForm.type === "theory"
-                          ? "bg-pink-500 text-white"
-                          : "bg-pink-100 text-pink-600"
-                      }`}
+                      type="submit"
+                      className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg"
                     >
-                      🩷 {t("Теорія", "Теория")}
+                      {editingLessonId ? (
+                        <>
+                          <Save className="w-4 h-4" />{" "}
+                          {t("Зберегти", "Сохранить")}
+                        </>
+                      ) : (
+                        <>
+                          <PlusCircle className="w-4 h-4" />{" "}
+                          {t("Додати урок", "Добавить урок")}
+                        </>
+                      )}
                     </button>
-                    <button
-                      type="button"
-                      onClick={() =>
-                        setLessonForm({ ...lessonForm, type: "practice" })
-                      }
-                      className={`flex-1 py-2 rounded-lg font-medium ${
-                        lessonForm.type === "practice"
-                          ? "bg-purple-500 text-white"
-                          : "bg-purple-100 text-purple-600"
-                      }`}
-                    >
-                      💜 {t("Практика", "Практика")}
-                    </button>
+                    {editingLessonId && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingLessonId(null);
+                          setLessonForm({
+                            title: "",
+                            description: "",
+                            youtube: "",
+                            homework: "",
+                            materials: "",
+                          });
+                        }}
+                        className="px-4 py-2 bg-gray-300 rounded-lg text-sm flex items-center gap-1"
+                      >
+                        <XCircle className="w-4 h-4" />{" "}
+                        {t("Скасувати", "Отменить")}
+                      </button>
+                    )}
                   </div>
+                </form>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
