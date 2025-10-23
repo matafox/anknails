@@ -12,17 +12,26 @@ import {
 } from "lucide-react";
 
 // 🎥 Безпечний YouTube
-const SafeYoutube = ({ url }) => {
-  if (!url) return null;
-  const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
-  const videoId = match ? match[1] : null;
-  if (!videoId) return null;
+const SafeYoutube = ({ url, videoId }) => {
+  let id = videoId || null;
+
+  if (!id && url) {
+    const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
+    id = match ? match[1] : null;
+  }
+
+  if (!id)
+    return (
+      <p className="text-sm text-gray-500 text-center py-4">
+        ❌ Невірне посилання або відео не знайдено
+      </p>
+    );
 
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
       <iframe
-        src={`https://www.youtube-nocookie.com/embed/${videoId}?controls=1&modestbranding=1&rel=0&showinfo=0&fs=0&disablekb=1&iv_load_policy=3&cc_load_policy=0`}
-        allow="autoplay; fullscreen"
+        src={`https://www.youtube-nocookie.com/embed/${id}?controls=1&modestbranding=1&rel=0&showinfo=0`}
+        allow="autoplay; fullscreen; picture-in-picture"
         loading="lazy"
         className="w-full h-full"
       />
@@ -32,15 +41,16 @@ const SafeYoutube = ({ url }) => {
 
 export default function CabinetPage() {
   const { i18n } = useTranslation();
+  const BACKEND = "https://anknails-backend-production.up.railway.app";
+
   const [user, setUser] = useState(null);
   const [modules, setModules] = useState([]);
   const [lessons, setLessons] = useState({});
   const [expanded, setExpanded] = useState(null);
   const [selectedLesson, setSelectedLesson] = useState(null);
+  const [banner, setBanner] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-
-  const BACKEND = "https://anknails-backend-production.up.railway.app";
 
   // 🌓 Тема
   useEffect(() => {
@@ -51,33 +61,89 @@ export default function CabinetPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  // 🧠 Користувач
+  // 🧠 Авторизація + користувач
   useEffect(() => {
+    const token = localStorage.getItem("user_token");
     const email = localStorage.getItem("user_email");
     const expires = localStorage.getItem("expires_at");
-    if (!email || !expires) {
+
+    if (!token || !email || !expires) {
       window.location.href = "/login";
       return;
     }
 
-    setUser({
-      email,
-      name: localStorage.getItem("user_name"),
-      expires_at: new Date(expires).toLocaleDateString(),
-    });
+    const expiryDate = new Date(expires);
+    if (expiryDate < new Date()) {
+      localStorage.clear();
+      alert(
+        i18n.language === "ru"
+          ? "Срок действия аккаунта истек"
+          : "Термін дії акаунта минув"
+      );
+      window.location.href = "/login";
+      return;
+    }
+
+    // Отримуємо ім’я користувача з бекенду
+    fetch(`${BACKEND}/api/users`)
+      .then((res) => res.json())
+      .then((data) => {
+        const found = data.users?.find((u) => u.email === email);
+        setUser({
+          email,
+          name: found?.name || null,
+          expires_at: new Date(found?.expires_at || expires).toLocaleDateString(),
+          active: found?.active ?? true,
+        });
+      })
+      .catch(() =>
+        setUser({
+          email,
+          name: null,
+          expires_at: expiryDate.toLocaleDateString(),
+          active: true,
+        })
+      );
+  }, [i18n.language]);
+
+  // 🎀 Банер
+  useEffect(() => {
+    fetch(`${BACKEND}/api/banner`)
+      .then((res) => res.json())
+      .then((data) => setBanner(data))
+      .catch(() => console.error("Помилка завантаження банера"));
   }, []);
 
   // 📘 Модулі
   useEffect(() => {
     fetch(`${BACKEND}/api/modules`)
       .then((res) => res.json())
-      .then((data) => setModules(data.modules || []));
+      .then((data) => setModules(data.modules || []))
+      .catch(() => console.error("Помилка модулів"));
   }, []);
 
+  // 📚 Уроки
   const fetchLessons = async (moduleId) => {
-    const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
-    const data = await res.json();
-    setLessons((prev) => ({ ...prev, [moduleId]: data.lessons || [] }));
+    try {
+      const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
+      const data = await res.json();
+      const normalized = (data.lessons || []).map((l) => {
+        const id =
+          l.youtube_id ||
+          (l.embed_url && (l.embed_url.match(/embed\/([a-zA-Z0-9_-]{11})/) || [])[1]) ||
+          null;
+        return {
+          ...l,
+          videoId: id,
+          videoUrl:
+            l.embed_url ||
+            (id ? `https://www.youtube-nocookie.com/embed/${id}` : null),
+        };
+      });
+      setLessons((prev) => ({ ...prev, [moduleId]: normalized }));
+    } catch (e) {
+      console.error("Помилка завантаження уроків:", e);
+    }
   };
 
   const toggleModule = (id) => {
@@ -119,7 +185,7 @@ export default function CabinetPage() {
         </button>
       </header>
 
-      {/* 📚 Бокове меню */}
+      {/* 📚 Меню з модулями */}
       <aside
         className={`w-72 flex-shrink-0 fixed md:static top-0 h-screen md:h-auto overflow-y-auto transition-transform duration-300 z-10 md:z-0 border-r backdrop-blur-xl ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -130,6 +196,7 @@ export default function CabinetPage() {
         }`}
       >
         <div className="p-6">
+          {/* 👩‍🎓 Профіль */}
           <div className="flex flex-col items-center text-center mb-6">
             <User className="w-16 h-16 text-pink-500 mb-2" />
             <h2 className="font-bold text-lg">
@@ -141,7 +208,7 @@ export default function CabinetPage() {
             </p>
           </div>
 
-          {/* Модулі */}
+          {/* 📘 Модулі */}
           <div className="space-y-2">
             {modules.map((mod) => (
               <div key={mod.id}>
@@ -160,7 +227,7 @@ export default function CabinetPage() {
                   )}
                 </button>
 
-                {/* Уроки */}
+                {/* 📖 Уроки */}
                 {expanded === mod.id && (
                   <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
                     {lessons[mod.id]?.map((l) => (
@@ -185,6 +252,7 @@ export default function CabinetPage() {
             ))}
           </div>
 
+          {/* 🚪 Вихід */}
           <button
             onClick={handleLogout}
             className="mt-8 w-full py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all"
@@ -197,6 +265,22 @@ export default function CabinetPage() {
 
       {/* 🌸 Контент */}
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
+        {/* 🎀 Банер */}
+        {banner && banner.active && (
+          <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+            {banner.image_url && (
+              <img
+                src={banner.image_url}
+                alt="Banner"
+                className="w-full h-48 md:h-64 object-cover"
+              />
+            )}
+            <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
+              {banner.title}
+            </div>
+          </div>
+        )}
+
         {!selectedLesson ? (
           <div className="flex items-center justify-center h-full text-center opacity-70">
             <p className="text-lg">
@@ -217,37 +301,48 @@ export default function CabinetPage() {
               {selectedLesson.title}
             </h2>
 
-            {selectedLesson.youtube && (
-              <div className="mb-6">
-                <SafeYoutube url={selectedLesson.youtube} />
+            {/* 🎥 Відео */}
+            <SafeYoutube url={selectedLesson.videoUrl} videoId={selectedLesson.videoId} />
+
+            {/* 📄 Опис */}
+            {selectedLesson.description && (
+              <div className="mt-4">
+                <h4 className="font-semibold mb-1">
+                  {i18n.language === "ru" ? "Описание" : "Опис"}
+                </h4>
+                <p>{selectedLesson.description}</p>
               </div>
             )}
 
-            {selectedLesson.description && (
-              <p className="mb-4 leading-relaxed">
-                {selectedLesson.description}
-              </p>
-            )}
-
+            {/* 📝 ДЗ */}
             {selectedLesson.homework && (
               <div className="mt-4">
                 <h4 className="font-semibold text-pink-500 mb-1">
-                  📝 {i18n.language === "ru" ? "Домашнее задание" : "Домашнє завдання"}
+                  📝{" "}
+                  {i18n.language === "ru"
+                    ? "Домашнее задание"
+                    : "Домашнє завдання"}
                 </h4>
                 <p>{selectedLesson.homework}</p>
               </div>
             )}
 
+            {/* 📚 Матеріали */}
             {selectedLesson.materials && (
               <div className="mt-4">
                 <h4 className="font-semibold text-pink-500 mb-1">
-                  📚 {i18n.language === "ru" ? "Материалы" : "Матеріали"}
+                  📚{" "}
+                  {i18n.language === "ru" ? "Материалы" : "Матеріали"}
                 </h4>
                 <p>{selectedLesson.materials}</p>
               </div>
             )}
           </div>
         )}
+
+        <footer className="mt-10 text-sm opacity-60 text-center py-6">
+          ANK Studio LMS © {new Date().getFullYear()}
+        </footer>
       </main>
     </div>
   );
