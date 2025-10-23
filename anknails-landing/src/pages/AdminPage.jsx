@@ -1,14 +1,15 @@
+// ✅ anknails-landing/src/pages/AdminPage.jsx
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   BookOpen,
-  Users,
   Image,
   LogOut,
   Settings,
   Menu,
   X,
 } from "lucide-react";
+
 import ModulesTab from "./admin/ModulesTab";
 import BannerTab from "./admin/BannerTab";
 import SettingsTab from "./admin/SettingsTab";
@@ -40,9 +41,21 @@ export default function AdminPage() {
   };
 
   const tabs = [
-    { id: "modules", label: i18n.language === "ru" ? "Модули курса" : "Модулі курсу", icon: BookOpen },
-    { id: "banner", label: i18n.language === "ru" ? "Баннер" : "Банер", icon: Image },
-    { id: "settings", label: i18n.language === "ru" ? "Настройки" : "Налаштування", icon: Settings },
+    {
+      id: "modules",
+      label: i18n.language === "ru" ? "Модули курса" : "Модулі курсу",
+      icon: BookOpen,
+    },
+    {
+      id: "banner",
+      label: i18n.language === "ru" ? "Баннер" : "Банер",
+      icon: Image,
+    },
+    {
+      id: "settings",
+      label: i18n.language === "ru" ? "Настройки" : "Налаштування",
+      icon: Settings,
+    },
   ];
 
   return (
@@ -119,15 +132,9 @@ export default function AdminPage() {
 
       {/* 🌸 Контент */}
       <main className="flex-1 p-4 sm:p-6 md:p-8 overflow-y-auto">
-        {activeTab === "modules" && (
-          <ModulesTab darkMode={darkMode} i18n={i18n} />
-        )}
-        {activeTab === "banner" && (
-          <BannerTab darkMode={darkMode} i18n={i18n} />
-        )}
-        {activeTab === "settings" && (
-          <SettingsTab darkMode={darkMode} i18n={i18n} />
-        )}
+        {activeTab === "modules" && <ModulesTab darkMode={darkMode} i18n={i18n} />}
+        {activeTab === "banner" && <BannerTab darkMode={darkMode} i18n={i18n} />}
+        {activeTab === "settings" && <SettingsTab darkMode={darkMode} i18n={i18n} />}
       </main>
     </div>
   );
