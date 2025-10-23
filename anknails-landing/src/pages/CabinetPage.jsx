@@ -20,7 +20,7 @@ export default function CabinetPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  // 🧠 Авторизація + дані користувача з бекенду
+  // 🧠 Авторизація + отримання даних користувача
   useEffect(() => {
     const token = localStorage.getItem("user_token");
     const email = localStorage.getItem("user_email");
@@ -43,20 +43,28 @@ export default function CabinetPage() {
       return;
     }
 
-    // 🧾 Отримати ім’я користувача з бекенду
+    // 👤 Отримати користувача з бекенду
     fetch(`${BACKEND}/api/users`)
       .then((res) => res.json())
       .then((data) => {
         const found = data.users?.find((u) => u.email === email);
-        setUser({
-          email,
-          name: found?.name || null,
-          expires_at: expiryDate.toLocaleDateString(),
-          active: true,
-        });
+        if (found) {
+          setUser({
+            email: found.email,
+            name: found.name || null,
+            expires_at: new Date(found.expires_at).toLocaleDateString(),
+            active: found.active,
+          });
+        } else {
+          setUser({
+            email,
+            name: null,
+            expires_at: expiryDate.toLocaleDateString(),
+            active: true,
+          });
+        }
       })
       .catch(() => {
-        // fallback якщо не вдалося завантажити
         setUser({
           email,
           name: null,
@@ -89,7 +97,7 @@ export default function CabinetPage() {
 
   if (!user) return null;
 
-  const displayName = user.name || user.email;
+  const displayName = user.name?.trim() || user.email;
 
   return (
     <div
@@ -115,7 +123,7 @@ export default function CabinetPage() {
         </button>
       </header>
 
-      {/* 🩷 Бокове меню (адаптивне) */}
+      {/* 🩷 Бокове меню */}
       <aside
         className={`md:w-72 md:static fixed top-0 left-0 h-full md:h-auto transform ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
