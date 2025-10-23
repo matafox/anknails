@@ -1,14 +1,17 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LogOut, User, Menu, X, BookOpen, Clock } from "lucide-react";
+import { LogOut, User, Menu, X, BookOpen, Clock, ChevronDown, ChevronUp } from "lucide-react";
 
 export default function CabinetPage() {
   const { i18n } = useTranslation();
   const [user, setUser] = useState(null);
   const [banner, setBanner] = useState(null);
   const [modules, setModules] = useState([]);
+  const [lessons, setLessons] = useState({});
+  const [expanded, setExpanded] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
   const BACKEND = "https://anknails-backend-production.up.railway.app";
 
   // 🌓 Тема
@@ -20,7 +23,7 @@ export default function CabinetPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  // 🧠 Авторизація + отримання користувача
+  // 🧠 Авторизація + користувач
   useEffect(() => {
     const token = localStorage.getItem("user_token");
     const email = localStorage.getItem("user_email");
@@ -80,6 +83,25 @@ export default function CabinetPage() {
       .catch(() => console.error("Помилка завантаження модулів"));
   }, []);
 
+  const fetchLessons = async (moduleId) => {
+    try {
+      const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
+      const data = await res.json();
+      setLessons((prev) => ({ ...prev, [moduleId]: data.lessons || [] }));
+    } catch (err) {
+      console.error("Помилка завантаження уроків:", err);
+    }
+  };
+
+  const handleToggleModule = (id) => {
+    if (expanded === id) {
+      setExpanded(null);
+    } else {
+      setExpanded(id);
+      if (!lessons[id]) fetchLessons(id);
+    }
+  };
+
   const handleLogout = () => {
     localStorage.clear();
     window.location.href = "/login";
@@ -138,20 +160,6 @@ export default function CabinetPage() {
           <LogOut className="w-5 h-5" />
           {i18n.language === "ru" ? "Выйти" : "Вийти"}
         </button>
-
-        <div className="mt-10 border-t border-pink-200/30 pt-6 text-sm text-center md:text-left">
-          <h3 className="uppercase font-semibold opacity-70 mb-3">
-            {i18n.language === "ru" ? "Разделы" : "Розділи"}
-          </h3>
-          <ul className="space-y-2">
-            <li className="hover:text-pink-500 transition cursor-pointer">
-              {i18n.language === "ru" ? "Мои курсы" : "Мої курси"}
-            </li>
-            <li className="hover:text-pink-500 transition cursor-pointer">
-              {i18n.language === "ru" ? "Помощь" : "Допомога"}
-            </li>
-          </ul>
-        </div>
       </aside>
 
       {/* 🌸 Контент */}
@@ -175,26 +183,88 @@ export default function CabinetPage() {
 
           {/* 📘 Модулі */}
           {modules.length > 0 ? (
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="space-y-4">
               {modules.map((mod) => (
                 <div
                   key={mod.id}
-                  className={`p-5 rounded-2xl border transition-all hover:shadow-[0_0_20px_rgba(255,0,128,0.2)] ${
+                  className={`rounded-2xl border transition-all ${
                     darkMode
                       ? "border-fuchsia-900/30 bg-[#1a0a1f]/70"
                       : "border-pink-200 bg-white/80"
                   }`}
                 >
-                  <div className="flex items-center gap-3 mb-3">
-                    <BookOpen className="w-6 h-6 text-pink-500" />
-                    <h3 className="text-lg font-semibold">{mod.title}</h3>
+                  {/* Заголовок модуля */}
+                  <div
+                    className="flex justify-between items-center p-5 cursor-pointer"
+                    onClick={() => handleToggleModule(mod.id)}
+                  >
+                    <div className="flex items-center gap-3">
+                      <BookOpen className="w-6 h-6 text-pink-500" />
+                      <div>
+                        <h3 className="text-lg font-semibold">{mod.title}</h3>
+                        <p className="text-sm opacity-70">{mod.description}</p>
+                      </div>
+                    </div>
+                    {expanded === mod.id ? (
+                      <ChevronUp className="w-5 h-5 text-pink-500" />
+                    ) : (
+                      <ChevronDown className="w-5 h-5 text-pink-500" />
+                    )}
                   </div>
-                  <p className="text-sm opacity-80 mb-3">{mod.description}</p>
-                  <div className="flex items-center gap-2 text-sm opacity-70">
-                    <Clock className="w-4 h-4" />
-                    {i18n.language === "ru" ? "Уроков" : "Уроків"}:{" "}
-                    {mod.lessons}
-                  </div>
+
+                  {/* 📚 Уроки */}
+                  {expanded === mod.id && (
+                    <div className="p-5 border-t border-pink-200/30 space-y-5">
+                      {lessons[mod.id]?.length ? (
+                        lessons[mod.id].map((l) => (
+                          <div
+                            key={l.id}
+                            className="p-4 rounded-xl border border-pink-200/50 bg-white/50 shadow-sm"
+                          >
+                            <h4 className="font-semibold text-pink-600 mb-2">{l.title}</h4>
+                            {l.youtube && (
+                              <div className="mb-3">
+                                <iframe
+                                  className="w-full aspect-video rounded-xl"
+                                  src={l.youtube.replace("watch?v=", "embed/")}
+                                  allowFullScreen
+                                ></iframe>
+                              </div>
+                            )}
+                            {l.description && (
+                              <p className="text-sm opacity-80 mb-2">{l.description}</p>
+                            )}
+                            {l.homework && (
+                              <p className="text-sm mt-2">
+                                <span className="font-semibold text-pink-500">
+                                  📝 {i18n.language === "ru"
+                                    ? "Домашнее задание:"
+                                    : "Домашнє завдання:"}
+                                </span>{" "}
+                                {l.homework}
+                              </p>
+                            )}
+                            {l.materials && (
+                              <p className="text-sm mt-2">
+                                <span className="font-semibold text-pink-500">
+                                  📚 {i18n.language === "ru"
+                                    ? "Материалы:"
+                                    : "Матеріали:"}
+                                </span>{" "}
+                                {l.materials}
+                              </p>
+                            )}
+                          </div>
+                        ))
+                      ) : (
+                        <p className="text-sm opacity-60 text-center">
+                          {i18n.language === "ru"
+                            ? "Уроки ще не додані"
+                            : "Уроки ще не додані"}
+                        </p>
+                      )}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -209,7 +279,7 @@ export default function CabinetPage() {
           )}
         </div>
 
-        {/* 🩶 Футер завжди знизу */}
+        {/* 🩶 Футер */}
         <footer className="mt-auto text-sm opacity-60 text-center py-6">
           ANK Studio LMS © {new Date().getFullYear()}
         </footer>
