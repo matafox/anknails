@@ -9,6 +9,8 @@ import {
   ChevronDown,
   ChevronUp,
   PlayCircle,
+  Moon, 
+  Globe,
 } from "lucide-react";
 
 // 🎥 Безпечний YouTube
@@ -279,60 +281,68 @@ export default function CabinetPage() {
             </div>
           )}
 
-          {/* 🌗 Перемикач теми + Мова */}
-          <div className="mt-8 space-y-4 text-sm">
-            {/* 🌙 Тема */}
-            <div className="flex items-center gap-2">
-              <span className="text-lg">🌙</span>
-              <label className="flex items-center gap-2 cursor-pointer">
-                <span>{t("Темна тема", "Тёмная тема")}</span>
-                <input
-                  type="checkbox"
-                  checked={darkMode}
-                  onChange={() => {
-                    const newMode = !darkMode;
-                    setDarkMode(newMode);
-                    document.documentElement.classList.toggle("dark", newMode);
-                    localStorage.setItem("theme", newMode ? "dark" : "light");
-                  }}
-                  className="w-4 h-4 accent-pink-500"
-                />
-              </label>
-            </div>
+         {/* 🌗 Перемикач теми + Мова */}
+<div className="mt-8 space-y-4 text-sm">
+  {/* 🌙 Тема */}
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      <Moon className="w-4 h-4 text-pink-500" />
+      <span>{t("Темна тема", "Тёмная тема")}</span>
+    </div>
+    <label className="inline-flex items-center cursor-pointer">
+      <input
+        type="checkbox"
+        checked={darkMode}
+        onChange={() => {
+          const newMode = !darkMode;
+          setDarkMode(newMode);
+          document.documentElement.classList.toggle("dark", newMode);
+          localStorage.setItem("theme", newMode ? "dark" : "light");
+        }}
+        className="sr-only peer"
+      />
+      <div className="relative w-10 h-5 bg-pink-200 rounded-full peer peer-checked:bg-pink-500 transition">
+        <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+      </div>
+    </label>
+  </div>
 
-            {/* 🌍 Мова */}
-            <div className="flex items-center gap-3">
-              <span className="text-lg">🌍</span>
-              <div className="flex gap-2">
-                <button
-                  onClick={() => {
-                    i18n.changeLanguage("ru");
-                    localStorage.setItem("lang", "ru");
-                  }}
-                  className={`px-3 py-1 rounded-lg font-medium border transition ${
-                    i18n.language === "ru"
-                      ? "bg-pink-500 text-white border-pink-500"
-                      : "bg-white text-pink-600 border-pink-300"
-                  }`}
-                >
-                  RU
-                </button>
-                <button
-                  onClick={() => {
-                    i18n.changeLanguage("uk");
-                    localStorage.setItem("lang", "uk");
-                  }}
-                  className={`px-3 py-1 rounded-lg font-medium border transition ${
-                    i18n.language === "uk"
-                      ? "bg-pink-500 text-white border-pink-500"
-                      : "bg-white text-pink-600 border-pink-300"
-                  }`}
-                >
-                  UK
-                </button>
-              </div>
-            </div>
-          </div>
+  {/* 🌍 Мова */}
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-2">
+      <Globe className="w-4 h-4 text-pink-500" />
+      <span>{t("Мова", "Язык")}</span>
+    </div>
+    <div className="flex gap-2">
+      <button
+        onClick={() => {
+          i18n.changeLanguage("ru");
+          localStorage.setItem("lang", "ru");
+        }}
+        className={`px-3 py-1 rounded-lg font-medium border text-xs transition ${
+          i18n.language === "ru"
+            ? "bg-pink-500 text-white border-pink-500"
+            : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
+        }`}
+      >
+        RU
+      </button>
+      <button
+        onClick={() => {
+          i18n.changeLanguage("uk");
+          localStorage.setItem("lang", "uk");
+        }}
+        className={`px-3 py-1 rounded-lg font-medium border text-xs transition ${
+          i18n.language === "uk"
+            ? "bg-pink-500 text-white border-pink-500"
+            : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
+        }`}
+      >
+        UK
+      </button>
+    </div>
+  </div>
+</div>
 
           {/* 🚪 Вихід */}
           <button
