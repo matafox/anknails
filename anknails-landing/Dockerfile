@@ -1,13 +1,21 @@
+# 🐍 Офіційний Python образ
 FROM python:3.11-slim
 
+# 📂 Робоча директорія
 WORKDIR /app
 
-COPY backend /app/backend
+# 🔧 Скопіюємо залежності
+COPY backend/requirements.txt ./requirements.txt
 
-RUN pip install --no-cache-dir -r backend/requirements.txt
+# 📦 Встановимо залежності
+RUN pip install --no-cache-dir -r requirements.txt
 
-ENV PORT=8080
-EXPOSE 8080
+# 📂 Скопіюємо код бекенду
+COPY backend ./backend
 
-# 🔥 Використовуємо uvicorn напряму — гарантовано працює на Railway
-CMD ["uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8080"]
+# 🌍 Змінна середовища для Railway
+ENV PORT=8000
+EXPOSE 8000
+
+# 🚀 Запускаємо uvicorn
+CMD ["python", "-m", "uvicorn", "backend.app:app", "--host", "0.0.0.0", "--port", "8000"]
