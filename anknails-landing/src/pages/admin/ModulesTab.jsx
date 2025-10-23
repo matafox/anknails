@@ -3,10 +3,12 @@ import { Edit3, PlusCircle, Trash2, Save, FolderMinus } from "lucide-react";
 
 export default function ModulesTab({ darkMode, i18n }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
+  const [courses, setCourses] = useState([]);
+  const [selectedCourse, setSelectedCourse] = useState(null);
   const [modules, setModules] = useState([]);
-  const [form, setForm] = useState({ title: "", description: "", lessons: "" });
+  const [form, setForm] = useState({ title: "", description: "" });
   const [editId, setEditId] = useState(null);
-  const [expanded, setExpanded] = useState(null);
+  const [lessons, setLessons] = useState({});
   const [lessonForm, setLessonForm] = useState({
     title: "",
     description: "",
@@ -14,28 +16,32 @@ export default function ModulesTab({ darkMode, i18n }) {
     homework: "",
     materials: "",
   });
-  const [lessons, setLessons] = useState({});
   const [editingLessonId, setEditingLessonId] = useState(null);
+  const [expanded, setExpanded] = useState(null);
 
-  // 🧠 Завантаження модулів
-  const fetchModules = async () => {
-    const res = await fetch(`${BACKEND}/api/modules`);
+  const fetchCourses = async () => {
+    const res = await fetch(`${BACKEND}/api/courses`);
+    const data = await res.json();
+    setCourses(data.courses || []);
+    if (!selectedCourse && data.courses.length > 0) {
+      setSelectedCourse(data.courses[0].id);
+    }
+  };
+
+  const fetchModules = async (courseId) => {
+    const res = await fetch(`${BACKEND}/api/modules/${courseId}`);
     const data = await res.json();
     setModules(data.modules || []);
   };
 
-  // 🧠 Завантаження уроків
-  const fetchLessons = async (moduleId) => {
-    const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
-    const data = await res.json();
-    setLessons((prev) => ({ ...prev, [moduleId]: data.lessons || [] }));
-  };
-
   useEffect(() => {
-    fetchModules();
+    fetchCourses();
   }, []);
 
-  // 🧩 Створення / редагування модуля
+  useEffect(() => {
+    if (selectedCourse) fetchModules(selectedCourse);
+  }, [selectedCourse]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editId
@@ -47,48 +53,32 @@ export default function ModulesTab({ darkMode, i18n }) {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         token: "anka12341",
+        course_id: selectedCourse,
         ...form,
-        lessons: form.lessons === "" ? 0 : Number(form.lessons),
       }),
     });
 
-    setForm({ title: "", description: "", lessons: "" });
+    setForm({ title: "", description: "" });
     setEditId(null);
-    fetchModules();
+    fetchModules(selectedCourse);
   };
 
-  // ✏️ Заповнити форму редагування модуля
-  const handleEdit = (mod) => {
-    setForm({
-      title: mod.title,
-      description: mod.description,
-      lessons: mod.lessons ?? "",
-    });
-    setEditId(mod.id);
-  };
-
-  // ❌ Видалити модуль
   const handleDeleteModule = async (id) => {
-    if (!window.confirm("Видалити цей модуль і всі його уроки?")) return;
+    if (!window.confirm("Видалити модуль?")) return;
     await fetch(`${BACKEND}/api/modules/delete/${id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ token: "anka12341" }),
     });
-    fetchModules();
+    fetchModules(selectedCourse);
   };
 
-  // 🔄 Активність модуля
-  const toggleActive = async (id, current) => {
-    await fetch(`${BACKEND}/api/modules/update/${id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ active: !current }),
-    });
-    fetchModules();
+  const fetchLessons = async (moduleId) => {
+    const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
+    const data = await res.json();
+    setLessons((prev) => ({ ...prev, [moduleId]: data.lessons || [] }));
   };
 
-  // 🧠 Створення / редагування уроку
   const handleLessonSubmit = async (e, moduleId) => {
     e.preventDefault();
     const url = editingLessonId
@@ -98,11 +88,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     await fetch(url, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        module_id: moduleId,
-        token: "anka12341",
-        ...lessonForm,
-      }),
+      body: JSON.stringify({ token: "anka12341", module_id: moduleId, ...lessonForm }),
     });
 
     setLessonForm({
@@ -116,82 +102,44 @@ export default function ModulesTab({ darkMode, i18n }) {
     fetchLessons(moduleId);
   };
 
-  // 🖊️ Редагування уроку
-  const handleEditLesson = (lesson) => {
-    setLessonForm({
-      title: lesson.title || "",
-      description: lesson.description || "",
-      youtube: lesson.youtube || lesson.embed_url || "",
-      homework: lesson.homework || "",
-      materials: lesson.materials || "",
-    });
-    setEditingLessonId(lesson.id);
-  };
-
-  // 🗑️ Видалення уроку
-  const handleDeleteLesson = async (lessonId, moduleId) => {
-    if (!window.confirm("Видалити цей урок?")) return;
-    await fetch(`${BACKEND}/api/lessons/delete/${lessonId}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: "anka12341" }),
-    });
-    fetchLessons(moduleId);
-  };
-
-  // 🎞️ Безпечний YouTube iFrame
-  const SafeYoutube = ({ embedUrl }) =>
-    embedUrl ? (
-      <iframe
-        src={`${embedUrl}?modestbranding=1&rel=0&showinfo=0&controls=0`}
-        className="w-full aspect-video rounded-xl border border-pink-300"
-        allow="autoplay; fullscreen"
-        allowFullScreen
-      />
-    ) : null;
-
   return (
     <div className="space-y-10">
-      {/* 🧩 Форма створення / редагування модуля */}
+      {/* 🏫 Вибір курсу */}
+      <div className="max-w-lg">
+        <label className="block font-medium mb-1">Курс:</label>
+        <select
+          value={selectedCourse || ""}
+          onChange={(e) => setSelectedCourse(Number(e.target.value))}
+          className="w-full px-3 py-2 rounded-xl border border-pink-300"
+        >
+          {courses.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.title}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* 🧩 Створення / редагування модуля */}
       <form onSubmit={handleSubmit} className="max-w-lg space-y-4">
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          placeholder={i18n.language === "ru" ? "Название модуля" : "Назва модуля"}
-          className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:ring-1 focus:ring-pink-500 outline-none"
+          placeholder="Назва модуля"
+          className="w-full px-4 py-2 rounded-xl border border-pink-300"
           required
         />
         <textarea
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
-          placeholder={i18n.language === "ru" ? "Описание" : "Опис"}
-          className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:ring-1 focus:ring-pink-500 outline-none"
-        />
-        <input
-          type="number"
-          value={form.lessons === null ? "" : form.lessons}
-          onChange={(e) => {
-            const val = e.target.value;
-            setForm({
-              ...form,
-              lessons: val === "" ? "" : Number(val),
-            });
-          }}
-          onFocus={(e) => e.target.select()} // 💡 виділяє все число при фокусі
-          placeholder={i18n.language === "ru" ? "Количество уроков" : "Кількість уроків"}
-          className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:ring-1 focus:ring-pink-500 outline-none"
+          placeholder="Опис"
+          className="w-full px-4 py-2 rounded-xl border border-pink-300"
         />
         <button
           type="submit"
-          className="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all"
+          className="w-full py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold"
         >
-          {editId
-            ? i18n.language === "ru"
-              ? "Сохранить изменения"
-              : "Зберегти зміни"
-            : i18n.language === "ru"
-            ? "Создать модуль"
-            : "Створити модуль"}
+          {editId ? "Зберегти зміни" : "Створити модуль"}
         </button>
       </form>
 
@@ -200,119 +148,62 @@ export default function ModulesTab({ darkMode, i18n }) {
         {modules.map((mod) => (
           <div
             key={mod.id}
-            className={`p-5 rounded-2xl border transition-all hover:shadow-lg ${
+            className={`p-5 rounded-2xl border ${
               darkMode
                 ? "border-fuchsia-900/30 bg-[#1a0a1f]/70"
                 : "border-pink-200 bg-white/80"
             }`}
           >
-            <div
-              className="cursor-pointer"
-              onClick={() => {
-                setExpanded(expanded === mod.id ? null : mod.id);
-                fetchLessons(mod.id);
-              }}
-            >
-              <h4 className="font-semibold text-lg">{mod.title}</h4>
-              <p className="text-sm opacity-70 mb-2">{mod.description}</p>
-              <p className="text-xs opacity-60 mb-4">
-                {i18n.language === "ru" ? "Уроков" : "Уроків"}: {mod.lessons}
-              </p>
-            </div>
+            <h4 className="font-semibold text-lg">{mod.title}</h4>
+            <p className="text-sm opacity-70 mb-2">{mod.description}</p>
+            <p className="text-xs opacity-60 mb-4">Уроків: {mod.lessons}</p>
 
-            <div className="flex justify-between items-center mb-4">
-              <div className="flex gap-3">
-                <button
-                  onClick={() => handleEdit(mod)}
-                  className="flex items-center gap-2 text-sm text-blue-500 hover:scale-105 transition"
-                >
-                  <Edit3 className="w-4 h-4" />
-                  {i18n.language === "ru" ? "Редактировать" : "Редагувати"}
-                </button>
-                <button
-                  onClick={() => handleDeleteModule(mod.id)}
-                  className="flex items-center gap-2 text-sm text-red-500 hover:scale-105 transition"
-                >
-                  <FolderMinus className="w-4 h-4" />
-                  {i18n.language === "ru" ? "Удалить" : "Видалити"}
-                </button>
-              </div>
-
+            <div className="flex justify-between">
               <button
-                onClick={() => toggleActive(mod.id, mod.active)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold ${
-                  mod.active
-                    ? "bg-green-500/80 text-white"
-                    : "bg-gray-400/40 text-gray-800"
-                }`}
+                onClick={() => {
+                  setEditId(mod.id);
+                  setForm({ title: mod.title, description: mod.description });
+                }}
+                className="text-blue-500 flex items-center gap-1"
               >
-                {mod.active
-                  ? i18n.language === "ru"
-                    ? "Активен"
-                    : "Активний"
-                  : i18n.language === "ru"
-                  ? "Выключен"
-                  : "Вимкнено"}
+                <Edit3 className="w-4 h-4" /> Редагувати
+              </button>
+              <button
+                onClick={() => handleDeleteModule(mod.id)}
+                className="text-red-500 flex items-center gap-1"
+              >
+                <Trash2 className="w-4 h-4" /> Видалити
               </button>
             </div>
 
             {/* 📚 Уроки */}
+            <button
+              onClick={() => {
+                setExpanded(expanded === mod.id ? null : mod.id);
+                fetchLessons(mod.id);
+              }}
+              className="mt-3 text-pink-500 underline text-sm"
+            >
+              {expanded === mod.id ? "Сховати уроки" : "Показати уроки"}
+            </button>
+
             {expanded === mod.id && (
-              <div className="mt-4 border-t border-pink-200/30 pt-4">
-                <h5 className="font-semibold mb-3 text-pink-500">
-                  {i18n.language === "ru" ? "Уроки модуля" : "Уроки модуля"}
-                </h5>
+              <div className="mt-3 space-y-3 border-t border-pink-200 pt-3">
+                {(lessons[mod.id] || []).map((l) => (
+                  <div key={l.id} className="p-2 rounded-lg bg-pink-50 text-sm">
+                    <b>{l.title}</b>
+                    <p>{l.description}</p>
+                  </div>
+                ))}
 
-                {/* 🧾 Список уроків */}
-                <div className="space-y-3 mb-4">
-                  {lessons[mod.id]?.map((l) => (
-                    <div
-                      key={l.id}
-                      className="p-3 rounded-lg border border-pink-200/50 text-sm bg-white/40"
-                    >
-                      <div className="flex justify-between items-start">
-                        <p className="font-semibold text-pink-600">{l.title}</p>
-                        <div className="flex gap-2">
-                          <button
-                            onClick={() => handleEditLesson(l)}
-                            className="text-blue-500 hover:scale-110 transition"
-                          >
-                            <Edit3 className="w-4 h-4" />
-                          </button>
-                          <button
-                            onClick={() => handleDeleteLesson(l.id, mod.id)}
-                            className="text-red-500 hover:scale-110 transition"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </div>
-
-                      {l.embed_url && (
-                        <div className="mt-2">
-                          <SafeYoutube embedUrl={l.embed_url} />
-                        </div>
-                      )}
-
-                      {l.homework && (
-                        <p className="text-xs opacity-70 mt-1">📝 {l.homework}</p>
-                      )}
-                    </div>
-                  ))}
-                </div>
-
-                {/* ➕ Форма додавання / редагування уроку */}
-                <form
-                  onSubmit={(e) => handleLessonSubmit(e, mod.id)}
-                  className="space-y-2"
-                >
+                <form onSubmit={(e) => handleLessonSubmit(e, mod.id)} className="space-y-2">
                   <input
-                    placeholder={i18n.language === "ru" ? "Название урока" : "Назва уроку"}
+                    placeholder="Назва уроку"
                     value={lessonForm.title}
                     onChange={(e) =>
                       setLessonForm({ ...lessonForm, title: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-lg border border-pink-300"
+                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                     required
                   />
                   <input
@@ -321,58 +212,13 @@ export default function ModulesTab({ darkMode, i18n }) {
                     onChange={(e) =>
                       setLessonForm({ ...lessonForm, youtube: e.target.value })
                     }
-                    className="w-full px-3 py-2 rounded-lg border border-pink-300"
+                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                   />
-                  <textarea
-                    placeholder={i18n.language === "ru" ? "Описание" : "Опис"}
-                    value={lessonForm.description}
-                    onChange={(e) =>
-                      setLessonForm({ ...lessonForm, description: e.target.value })
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-pink-300"
-                  />
-                  <textarea
-                    placeholder={
-                      i18n.language === "ru" ? "Домашнее задание" : "Домашнє завдання"
-                    }
-                    value={lessonForm.homework}
-                    onChange={(e) =>
-                      setLessonForm({ ...lessonForm, homework: e.target.value })
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-pink-300"
-                  />
-                  <textarea
-                    placeholder={
-                      i18n.language === "ru"
-                        ? "Материалы (ссылки, текст)"
-                        : "Матеріали (посилання, текст)"
-                    }
-                    value={lessonForm.materials}
-                    onChange={(e) =>
-                      setLessonForm({ ...lessonForm, materials: e.target.value })
-                    }
-                    className="w-full px-3 py-2 rounded-lg border border-pink-300"
-                  />
-
                   <button
                     type="submit"
-                    className="flex items-center gap-2 px-4 py-2 rounded-lg bg-pink-500 text-white font-medium hover:scale-105 transition"
+                    className="flex items-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg"
                   >
-                    {editingLessonId ? (
-                      <>
-                        <Save className="w-4 h-4" />
-                        {i18n.language === "ru"
-                          ? "Сохранить урок"
-                          : "Зберегти урок"}
-                      </>
-                    ) : (
-                      <>
-                        <PlusCircle className="w-4 h-4" />
-                        {i18n.language === "ru"
-                          ? "Добавить урок"
-                          : "Додати урок"}
-                      </>
-                    )}
+                    <PlusCircle className="w-4 h-4" /> Додати урок
                   </button>
                 </form>
               </div>
