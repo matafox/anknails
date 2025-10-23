@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { Edit3 } from "lucide-react";
 
 export default function ModulesTab({ darkMode, i18n }) {
@@ -7,22 +7,16 @@ export default function ModulesTab({ darkMode, i18n }) {
   const [form, setForm] = useState({ title: "", description: "", lessons: 0 });
   const [editId, setEditId] = useState(null);
 
-  // 🔄 Отримати модулі
   const fetchModules = async () => {
-    try {
-      const res = await fetch(`${BACKEND}/api/modules`);
-      const data = await res.json();
-      setModules(data.modules || []);
-    } catch (err) {
-      console.error("Помилка завантаження модулів:", err);
-    }
+    const res = await fetch(`${BACKEND}/api/modules`);
+    const data = await res.json();
+    setModules(data.modules || []);
   };
 
   useEffect(() => {
     fetchModules();
   }, []);
 
-  // 💾 Створення / оновлення
   const handleSubmit = async (e) => {
     e.preventDefault();
     const url = editId
@@ -53,19 +47,21 @@ export default function ModulesTab({ darkMode, i18n }) {
     await fetch(`${BACKEND}/api/modules/update/${id}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ token: "anka12341", active: !current }),
+      body: JSON.stringify({ active: !current }),
     });
     fetchModules();
   };
 
   return (
     <div className="space-y-10">
-      {/* 🧾 Форма створення */}
+      {/* 🔹 Форма створення / редагування */}
       <form onSubmit={handleSubmit} className="max-w-lg space-y-4">
         <input
           value={form.title}
           onChange={(e) => setForm({ ...form, title: e.target.value })}
-          placeholder={i18n.language === "ru" ? "Название модуля" : "Назва модуля"}
+          placeholder={
+            i18n.language === "ru" ? "Название модуля" : "Назва модуля"
+          }
           className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:ring-1 focus:ring-pink-500 outline-none"
           required
         />
@@ -82,10 +78,13 @@ export default function ModulesTab({ darkMode, i18n }) {
             setForm({ ...form, lessons: parseInt(e.target.value) })
           }
           placeholder={
-            i18n.language === "ru" ? "Количество уроков" : "Кількість уроків"
+            i18n.language === "ru"
+              ? "Количество уроков"
+              : "Кількість уроків"
           }
           className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:ring-1 focus:ring-pink-500 outline-none"
         />
+
         <button
           type="submit"
           className="w-full py-3 rounded-xl font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-[0_0_20px_rgba(255,0,128,0.3)]"
@@ -100,7 +99,7 @@ export default function ModulesTab({ darkMode, i18n }) {
         </button>
       </form>
 
-      {/* 📚 Список модулів */}
+      {/* 🔹 Список модулів */}
       <div className="grid gap-4 sm:grid-cols-2">
         {modules.map((mod) => (
           <div
@@ -115,4 +114,37 @@ export default function ModulesTab({ darkMode, i18n }) {
               <h4 className="font-semibold text-lg">{mod.title}</h4>
               <p className="text-sm opacity-70 mb-3">{mod.description}</p>
               <p className="text-xs opacity-60 mb-4">
-                {i18n.language === "ru" ?
+                {i18n.language === "ru" ? "Уроков" : "Уроків"}: {mod.lessons}
+              </p>
+            </div>
+            <div className="flex justify-between items-center">
+              <button
+                onClick={() => handleEdit(mod)}
+                className="flex items-center gap-2 text-sm text-pink-500 hover:scale-105 transition"
+              >
+                <Edit3 className="w-4 h-4" />
+                {i18n.language === "ru" ? "Редактировать" : "Редагувати"}
+              </button>
+              <button
+                onClick={() => toggleActive(mod.id, mod.active)}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold ${
+                  mod.active
+                    ? "bg-green-500/80 text-white"
+                    : "bg-gray-400/40 text-gray-800"
+                }`}
+              >
+                {mod.active
+                  ? i18n.language === "ru"
+                    ? "Активен"
+                    : "Активний"
+                  : i18n.language === "ru"
+                  ? "Выключен"
+                  : "Вимкнено"}
+              </button>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
