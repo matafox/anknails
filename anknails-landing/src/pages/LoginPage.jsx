@@ -7,6 +7,7 @@ export default function LoginPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
@@ -17,19 +18,53 @@ export default function LoginPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError("");
+    setLoading(true);
 
-    if (email === "annaivanovna1802@gmail.com" && password === "anka12341") {
-      localStorage.setItem("admin_token", "true");
-      setError("");
-      window.location.href = "/"; // редірект після входу
-    } else {
-      setError(
-        i18n.language === "ru"
-          ? "Неверный email или пароль"
-          : "Невірний email або пароль"
+    try {
+      // 🧩 Якщо це адмін
+      if (email === "annaivanovna1802@gmail.com" && password === "anka12341") {
+        localStorage.setItem("admin_token", "true");
+        localStorage.removeItem("user_token");
+        window.location.href = "/admin";
+        return;
+      }
+
+      // 🧩 Інакше — це користувач з бази
+      const res = await fetch(
+        "https://anknails-production.up.railway.app/api/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password }),
+        }
       );
+
+      const data = await res.json();
+      setLoading(false);
+
+      if (!res.ok) {
+        throw new Error(
+          data.detail ||
+            (i18n.language === "ru"
+              ? "Ошибка входа"
+              : "Помилка входу")
+        );
+      }
+
+      // ✅ Успішний логін
+      localStorage.setItem("user_token", "true");
+      localStorage.setItem("user_email", data.user.email);
+      localStorage.setItem("expires_at", data.user.expires_at);
+      localStorage.removeItem("admin_token");
+
+      // перенаправлення
+      window.location.href = "/cabinet"; // або "/" якщо ще нема кабінету
+    } catch (err) {
+      setLoading(false);
+      setError(err.message);
     }
   };
 
@@ -98,13 +133,23 @@ export default function LoginPage() {
             <p className="text-sm text-rose-500 text-center font-medium">{error}</p>
           )}
 
-          {/* Submit */}
           <button
             type="submit"
-            className="w-full flex items-center justify-center gap-3 py-3 rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
+            disabled={loading}
+            className={`w-full flex items-center justify-center gap-3 py-3 rounded-2xl text-white font-semibold shadow-[0_0_25px_rgba(255,0,128,0.5)] transition-all duration-300 ${
+              loading
+                ? "bg-gray-400 cursor-not-allowed"
+                : "bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03]"
+            }`}
           >
             <LogIn className="w-5 h-5" />
-            {i18n.language === "ru" ? "Войти" : "Увійти"}
+            {loading
+              ? i18n.language === "ru"
+                ? "Загрузка..."
+                : "Завантаження..."
+              : i18n.language === "ru"
+              ? "Войти"
+              : "Увійти"}
           </button>
         </form>
 
