@@ -246,22 +246,40 @@ export default function CabinetPage() {
 
                   {expanded === mod.id && (
                     <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
-                      {lessons[mod.id]?.map((l) => (
-                        <button
-                          key={l.id}
-                          onClick={() => {
-                            setSelectedLesson(l);
-                            setMenuOpen(false);
-                          }}
-                          className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
-                            selectedLesson?.id === l.id
-                              ? "bg-pink-500/20 text-pink-600"
-                              : "opacity-80"
-                          }`}
-                        >
-                          <PlayCircle className="w-3 h-3" /> {l.title}
-                        </button>
-                      ))}
+{lessons[mod.id]?.map((l) => (
+  <button
+    key={l.id}
+    onClick={() => {
+      setSelectedLesson(l);
+      setMenuOpen(false);
+    }}
+    className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
+      selectedLesson?.id === l.id
+        ? "bg-pink-500/20 text-pink-600"
+        : "opacity-80"
+    }`}
+  >
+    <PlayCircle className="w-3 h-3" /> {l.title}
+    {/* 🟣 Плашка типу уроку */}
+    {l.type && (
+      <span
+        className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
+          l.type === "practice"
+            ? "bg-purple-100 text-purple-700"
+            : "bg-pink-100 text-pink-700"
+        }`}
+      >
+        {l.type === "practice"
+          ? i18n.language === "ru"
+            ? "Практика"
+            : "Практика"
+          : i18n.language === "ru"
+          ? "Теория"
+          : "Теорія"}
+      </span>
+    )}
+  </button>
+))}
                     </div>
                   )}
                 </div>
