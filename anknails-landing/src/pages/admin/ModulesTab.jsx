@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Edit3, PlusCircle, XCircle, Trash2, Video } from "lucide-react";
+import { Edit3, PlusCircle, Trash2 } from "lucide-react";
 
 export default function ModulesTab({ darkMode, i18n }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
@@ -16,21 +16,14 @@ export default function ModulesTab({ darkMode, i18n }) {
   });
   const [lessons, setLessons] = useState({});
 
-  // 🎥 Витяг ID з YouTube URL
-  const extractId = (url) => {
-    if (!url) return null;
-    const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
-    return match ? match[1] : null;
-  };
-
-  // 🔹 Завантаження модулів
+  // 🧠 Завантаження модулів
   const fetchModules = async () => {
     const res = await fetch(`${BACKEND}/api/modules`);
     const data = await res.json();
     setModules(data.modules || []);
   };
 
-  // 🔹 Завантаження уроків
+  // 🧠 Завантаження уроків
   const fetchLessons = async (moduleId) => {
     const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
     const data = await res.json();
@@ -77,10 +70,10 @@ export default function ModulesTab({ darkMode, i18n }) {
     fetchModules();
   };
 
-  // 🧾 Створення уроку
+  // 🎥 Створення уроку
   const handleLessonSubmit = async (e, moduleId) => {
     e.preventDefault();
-    const youtubeId = extractId(lessonForm.youtube);
+
     await fetch(`${BACKEND}/api/lessons/create`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -88,9 +81,9 @@ export default function ModulesTab({ darkMode, i18n }) {
         module_id: moduleId,
         token: "anka12341",
         ...lessonForm,
-        youtube: youtubeId ? `https://www.youtube-nocookie.com/embed/${youtubeId}` : "",
       }),
     });
+
     setLessonForm({
       title: "",
       description: "",
@@ -98,6 +91,7 @@ export default function ModulesTab({ darkMode, i18n }) {
       homework: "",
       materials: "",
     });
+
     fetchLessons(moduleId);
   };
 
@@ -111,6 +105,16 @@ export default function ModulesTab({ darkMode, i18n }) {
     });
     fetchLessons(moduleId);
   };
+
+  // 🎞️ Безпечний iframe-компонент
+  const SafeYoutube = ({ embedUrl }) =>
+    embedUrl ? (
+      <iframe
+        src={`${embedUrl}?modestbranding=1&rel=0&showinfo=0`}
+        className="w-full aspect-video rounded-xl border border-pink-300"
+        allowFullScreen
+      />
+    ) : null;
 
   return (
     <div className="space-y-10">
@@ -127,13 +131,6 @@ export default function ModulesTab({ darkMode, i18n }) {
           value={form.description}
           onChange={(e) => setForm({ ...form, description: e.target.value })}
           placeholder={i18n.language === "ru" ? "Описание" : "Опис"}
-          className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:ring-1 focus:ring-pink-500 outline-none"
-        />
-        <input
-          type="number"
-          value={form.lessons}
-          onChange={(e) => setForm({ ...form, lessons: parseInt(e.target.value) })}
-          placeholder={i18n.language === "ru" ? "Количество уроков" : "Кількість уроків"}
           className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:ring-1 focus:ring-pink-500 outline-none"
         />
         <button
@@ -225,20 +222,15 @@ export default function ModulesTab({ darkMode, i18n }) {
                         </button>
                       </div>
 
-                      {l.youtube && (
+                      {/* 🎞️ Відео */}
+                      {l.embed_url && (
                         <div className="mt-2">
-                          <iframe
-                            src={l.youtube}
-                            className="w-full aspect-video rounded-xl border border-pink-200"
-                            allowFullScreen
-                          ></iframe>
+                          <SafeYoutube embedUrl={l.embed_url} />
                         </div>
                       )}
 
                       {l.homework && (
-                        <p className="text-xs opacity-70 mt-1">
-                          📝 {l.homework}
-                        </p>
+                        <p className="text-xs opacity-70 mt-1">📝 {l.homework}</p>
                       )}
                     </div>
                   ))}
