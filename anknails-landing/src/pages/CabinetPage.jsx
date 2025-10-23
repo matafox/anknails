@@ -9,8 +9,9 @@ import {
   ChevronDown,
   ChevronUp,
   PlayCircle,
-  Moon, 
+  Moon,
   Globe,
+  Heart,
 } from "lucide-react";
 
 // 🎥 Безпечний YouTube
@@ -194,7 +195,7 @@ export default function CabinetPage() {
 
       {/* 📚 Меню */}
       <aside
-        className={`w-72 flex-shrink-0 fixed md:static top-0 h-screen md:h-auto overflow-y-auto transition-transform duration-300 z-10 md:z-0 border-r backdrop-blur-xl ${
+        className={`w-72 flex flex-col justify-between fixed md:static top-0 h-screen overflow-y-auto transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } ${
           darkMode
@@ -215,13 +216,13 @@ export default function CabinetPage() {
           </div>
 
           {/* 📘 Модулі */}
-          {modules.length === 0 ? (
-            <p className="text-center text-sm opacity-70">
-              {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
-            </p>
-          ) : (
-            <div className="space-y-2">
-              {modules.map((mod) => (
+          <div className="space-y-2">
+            {modules.length === 0 ? (
+              <p className="text-center text-sm opacity-70">
+                {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
+              </p>
+            ) : (
+              modules.map((mod) => (
                 <div key={mod.id}>
                   <button
                     onClick={() => toggleModule(mod.id)}
@@ -231,11 +232,9 @@ export default function CabinetPage() {
                       <BookOpen className="w-4 h-4" />
                       {mod.title}
                     </span>
-
                     <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
                       {mod.lessons || 0}
                     </span>
-
                     {expanded === mod.id ? (
                       <ChevronUp className="w-4 h-4" />
                     ) : (
@@ -277,77 +276,67 @@ export default function CabinetPage() {
                     </div>
                   )}
                 </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* 🔧 Низ меню: тема, мова, вихід */}
+        <div className="p-6 border-t border-pink-200/30 space-y-5">
+          {/* 🌗 Перемикач теми */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Moon className="w-4 h-4 text-pink-500" />
+              <span>{t("Темна тема", "Тёмная тема")}</span>
+            </div>
+            <label className="inline-flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={darkMode}
+                onChange={() => {
+                  const newMode = !darkMode;
+                  setDarkMode(newMode);
+                  document.documentElement.classList.toggle("dark", newMode);
+                  localStorage.setItem("theme", newMode ? "dark" : "light");
+                }}
+                className="sr-only peer"
+              />
+              <div className="relative w-10 h-5 bg-pink-200 rounded-full peer peer-checked:bg-pink-500 transition">
+                <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
+              </div>
+            </label>
+          </div>
+
+          {/* 🌍 Мова */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Globe className="w-4 h-4 text-pink-500" />
+              <span>{t("Мова", "Язык")}</span>
+            </div>
+            <div className="flex gap-2">
+              {["ru", "uk"].map((lang) => (
+                <button
+                  key={lang}
+                  onClick={() => {
+                    i18n.changeLanguage(lang);
+                    localStorage.setItem("lang", lang);
+                  }}
+                  className={`px-3 py-1 rounded-lg font-medium border text-xs transition ${
+                    i18n.language === lang
+                      ? "bg-pink-500 text-white border-pink-500"
+                      : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
+                  }`}
+                >
+                  {lang.toUpperCase()}
+                </button>
               ))}
             </div>
-          )}
-
-         {/* 🌗 Перемикач теми + Мова */}
-<div className="mt-8 space-y-4 text-sm">
-  {/* 🌙 Тема */}
-  <div className="flex items-center justify-between">
-    <div className="flex items-center gap-2">
-      <Moon className="w-4 h-4 text-pink-500" />
-      <span>{t("Темна тема", "Тёмная тема")}</span>
-    </div>
-    <label className="inline-flex items-center cursor-pointer">
-      <input
-        type="checkbox"
-        checked={darkMode}
-        onChange={() => {
-          const newMode = !darkMode;
-          setDarkMode(newMode);
-          document.documentElement.classList.toggle("dark", newMode);
-          localStorage.setItem("theme", newMode ? "dark" : "light");
-        }}
-        className="sr-only peer"
-      />
-      <div className="relative w-10 h-5 bg-pink-200 rounded-full peer peer-checked:bg-pink-500 transition">
-        <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full transition-transform peer-checked:translate-x-5 shadow-sm"></div>
-      </div>
-    </label>
-  </div>
-
-  {/* 🌍 Мова */}
-  <div className="flex items-center justify-between">
-    <div className="flex items-center gap-2">
-      <Globe className="w-4 h-4 text-pink-500" />
-      <span>{t("Мова", "Язык")}</span>
-    </div>
-    <div className="flex gap-2">
-      <button
-        onClick={() => {
-          i18n.changeLanguage("ru");
-          localStorage.setItem("lang", "ru");
-        }}
-        className={`px-3 py-1 rounded-lg font-medium border text-xs transition ${
-          i18n.language === "ru"
-            ? "bg-pink-500 text-white border-pink-500"
-            : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
-        }`}
-      >
-        RU
-      </button>
-      <button
-        onClick={() => {
-          i18n.changeLanguage("uk");
-          localStorage.setItem("lang", "uk");
-        }}
-        className={`px-3 py-1 rounded-lg font-medium border text-xs transition ${
-          i18n.language === "uk"
-            ? "bg-pink-500 text-white border-pink-500"
-            : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
-        }`}
-      >
-        UK
-      </button>
-    </div>
-  </div>
-</div>
+          </div>
 
           {/* 🚪 Вихід */}
           <button
             onClick={handleLogout}
-            className="mt-8 w-full py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all"
+            className="w-full py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all"
           >
             <LogOut className="inline w-4 h-4 mr-1" /> {t("Вийти", "Выйти")}
           </button>
@@ -355,7 +344,7 @@ export default function CabinetPage() {
       </aside>
 
       {/* 🌸 Контент */}
-      <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
+      <main className="flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0">
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
             {banner.image_url && (
@@ -371,15 +360,16 @@ export default function CabinetPage() {
           </div>
         )}
 
+        {/* 📖 Контент уроку */}
         {!selectedLesson ? (
-          <div className="flex items-center justify-center h-full text-center opacity-70">
+          <div className="flex items-center justify-center flex-1 text-center opacity-70">
             <p className="text-lg">
               {t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}
             </p>
           </div>
         ) : (
           <div
-            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
+            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg flex-1 ${
               darkMode
                 ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
                 : "bg-white/80 border border-pink-200"
@@ -418,10 +408,32 @@ export default function CabinetPage() {
           </div>
         )}
 
-        <footer className="mt-10 text-sm opacity-60 text-center py-6">
-          ANK Studio LMS © {new Date().getFullYear()}
-        </footer>
-      </main>
-    </div>
-  );
-}
+        {/* 💖 Футер */}
+        <footer
+          className={`relative mt-auto py-6 text-center ${
+            darkMode ? "text-fuchsia-100/80" : "text-gray-600"
+          }`}
+        >
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 leading-relaxed">
+            <span className="font-medium tracking-wide">
+              © {new Date().getFullYear()} ANK Studio LMS
+            </span>
+            <span className="hidden sm:inline text-gray-400 dark:text-gray-600">•</span>
+            <span className="flex items-center gap-1.5">
+              <span className="text-gray-500 dark:text-gray-400">Made with</span>
+              <Heart
+                className="w-4 h-4 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.4)] animate-pulse"
+                fill="currentColor"
+              />
+              <span className="text-gray-500 dark:text-gray-400">by</span>
+              <a
+                href="https://t.me/mosaert"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-semibold text-pink-500 hover:text-rose-600 transition-colors hover:underline underline-offset-2"
+              >
+                @mosaert
+              </a>
+            </span>
+          </div>
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-rose-300/40 to-transparent blur-sm dark:via-rose-600
