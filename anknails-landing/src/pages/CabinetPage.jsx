@@ -1,13 +1,15 @@
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { LogOut, User, Clock, Menu, X } from "lucide-react";
+import { LogOut, User, Menu, X, BookOpen, Clock } from "lucide-react";
 
 export default function CabinetPage() {
   const { i18n } = useTranslation();
   const [user, setUser] = useState(null);
   const [banner, setBanner] = useState(null);
+  const [modules, setModules] = useState([]);
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const BACKEND = "https://anknails-backend-production.up.railway.app";
 
   // 🌓 Тема
   useEffect(() => {
@@ -50,10 +52,18 @@ export default function CabinetPage() {
 
   // 🎀 Банер із бекенду
   useEffect(() => {
-    fetch("https://anknails-backend-production.up.railway.app/api/banner")
+    fetch(`${BACKEND}/api/banner`)
       .then((res) => res.json())
       .then((data) => setBanner(data))
       .catch(() => console.error("Помилка завантаження банера"));
+  }, []);
+
+  // 📘 Модулі з бекенду
+  useEffect(() => {
+    fetch(`${BACKEND}/api/modules`)
+      .then((res) => res.json())
+      .then((data) => setModules(data.modules || []))
+      .catch(() => console.error("Помилка завантаження модулів"));
   }, []);
 
   const handleLogout = () => {
@@ -147,14 +157,39 @@ export default function CabinetPage() {
           </div>
         )}
 
-        {/* 🪄 Повідомлення, якщо модулів ще немає */}
-        <div className="text-center py-20 opacity-70">
-          <p className="text-lg">
-            {i18n.language === "ru"
-              ? "Модули пока не добавлены"
-              : "Модулі ще не додані"}
-          </p>
-        </div>
+        {/* 📘 Модулі */}
+        {modules.length > 0 ? (
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            {modules.map((mod) => (
+              <div
+                key={mod.id}
+                className={`p-5 rounded-2xl border transition-all hover:shadow-[0_0_20px_rgba(255,0,128,0.2)] ${
+                  darkMode
+                    ? "border-fuchsia-900/30 bg-[#1a0a1f]/70"
+                    : "border-pink-200 bg-white/80"
+                }`}
+              >
+                <div className="flex items-center gap-3 mb-3">
+                  <BookOpen className="w-6 h-6 text-pink-500" />
+                  <h3 className="text-lg font-semibold">{mod.title}</h3>
+                </div>
+                <p className="text-sm opacity-80 mb-3">{mod.description}</p>
+                <div className="flex items-center gap-2 text-sm opacity-70">
+                  <Clock className="w-4 h-4" />
+                  {i18n.language === "ru" ? "Уроков" : "Уроків"}: {mod.lessons}
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20 opacity-70">
+            <p className="text-lg">
+              {i18n.language === "ru"
+                ? "Модули пока не добавлены"
+                : "Модулі ще не додані"}
+            </p>
+          </div>
+        )}
 
         <p className="mt-10 text-sm opacity-60 text-center">
           ANK Studio LMS © {new Date().getFullYear()}
