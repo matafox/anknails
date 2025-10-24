@@ -329,7 +329,7 @@ export default function CabinetPage() {
       </aside>
 
       {/* 🌸 Контент */}
-      <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
+            <main className="flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0">
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
             {banner.image_url && (
@@ -396,23 +396,9 @@ export default function CabinetPage() {
         )}
 
         {/* 💖 Футер завжди внизу */}
-<footer
-  className={`relative mt-auto text-center py-6 text-sm overflow-hidden ${
-    darkMode
-      ? "bg-[#100015]/90 border-t border-fuchsia-900/40 text-fuchsia-100/80"
-      : "bg-white/80 border-t border-pink-200 text-gray-600"
-  } backdrop-blur-md shadow-[0_-4px_12px_rgba(255,0,128,0.1)]`}
->
-  {/* 💫 Градієнтне сяйво зверху */}
-  <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-pink-400/40 to-transparent blur-sm"></div>
-
-  <p className="font-medium relative z-10">
-    © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> — All rights reserved.
-  </p>
-
-  {/* subtle підсвітка знизу */}
-  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-rose-300/30 to-transparent blur-sm"></div>
-</footer>
+        <footer className="mt-10 text-sm opacity-60 text-center py-6">
+          ANK Studio LMS © {new Date().getFullYear()}
+        </footer>
       </main>
     </div>
   );
