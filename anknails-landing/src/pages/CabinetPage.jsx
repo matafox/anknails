@@ -16,7 +16,7 @@ import {
 } from "lucide-react";
 
 // 🎥 Плеєр з підтримкою YouTube і Cloudinary (із захистом від скачування)
-const SafeVideo = ({ url, videoId, t }) => {
+const SafeVideo = ({ url, videoId, t, BACKEND }) => {
   if (!url && !videoId)
     return (
       <p className="text-sm text-gray-500 text-center py-4">
@@ -403,6 +403,7 @@ export default function CabinetPage() {
               url={selectedLesson.videoUrl}
               videoId={selectedLesson.videoId}
               t={t}
+              BACKEND={BACKEND}
             />
 
             {selectedLesson.description && (
