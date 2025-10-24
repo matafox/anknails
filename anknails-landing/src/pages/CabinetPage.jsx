@@ -90,6 +90,9 @@ const SafeVideo = ({ lesson, t }) => {
 };
 
 export default function CabinetPage() {
+  window.addEventListener("error", (e) => {
+  console.log("🔥 Global error caught:", e.message, e.filename, e.lineno);
+});
   const { i18n } = useTranslation();
   const BACKEND = "https://anknails-backend-production.up.railway.app";
 
