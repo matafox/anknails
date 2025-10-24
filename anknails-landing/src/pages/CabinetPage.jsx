@@ -207,6 +207,11 @@ export default function CabinetPage() {
     window.location.href = "/login";
   };
 
+  useEffect(() => {
+  console.log("🧠 modules =", modules);
+  console.log("📘 lessons =", lessons);
+}, [modules, lessons]);
+
   if (!user) return null;
 
   return (
