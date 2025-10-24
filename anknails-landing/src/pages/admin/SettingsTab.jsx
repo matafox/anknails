@@ -105,13 +105,30 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-  // 📊 Завантаження прогресу користувача
+  // 📊 Завантаження прогресу користувача (з назвами уроків)
   const loadProgress = async (userId) => {
     try {
       setLoadingProgress(true);
       const res = await fetch(`${BACKEND}/api/progress/user/${userId}`);
       const data = await res.json();
-      setProgress(data.progress || []);
+
+      // 🧩 Отримуємо всі уроки з бекенду
+      const lessonsRes = await fetch(`${BACKEND}/api/lessons/all`);
+      const lessonsData = await lessonsRes.json();
+
+      // створюємо мапу ID → назва
+      const lessonMap = {};
+      (lessonsData.lessons || []).forEach((l) => {
+        lessonMap[l.id] = l.title;
+      });
+
+      // додаємо назви до прогресу
+      const withTitles = (data.progress || []).map((p) => ({
+        ...p,
+        lesson_title: lessonMap[p.lesson_id] || "—",
+      }));
+
+      setProgress(withTitles);
       setSelectedUser(userId);
     } catch (err) {
       console.error("Помилка завантаження прогресу:", err);
@@ -334,20 +351,24 @@ export default function SettingsTab({ i18n, darkMode }) {
       {selectedUser && (
         <div className="mt-10">
           <h4 className="text-lg font-semibold mb-4">
-            {i18n.language === "ru" ? "Прогресс пользователя" : "Прогрес користувача"} #{selectedUser}
+            {i18n.language === "ru"
+              ? "Прогресс пользователя"
+              : "Прогрес користувача"}{" "}
+            #{selectedUser}
           </h4>
 
           {loadingProgress ? (
             <p className="opacity-70">Завантаження...</p>
           ) : progress.length > 0 ? (
             <table
-              className={`min-w-[600px] w-full rounded-xl overflow-hidden border ${
+              className={`min-w-[700px] w-full rounded-xl overflow-hidden border ${
                 darkMode ? "border-fuchsia-900/30" : "border-pink-200"
               }`}
             >
               <thead className={darkMode ? "bg-fuchsia-950/40" : "bg-pink-100"}>
                 <tr>
                   <th className="py-2 px-3 text-left">Lesson ID</th>
+                  <th className="py-2 px-3 text-left">Назва уроку</th>
                   <th className="py-2 px-3 text-left">Прогрес</th>
                   <th className="py-2 px-3 text-left">Домашка</th>
                 </tr>
@@ -367,7 +388,10 @@ export default function SettingsTab({ i18n, darkMode }) {
                           : "border-pink-200 hover:bg-pink-50"
                       }`}
                     >
-                      <td className="py-2 px-3">{p.lesson_id}</td>
+                      <td className="py-2 px-3 font-mono opacity-80">
+                        {p.lesson_id}
+                      </td>
+                      <td className="py-2 px-3">{p.lesson_title}</td>
                       <td className="py-2 px-3">{percent}%</td>
                       <td className="py-2 px-3">
                         {p.homework_done ? (
