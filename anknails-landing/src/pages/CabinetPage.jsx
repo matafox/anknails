@@ -15,7 +15,7 @@ import {
   FolderOpen
 } from "lucide-react";
 
-// 🎥 Плеєр з підтримкою YouTube і Cloudinary
+// 🎥 Плеєр з підтримкою YouTube і Cloudinary (із захистом від скачування)
 const SafeVideo = ({ url, videoId, t }) => {
   if (!url && !videoId)
     return (
@@ -24,19 +24,29 @@ const SafeVideo = ({ url, videoId, t }) => {
       </p>
     );
 
-  // 🎬 Якщо це Cloudinary або інше пряме посилання
+  // 🎬 Якщо це Cloudinary або пряме посилання
   if (url && url.includes("cloudinary.com")) {
     return (
-      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
+      <div
+        className="relative w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md select-none"
+        onContextMenu={(e) => e.preventDefault()} // 🚫 блокує правий клік
+      >
         <video
           src={url}
           controls
-          controlsList="nodownload"
+          controlsList="nodownload noremoteplayback"
+          disablePictureInPicture
           preload="metadata"
-          className="w-full h-full object-cover"
+          className="w-full h-full object-cover pointer-events-auto"
+          onContextMenu={(e) => e.preventDefault()} // 🚫 дублюємо захист
         >
-          {t("Ваш браузер не підтримує відтворення відео", "Ваш браузер не поддерживает воспроизведение видео")}
+          {t(
+            "Ваш браузер не підтримує відтворення відео",
+            "Ваш браузер не поддерживает воспроизведение видео"
+          )}
         </video>
+        {/* 🕵️ Невидимий шар, що перехоплює клік правою кнопкою */}
+        <div className="absolute inset-0 pointer-events-none bg-transparent" />
       </div>
     );
   }
