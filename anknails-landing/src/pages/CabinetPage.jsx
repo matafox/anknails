@@ -327,57 +327,72 @@ export default function CabinetPage() {
       </aside>
 
       {/* 🌸 Контент */}
-    <main className="flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0">
-  {banner && banner.active && (
-    <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-      {banner.image_url && (
-        <img
-          src={banner.image_url}
-          alt="Banner"
-          className="w-full h-48 md:h-64 object-cover"
-        />
-      )}
-      <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
-        {banner.title}
-      </div>
-    </div>
-  )}
+      <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
+        {banner && banner.active && (
+          <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+            {banner.image_url && (
+              <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />
+            )}
+            <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
+              {banner.title}
+            </div>
+          </div>
+        )}
 
-  {/* 📖 Контент */}
-  {!selectedLesson ? (
-    <div className="flex items-center justify-center flex-1 text-center opacity-70">
-      <p className="text-lg">
-        {t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}
-      </p>
-    </div>
-  ) : (
-    <div
-      className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg flex-1 ${
-        darkMode
-          ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
-          : "bg-white/80 border border-pink-200"
-      }`}
-    >
-      <h2 className="text-2xl font-bold text-pink-600 mb-4">
-        {selectedLesson.title}
-      </h2>
+        {!selectedLesson ? (
+          <div className="flex items-center justify-center h-full text-center opacity-70">
+            <p className="text-lg">{t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}</p>
+          </div>
+        ) : (
+          <div
+            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
+              darkMode
+                ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
+                : "bg-white/80 border border-pink-200"
+            }`}
+          >
+            <h2 className="text-2xl font-bold text-pink-600 mb-4">{selectedLesson.title}</h2>
+            <SafeYoutube url={selectedLesson.videoUrl} videoId={selectedLesson.videoId} t={t} />
+            {selectedLesson.description && (
+  <div className="mt-4">
+    <h4 className="font-semibold mb-1">{t("Опис", "Описание")}</h4>
+    <p>{selectedLesson.description}</p>
+  </div>
+)}
 
-      <SafeYoutube
-        url={selectedLesson.videoUrl}
-        videoId={selectedLesson.videoId}
-        t={t}
-      />
+{selectedLesson.homework && (
+  <div className="mt-4">
+    <h4 className="font-semibold text-pink-500 mb-1">
+      📝 {t("Домашнє завдання", "Домашнее задание")}
+    </h4>
+    <p>{selectedLesson.homework}</p>
+  </div>
+)}
 
-      {selectedLesson.description && (
-        <div className="mt-4">
-          <h4 className="font-semibold mb-1">{t("Опис", "Описание")}</h4>
-          <p>{selectedLesson.description}</p>
-        </div>
-      )}
-    </div>
-  )}
+{selectedLesson.materials && (
+  <div className="mt-4">
+    <h4 className="font-semibold text-pink-500 mb-1">
+      📚 {t("Матеріали", "Материалы")}
+    </h4>
+    {/* якщо є посилання — зроби клікабельним */}
+    {selectedLesson.materials.startsWith("http") ? (
+      <a
+        href={selectedLesson.materials}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="text-pink-600 underline hover:text-pink-700 transition"
+      >
+        {t("Відкрити матеріал", "Открыть материал")}
+      </a>
+    ) : (
+      <p>{selectedLesson.materials}</p>
+    )}
+  </div>
+)}
+          </div>
+        )}
 
-  {/* 💖 Футер завжди внизу */}
+        {/* 💖 Футер завжди внизу */}
   <footer
     className={`mt-auto text-center py-6 text-sm border-t ${
       darkMode
@@ -389,7 +404,7 @@ export default function CabinetPage() {
       © {new Date().getFullYear()} ANK Studio LMS — All rights reserved.
     </p>
   </footer>
-</main>
+      </main>
     </div>
   );
 }
