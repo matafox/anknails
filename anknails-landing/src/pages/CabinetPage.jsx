@@ -416,9 +416,11 @@ export default function CabinetPage() {
                 : "bg-white/80 border border-pink-200"
             }`}
           >
-            <h2 className="text-2xl font-bold text-pink-600 mb-4">
-              {selectedLesson.title}
-            </h2>
+            {selectedLesson?.title && (
+  <h2 className="text-2xl font-bold text-pink-600 mb-4">
+    {selectedLesson.title}
+  </h2>
+)}
 
             {/* 🎥 Плеєр */}
            <SafeVideo lesson={selectedLesson} t={t} />
