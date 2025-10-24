@@ -105,37 +105,23 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-  // 📊 Завантаження прогресу користувача (з назвами уроків)
-  const loadProgress = async (userId) => {
-    try {
-      setLoadingProgress(true);
-      const res = await fetch(`${BACKEND}/api/progress/user/${userId}`);
-      const data = await res.json();
+// 📊 Завантаження прогресу користувача (тепер без зайвого мапу)
+const loadProgress = async (userId) => {
+  try {
+    setLoadingProgress(true);
+    const res = await fetch(`${BACKEND}/api/progress/user/${userId}`);
+    const data = await res.json();
 
-      // 🧩 Отримуємо всі уроки з бекенду
-      const lessonsRes = await fetch(`${BACKEND}/api/lessons/all`);
-      const lessonsData = await lessonsRes.json();
+    // бекенд уже повертає lesson_title
+    setProgress(data.progress || []);
+    setSelectedUser(userId);
+  } catch (err) {
+    console.error("Помилка завантаження прогресу:", err);
+  } finally {
+    setLoadingProgress(false);
+  }
+};
 
-      // створюємо мапу ID → назва
-      const lessonMap = {};
-      (lessonsData.lessons || []).forEach((l) => {
-        lessonMap[l.id] = l.title;
-      });
-
-      // додаємо назви до прогресу
-      const withTitles = (data.progress || []).map((p) => ({
-        ...p,
-        lesson_title: lessonMap[p.lesson_id] || "—",
-      }));
-
-      setProgress(withTitles);
-      setSelectedUser(userId);
-    } catch (err) {
-      console.error("Помилка завантаження прогресу:", err);
-    } finally {
-      setLoadingProgress(false);
-    }
-  };
 
   // ✅ Позначити домашку виконаною
   const markHomeworkDone = async (lesson_id) => {
