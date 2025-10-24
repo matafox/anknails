@@ -181,15 +181,15 @@ export default function CabinetPage() {
       </header>
 
       {/* 📚 Меню */}
-      <aside
-        className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
-          menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } ${
-          darkMode
-            ? "border-fuchsia-900/30 bg-[#1a0a1f]/80"
-            : "border-pink-200 bg-white/80"
-        }`}
-      >
+<aside
+  className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
+    menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+  } ${
+    darkMode
+      ? "border-fuchsia-900/30 bg-[#1a0a1f]/80"
+      : "border-pink-200 bg-white/80"
+  } md:pt-0 pt-16`}
+>
         <div className="p-6 flex-1 overflow-y-auto">
           {/* 👩‍🎓 Профіль */}
           <div className="flex flex-col items-center text-center mb-6">
