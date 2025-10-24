@@ -283,23 +283,24 @@ export default function CabinetPage() {
 
                   {expanded === mod.id && (
   <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
-    {(lessons[mod.id] || [])
-      .filter((l) => l && l.title)
+    {(Array.isArray(lessons[mod.id]) ? lessons[mod.id] : [])
+      .filter((l) => l && typeof l.title === "string")
       .map((l) => (
         <button
-          key={l.id}
+          key={l.id || Math.random()}
           onClick={() => {
+            if (!l) return;
             setSelectedLesson(l);
             setMenuOpen(false);
           }}
           className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
-            selectedLesson?.id === l.id
+            selectedLesson?.id === l?.id
               ? "bg-pink-500/20 text-pink-600"
               : "opacity-80"
           }`}
         >
-          <PlayCircle className="w-3 h-3" /> {l.title}
-          {l.type && (
+          <PlayCircle className="w-3 h-3" /> {l?.title || "Без назви"}
+          {l?.type && (
             <span
               className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
                 l.type === "practice"
