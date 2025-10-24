@@ -11,6 +11,8 @@ import {
   PlayCircle,
   Moon,
   Globe,
+  CheckSquare,
+  FolderOpen
 } from "lucide-react";
 
 // 🎥 Безпечний YouTube
@@ -353,7 +355,7 @@ export default function CabinetPage() {
           >
             <h2 className="text-2xl font-bold text-pink-600 mb-4">{selectedLesson.title}</h2>
             <SafeYoutube url={selectedLesson.videoUrl} videoId={selectedLesson.videoId} t={t} />
-            {selectedLesson.description && (
+          {selectedLesson.description && (
   <div className="mt-4">
     <h4 className="font-semibold mb-1">{t("Опис", "Описание")}</h4>
     <p>{selectedLesson.description}</p>
@@ -361,31 +363,32 @@ export default function CabinetPage() {
 )}
 
 {selectedLesson.homework && (
-  <div className="mt-4">
-    <h4 className="font-semibold text-pink-500 mb-1">
-      📝 {t("Домашнє завдання", "Домашнее задание")}
+  <div className="mt-5 flex flex-col gap-1">
+    <h4 className="flex items-center gap-2 font-semibold text-pink-500 mb-1">
+      <CheckSquare className="w-5 h-5 text-pink-500" />
+      {t("Домашнє завдання", "Домашнее задание")}
     </h4>
-    <p>{selectedLesson.homework}</p>
+    <p className="pl-7">{selectedLesson.homework}</p>
   </div>
 )}
 
 {selectedLesson.materials && (
-  <div className="mt-4">
-    <h4 className="font-semibold text-pink-500 mb-1">
-      📚 {t("Матеріали", "Материалы")}
+  <div className="mt-5 flex flex-col gap-1">
+    <h4 className="flex items-center gap-2 font-semibold text-pink-500 mb-1">
+      <FolderOpen className="w-5 h-5 text-pink-500" />
+      {t("Матеріали", "Материалы")}
     </h4>
-    {/* якщо є посилання — зроби клікабельним */}
     {selectedLesson.materials.startsWith("http") ? (
       <a
         href={selectedLesson.materials}
         target="_blank"
         rel="noopener noreferrer"
-        className="text-pink-600 underline hover:text-pink-700 transition"
+        className="pl-7 text-pink-600 underline hover:text-pink-700 transition"
       >
         {t("Відкрити матеріал", "Открыть материал")}
       </a>
     ) : (
-      <p>{selectedLesson.materials}</p>
+      <p className="pl-7">{selectedLesson.materials}</p>
     )}
   </div>
 )}
@@ -393,17 +396,23 @@ export default function CabinetPage() {
         )}
 
         {/* 💖 Футер завжди внизу */}
-  <footer
-    className={`mt-auto text-center py-6 text-sm border-t ${
-      darkMode
-        ? "border-fuchsia-900/30 text-fuchsia-100/80"
-        : "border-pink-200 text-gray-600"
-    }`}
-  >
-    <p className="font-medium">
-      © {new Date().getFullYear()} ANK Studio LMS — All rights reserved.
-    </p>
-  </footer>
+<footer
+  className={`relative mt-auto text-center py-6 text-sm overflow-hidden ${
+    darkMode
+      ? "bg-[#100015]/90 border-t border-fuchsia-900/40 text-fuchsia-100/80"
+      : "bg-white/80 border-t border-pink-200 text-gray-600"
+  } backdrop-blur-md shadow-[0_-4px_12px_rgba(255,0,128,0.1)]`}
+>
+  {/* 💫 Градієнтне сяйво зверху */}
+  <div className="absolute top-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-pink-400/40 to-transparent blur-sm"></div>
+
+  <p className="font-medium relative z-10">
+    © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> — All rights reserved.
+  </p>
+
+  {/* subtle підсвітка знизу */}
+  <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[1px] bg-gradient-to-r from-transparent via-rose-300/30 to-transparent blur-sm"></div>
+</footer>
       </main>
     </div>
   );
