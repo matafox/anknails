@@ -18,46 +18,74 @@ import {
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
 const SafeVideo = ({ lesson, t }) => {
-  if (!lesson) return null;
+  const [videoUrl, setVideoUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!lesson) return;
+
+    // Якщо Cloudinary
+    if (lesson.youtube_id?.includes("cloudinary.com")) {
+      fetch(`${BACKEND}/api/sign_video/${lesson.id}`)
+        .then((r) => r.json())
+        .then((data) => {
+          setVideoUrl(data.url);
+        })
+        .catch(() => setVideoUrl(null))
+        .finally(() => setLoading(false));
+    } 
+    // Якщо YouTube або вбудоване
+    else if (lesson.embed_url) {
+      setVideoUrl(lesson.embed_url);
+      setLoading(false);
+    } 
+    else {
+      setVideoUrl(null);
+      setLoading(false);
+    }
+  }, [lesson]);
+
+  if (loading) {
+    return (
+      <div className="w-full aspect-video flex items-center justify-center bg-black/60 rounded-xl text-pink-300 text-sm">
+        Завантаження відео...
+      </div>
+    );
+  }
+
+  if (!videoUrl) {
+    return (
+      <p className="text-sm text-gray-500 text-center py-4">
+        ❌ {t("Невірне посилання або відео не знайдено", "Неверная ссылка или видео не найдено")}
+      </p>
+    );
+  }
 
   const isCloudinary = lesson.youtube_id?.includes("cloudinary.com");
-  const hasEmbed = lesson.embed_url;
+  const isYouTube = videoUrl.includes("youtube");
 
-  // 🎬 Якщо Cloudinary — граємо через бекенд-проксі
-  if (isCloudinary) {
-    return (
-      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
+  return (
+    <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
+      {isYouTube ? (
+        <iframe
+          src={videoUrl}
+          allow="autoplay; fullscreen; picture-in-picture"
+          loading="lazy"
+          className="w-full h-full"
+        />
+      ) : (
         <video
-          src={`${BACKEND}/api/video/${lesson.id}`}
+          src={videoUrl}
           controls
           controlsList="nodownload"
+          playsInline
           preload="metadata"
           className="w-full h-full object-cover"
         >
           {t("Ваш браузер не підтримує відтворення відео", "Ваш браузер не поддерживает воспроизведение видео")}
         </video>
-      </div>
-    );
-  }
-
-  // 🎞️ Якщо це YouTube або embed_url з бекенду
-  if (hasEmbed) {
-    return (
-      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
-        <iframe
-          src={lesson.embed_url}
-          allow="autoplay; fullscreen; picture-in-picture"
-          loading="lazy"
-          className="w-full h-full"
-        />
-      </div>
-    );
-  }
-
-  return (
-    <p className="text-sm text-gray-500 text-center py-4">
-      ❌ {t("Невірне посилання або відео не знайдено", "Неверная ссылка или видео не найдено")}
-    </p>
+      )}
+    </div>
   );
 };
 
