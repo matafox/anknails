@@ -100,13 +100,17 @@ if (lesson.youtube_id?.includes("cloudinary.com")) {
 
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-      <video
-        src={videoUrl}
-        controls
-        playsInline
-        controlsList="nodownload"
-        preload="metadata"
-        className="w-full h-full object-cover"
+<video
+  key={videoUrl} // 🔑 примусове оновлення джерела
+  src={videoUrl}
+  type="video/mp4"
+  controls
+  playsInline
+  crossOrigin="anonymous"
+  controlsList="nodownload noremoteplayback"
+  preload="auto"
+  className="w-full h-full object-contain bg-black"
+  onError={(e) => console.error("🎬 Video error", e)}
         onTimeUpdate={(e) => {
           const current = e.target.currentTime;
           const total = e.target.duration;
