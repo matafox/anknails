@@ -485,7 +485,7 @@ export default function CabinetPage() {
 
                 {progress[selectedLesson.id]?.homework_done && (
                   <div className="mt-3 ml-6 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 w-fit">
-                    ✅ {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+                     {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
                   </div>
                 )}
               </div>
