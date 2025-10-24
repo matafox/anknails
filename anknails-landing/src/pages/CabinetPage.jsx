@@ -304,83 +304,94 @@ export default function CabinetPage() {
           ) : (
             <div className="space-y-2">
               {modules.map((mod) => (
-                <div key={mod.id}>
-                  <button
-                    onClick={() => toggleModule(mod.id)}
-                    className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
-                  >
-                    <span className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" /> {mod.title}
-                    </span>
-                    <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
-                      {mod.lessons || 0}
-                    </span>
-                    {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
+  <div key={mod.id} className="mb-2">
+    <button
+      onClick={() => toggleModule(mod.id)}
+      className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
+    >
+      <span className="flex items-center gap-2">
+        <BookOpen className="w-4 h-4" /> {mod.title}
+      </span>
+      <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
+        {mod.lessons || 0}
+      </span>
+      {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+    </button>
 
-                  {expanded === mod.id && (
-                    <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
-                      {lessons[mod.id]?.map((l) => {
-                        const prog = progress[l.id];
-                        const percent =
-                          prog && prog.total_seconds > 0
-                            ? Math.min(100, Math.round((prog.watched_seconds / prog.total_seconds) * 100))
-                            : 0;
-                        const done = prog?.completed || prog?.homework_done;
+    {/* 📝 Опис модуля */}
+    {mod.description && (
+      <p
+        className={`text-xs mt-1 ml-8 pr-4 leading-snug ${
+          darkMode ? "text-fuchsia-200/70" : "text-gray-600"
+        }`}
+      >
+        {mod.description}
+      </p>
+    )}
 
-                        return (
-                          <div
-                            key={l.id}
-                            onClick={() => {
-                              setSelectedLesson(l);
-                              setMenuOpen(false);
-                            }}
-                            className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
-                              selectedLesson?.id === l.id
-                                ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
-                                : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              {done ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <circle cx="12" cy="12" r="10" />
-                                  <path d="M9 12l2 2 4-4" />
-                                </svg>
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <circle cx="12" cy="12" r="10" />
-                                </svg>
-                              )}
+    {expanded === mod.id && (
+      <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
+        {lessons[mod.id]?.map((l) => {
+          const prog = progress[l.id];
+          const percent =
+            prog && prog.total_seconds > 0
+              ? Math.min(100, Math.round((prog.watched_seconds / prog.total_seconds) * 100))
+              : 0;
+          const done = prog?.completed || prog?.homework_done;
 
-                              <span className="flex-1 truncate">{l.title}</span>
+          return (
+            <div
+              key={l.id}
+              onClick={() => {
+                setSelectedLesson(l);
+                setMenuOpen(false);
+              }}
+              className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
+                selectedLesson?.id === l.id
+                  ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
+                  : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                {done ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M9 12l2 2 4-4" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <circle cx="12" cy="12" r="10" />
+                  </svg>
+                )}
 
-                              {percent > 0 && (
-                                <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
-                                  {percent}%
-                                </span>
-                              )}
-                            </div>
+                <span className="flex-1 truncate">{l.title}</span>
 
-                            <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full transition-all duration-500 ${
-                                  done
-                                    ? "bg-green-400"
-                                    : percent > 0
-                                    ? "bg-gradient-to-r from-pink-400 to-rose-500"
-                                    : "bg-transparent"
-                                }`}
-                                style={{ width: `${percent}%` }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              ))}
+                {percent > 0 && (
+                  <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
+                    {percent}%
+                  </span>
+                )}
+              </div>
+
+              <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
+                <div
+                  className={`h-full transition-all duration-500 ${
+                    done
+                      ? "bg-green-400"
+                      : percent > 0
+                      ? "bg-gradient-to-r from-pink-400 to-rose-500"
+                      : "bg-transparent"
+                  }`}
+                  style={{ width: `${percent}%` }}
+                />
+              </div>
+            </div>
+          );
+        })}
+      </div>
+    )}
+  </div>
+))}
             </div>
           )}
         </div>
