@@ -25,31 +25,21 @@ const SafeVideo = ({ url, videoId, t }) => {
     );
 
   // 🎬 Якщо це Cloudinary або пряме посилання
-  if (url && url.includes("cloudinary.com")) {
-    return (
-      <div
-        className="relative w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md select-none"
-        onContextMenu={(e) => e.preventDefault()} // 🚫 блокує правий клік
+if (url && url.includes("cloudinary.com")) {
+  return (
+    <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
+      <video
+        src={`${BACKEND}/api/video/${selectedLesson.id}`}
+        controls
+        controlsList="nodownload"
+        preload="metadata"
+        className="w-full h-full object-cover"
       >
-        <video
-          src={url}
-          controls
-          controlsList="nodownload noremoteplayback"
-          disablePictureInPicture
-          preload="metadata"
-          className="w-full h-full object-cover pointer-events-auto"
-          onContextMenu={(e) => e.preventDefault()} // 🚫 дублюємо захист
-        >
-          {t(
-            "Ваш браузер не підтримує відтворення відео",
-            "Ваш браузер не поддерживает воспроизведение видео"
-          )}
-        </video>
-        {/* 🕵️ Невидимий шар, що перехоплює клік правою кнопкою */}
-        <div className="absolute inset-0 pointer-events-none bg-transparent" />
-      </div>
-    );
-  }
+        {t("Ваш браузер не підтримує відтворення відео", "Ваш браузер не поддерживает воспроизведение видео")}
+      </video>
+    </div>
+  );
+}
 
   // 🎞️ Якщо це YouTube
   let id = videoId || null;
