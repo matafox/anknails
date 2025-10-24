@@ -51,7 +51,7 @@ export default function App() {
       <main className="flex-grow w-full flex flex-col items-center justify-center px-4 sm:px-6 z-10 pt-24 sm:pt-28">
         <div className="flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 mb-4">
           <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
-            {t("title") || "ANK Studio"}
+            {t("title")}
           </h1>
 
           <div className="px-4 py-1.5 rounded-full border border-white/40 dark:border-white/10 
