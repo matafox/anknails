@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   LogOut,
-  User,
+  SquareUserRound,
   Menu,
   X,
   BookOpen,
@@ -288,7 +288,7 @@ export default function CabinetPage() {
       >
         <div className="p-6 flex-1 overflow-y-auto">
           <div className="flex flex-col items-center text-center mb-6">
-            <User className="w-16 h-16 text-pink-500 mb-2" />
+            <SquareUserRound className="w-16 h-16 text-pink-500 mb-2" />
             <h2 className="font-bold text-lg">
               {user.name || user.email.split("@")[0]}
             </h2>
