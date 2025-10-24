@@ -28,13 +28,13 @@ const SafeVideo = ({ url, videoId, t, BACKEND }) => {
 if (url && url.includes("cloudinary.com")) {
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
-      <video
-        src={`${BACKEND}/api/video/${selectedLesson.id}`}
-        controls
-        controlsList="nodownload"
-        preload="metadata"
-        className="w-full h-full object-cover"
-      >
+<video
+  src={`${BACKEND}/api/video/${videoId || ""}`}
+  controls
+  controlsList="nodownload"
+  preload="metadata"
+  className="w-full h-full object-cover"
+>
         {t("Ваш браузер не підтримує відтворення відео", "Ваш браузер не поддерживает воспроизведение видео")}
       </video>
     </div>
