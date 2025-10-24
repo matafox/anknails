@@ -16,7 +16,7 @@ import {
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
-const SafeVideo = ({ lesson, t }) => {
+const SafeVideo = ({ lesson, t, onProgressUpdate }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
@@ -50,23 +50,26 @@ if (lesson.youtube_id?.includes("cloudinary.com")) {
   }, [lesson]);
 
   const sendProgress = async (watched, total, done = false) => {
-    if (!userId || !lesson?.id || total <= 0) return;
-    try {
-      await fetch(`${BACKEND}/api/progress/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          lesson_id: lesson.id,
-          watched_seconds: watched,
-          total_seconds: total,
-          completed: done,
-        }),
-      });
-    } catch (e) {
-      console.warn("⚠️ Проблема з оновленням прогресу", e);
-    }
-  };
+  if (!userId || !lesson?.id || total <= 0) return;
+  try {
+    await fetch(`${BACKEND}/api/progress/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: userId,
+        lesson_id: lesson.id,
+        watched_seconds: watched,
+        total_seconds: total,
+        completed: done,
+      }),
+    });
+
+    // 🔄 миттєво оновлюємо стан без очікування перезавантаження
+    if (onProgressUpdate) onProgressUpdate(lesson.id, watched, total, done);
+  } catch (e) {
+    console.warn("⚠️ Проблема з оновленням прогресу", e);
+  }
+};
 
   if (loading)
     return (
@@ -149,7 +152,7 @@ export default function CabinetPage() {
   const [progress, setProgress] = useState({});
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
-
+  
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -497,7 +500,21 @@ export default function CabinetPage() {
     </span>
   )}
 </div>
-            <SafeVideo lesson={selectedLesson} t={t} />
+            <SafeVideo
+  lesson={selectedLesson}
+  t={t}
+  onProgressUpdate={(lessonId, watched, total, done) => {
+    setProgress(prev => ({
+      ...prev,
+      [lessonId]: {
+        ...(prev[lessonId] || {}),
+        watched_seconds: watched,
+        total_seconds: total,
+        completed: done || prev[lessonId]?.completed,
+      },
+    }));
+  }}
+/>
 
             {selectedLesson.description && (
               <div className="mt-4">
