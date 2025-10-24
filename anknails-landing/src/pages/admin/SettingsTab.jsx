@@ -4,8 +4,11 @@ export default function SettingsTab({ i18n, darkMode }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [progress, setProgress] = useState([]);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingProgress, setLoadingProgress] = useState(false);
 
   // 🧠 Завантаження користувачів
   const loadUsers = async () => {
@@ -44,7 +47,6 @@ export default function SettingsTab({ i18n, darkMode }) {
     const name = e.target.name.value.trim();
     const days = parseInt(e.target.days.value);
     const course_id = parseInt(e.target.course.value) || null;
-
     if (!email) return alert("Введіть email");
 
     try {
@@ -103,9 +105,46 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
+  // 📊 Завантаження прогресу користувача
+  const loadProgress = async (userId) => {
+    try {
+      setLoadingProgress(true);
+      const res = await fetch(`${BACKEND}/api/progress/user/${userId}`);
+      const data = await res.json();
+      setProgress(data.progress || []);
+      setSelectedUser(userId);
+    } catch (err) {
+      console.error("Помилка завантаження прогресу:", err);
+    } finally {
+      setLoadingProgress(false);
+    }
+  };
+
+  // ✅ Позначити домашку виконаною
+  const markHomeworkDone = async (lesson_id) => {
+    try {
+      const res = await fetch(`${BACKEND}/api/progress/homework`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: selectedUser,
+          lesson_id,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadProgress(selectedUser);
+      } else {
+        alert("❌ Помилка оновлення домашки");
+      }
+    } catch (err) {
+      console.error("Помилка:", err);
+    }
+  };
+
   return (
     <section>
-      {/* 🧾 Форма створення */}
+      {/* 🧾 Створення користувача */}
       <div
         className={`max-w-md space-y-5 p-6 rounded-2xl shadow-lg border ${
           darkMode
@@ -157,7 +196,7 @@ export default function SettingsTab({ i18n, darkMode }) {
             />
           </div>
 
-          {/* 🎓 Вибір курсу */}
+          {/* 🎓 Курс */}
           <div>
             <label className="block text-sm font-medium mb-1">
               {i18n.language === "ru" ? "Курс" : "Курс"}
@@ -167,9 +206,7 @@ export default function SettingsTab({ i18n, darkMode }) {
               className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 outline-none"
             >
               <option value="">
-                {i18n.language === "ru"
-                  ? "Без курса"
-                  : "Без курсу"}
+                {i18n.language === "ru" ? "Без курса" : "Без курсу"}
               </option>
               {courses.map((c) => (
                 <option key={c.id} value={c.id}>
@@ -212,22 +249,35 @@ export default function SettingsTab({ i18n, darkMode }) {
             <thead className={darkMode ? "bg-fuchsia-950/40" : "bg-pink-100"}>
               <tr>
                 <th className="py-2 px-3 text-left">ID</th>
-                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Имя" : "Ім’я"}</th>
+                <th className="py-2 px-3 text-left">
+                  {i18n.language === "ru" ? "Имя" : "Ім’я"}
+                </th>
                 <th className="py-2 px-3 text-left">Email</th>
-                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Пароль" : "Пароль"}</th>
-                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Курс" : "Курс"}</th>
-                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Доступ до" : "Доступ до"}</th>
+                <th className="py-2 px-3 text-left">Пароль</th>
+                <th className="py-2 px-3 text-left">
+                  {i18n.language === "ru" ? "Курс" : "Курс"}
+                </th>
+                <th className="py-2 px-3 text-left">
+                  {i18n.language === "ru" ? "Доступ до" : "Доступ до"}
+                </th>
+                <th></th>
               </tr>
             </thead>
             <tbody>
               {users.map((u) => (
-                <tr key={u.id} className={`border-t ${darkMode ? "border-fuchsia-900/30 hover:bg-fuchsia-950/30" : "border-pink-200 hover:bg-pink-50"}`}>
+                <tr
+                  key={u.id}
+                  className={`border-t ${
+                    darkMode
+                      ? "border-fuchsia-900/30 hover:bg-fuchsia-950/30"
+                      : "border-pink-200 hover:bg-pink-50"
+                  }`}
+                >
                   <td className="py-2 px-3">{u.id}</td>
                   <td className="py-2 px-3">
                     <input
                       type="text"
                       defaultValue={u.name || ""}
-                      placeholder={i18n.language === "ru" ? "Без имени" : "Без імені"}
                       onBlur={(e) => handleNameChange(u.id, e.target.value.trim())}
                       className={`px-2 py-1 w-full rounded-md border text-sm outline-none ${
                         darkMode
@@ -244,13 +294,29 @@ export default function SettingsTab({ i18n, darkMode }) {
                       onChange={(e) => handleCourseChange(u.id, e.target.value)}
                       className="px-2 py-1 rounded-md border border-pink-300 text-sm outline-none bg-white/70"
                     >
-                      <option value="">{i18n.language === "ru" ? "Без курса" : "Без курсу"}</option>
+                      <option value="">
+                        {i18n.language === "ru" ? "Без курса" : "Без курсу"}
+                      </option>
                       {courses.map((c) => (
-                        <option key={c.id} value={c.id}>{c.title}</option>
+                        <option key={c.id} value={c.id}>
+                          {c.title}
+                        </option>
                       ))}
                     </select>
                   </td>
-                  <td className="py-2 px-3">{new Date(u.expires_at).toLocaleDateString()}</td>
+                  <td className="py-2 px-3">
+                    {new Date(u.expires_at).toLocaleDateString()}
+                  </td>
+                  <td className="py-2 px-3">
+                    <button
+                      onClick={() => loadProgress(u.id)}
+                      className="text-sm text-pink-600 hover:underline"
+                    >
+                      {i18n.language === "ru"
+                        ? "Прогресс"
+                        : "Переглянути прогрес"}
+                    </button>
+                  </td>
                 </tr>
               ))}
             </tbody>
@@ -263,6 +329,68 @@ export default function SettingsTab({ i18n, darkMode }) {
           </p>
         )}
       </div>
+
+      {/* 📊 Прогрес користувача */}
+      {selectedUser && (
+        <div className="mt-10">
+          <h4 className="text-lg font-semibold mb-4">
+            {i18n.language === "ru" ? "Прогресс пользователя" : "Прогрес користувача"} #{selectedUser}
+          </h4>
+
+          {loadingProgress ? (
+            <p className="opacity-70">Завантаження...</p>
+          ) : progress.length > 0 ? (
+            <table
+              className={`min-w-[600px] w-full rounded-xl overflow-hidden border ${
+                darkMode ? "border-fuchsia-900/30" : "border-pink-200"
+              }`}
+            >
+              <thead className={darkMode ? "bg-fuchsia-950/40" : "bg-pink-100"}>
+                <tr>
+                  <th className="py-2 px-3 text-left">Lesson ID</th>
+                  <th className="py-2 px-3 text-left">Прогрес</th>
+                  <th className="py-2 px-3 text-left">Домашка</th>
+                </tr>
+              </thead>
+              <tbody>
+                {progress.map((p) => {
+                  const percent =
+                    p.total_seconds > 0
+                      ? Math.round((p.watched_seconds / p.total_seconds) * 100)
+                      : 0;
+                  return (
+                    <tr
+                      key={p.lesson_id}
+                      className={`border-t ${
+                        darkMode
+                          ? "border-fuchsia-900/30 hover:bg-fuchsia-950/30"
+                          : "border-pink-200 hover:bg-pink-50"
+                      }`}
+                    >
+                      <td className="py-2 px-3">{p.lesson_id}</td>
+                      <td className="py-2 px-3">{percent}%</td>
+                      <td className="py-2 px-3">
+                        {p.homework_done ? (
+                          <span className="text-green-500">✅</span>
+                        ) : (
+                          <button
+                            onClick={() => markHomeworkDone(p.lesson_id)}
+                            className="text-xs px-3 py-1 rounded-md bg-pink-100 text-pink-700 hover:bg-pink-200"
+                          >
+                            Позначити
+                          </button>
+                        )}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          ) : (
+            <p className="opacity-70">Немає даних про прогрес.</p>
+          )}
+        </div>
+      )}
     </section>
   );
 }
