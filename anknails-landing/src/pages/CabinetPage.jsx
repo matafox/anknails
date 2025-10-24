@@ -329,7 +329,7 @@ export default function CabinetPage() {
       </aside>
 
       {/* 🌸 Контент */}
-            <main className="flex flex-col min-h-screen p-5 md:p-10 mt-16 md:mt-0">
+      <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
             {banner.image_url && (
@@ -396,9 +396,11 @@ export default function CabinetPage() {
         )}
 
         {/* 💖 Футер завжди внизу */}
-        <footer className="mt-10 text-sm opacity-60 text-center py-6">
-          ANK Studio LMS © {new Date().getFullYear()}
-        </footer>
+<footer
+  <p className="font-medium relative z-10">
+    © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> — All rights reserved.
+  </p>
+</footer>
       </main>
     </div>
   );
