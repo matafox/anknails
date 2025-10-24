@@ -262,7 +262,7 @@ export default function CabinetPage() {
             </p>
           ) : (
             <div className="space-y-2">
-              {modules.map((mod) => (
+              {(modules || []).filter((m) => m && m.title).map((mod) => (
                 <div key={mod.id}>
                   <button
                     onClick={() => toggleModule(mod.id)}
