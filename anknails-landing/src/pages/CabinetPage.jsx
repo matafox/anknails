@@ -465,7 +465,22 @@ export default function CabinetPage() {
               darkMode ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40" : "bg-white/80 border border-pink-200"
             }`}
           >
-            <h2 className="text-2xl font-bold text-pink-600 mb-4">{selectedLesson.title}</h2>
+            <div className="flex items-center justify-between mb-4">
+  <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
+  {selectedLesson.type && (
+    <span
+      className={`text-xs md:text-sm px-3 py-1 rounded-full font-medium ${
+        selectedLesson.type === "practice"
+          ? "bg-purple-100 text-purple-700 border border-purple-300"
+          : "bg-pink-100 text-pink-700 border border-pink-300"
+      }`}
+    >
+      {selectedLesson.type === "practice"
+        ? t("Практика", "Практика")
+        : t("Теорія", "Теория")}
+    </span>
+  )}
+</div>
             <SafeVideo lesson={selectedLesson} t={t} />
 
             {selectedLesson.description && (
