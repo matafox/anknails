@@ -61,18 +61,6 @@ const SafeVideo = ({ lesson, t }) => {
   );
 };
 
-  return (
-    <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
-      <iframe
-        src={`https://www.youtube-nocookie.com/embed/${id}?controls=1&modestbranding=1&rel=0&showinfo=0`}
-        allow="autoplay; fullscreen; picture-in-picture"
-        loading="lazy"
-        className="w-full h-full"
-      />
-    </div>
-  );
-};
-
 export default function CabinetPage() {
   const { i18n } = useTranslation();
   const BACKEND = "https://anknails-backend-production.up.railway.app";
