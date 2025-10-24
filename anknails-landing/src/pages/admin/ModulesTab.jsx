@@ -5,6 +5,7 @@ import {
   Trash2,
   Save,
   XCircle,
+  Upload,
 } from "lucide-react";
 
 export default function ModulesTab({ darkMode, i18n }) {
@@ -18,13 +19,15 @@ export default function ModulesTab({ darkMode, i18n }) {
   const [lessonForm, setLessonForm] = useState({
     title: "",
     description: "",
-    youtube: "",
+    videoFile: null,
+    video_url: "",
     homework: "",
     materials: "",
-    type: "",
+    type: "theory",
   });
   const [editingLessonId, setEditingLessonId] = useState(null);
   const [expanded, setExpanded] = useState(null);
+  const [uploading, setUploading] = useState(false);
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
@@ -93,9 +96,33 @@ export default function ModulesTab({ darkMode, i18n }) {
     setLessons((prev) => ({ ...prev, [moduleId]: data.lessons || [] }));
   };
 
+  // ☁️ Завантаження відео у Cloudinary
+  const handleVideoUpload = async (file) => {
+    if (!file) return null;
+    setUploading(true);
+    const formData = new FormData();
+    formData.append("file", file);
+
+    const res = await fetch(`${BACKEND}/api/upload_video`, {
+      method: "POST",
+      body: formData,
+    });
+
+    const data = await res.json();
+    setUploading(false);
+    return data.url;
+  };
+
   // 🧾 Створення або редагування уроку
   const handleLessonSubmit = async (e, moduleId) => {
     e.preventDefault();
+
+    let videoUrl = lessonForm.video_url;
+    if (lessonForm.videoFile) {
+      const uploaded = await handleVideoUpload(lessonForm.videoFile);
+      if (uploaded) videoUrl = uploaded;
+    }
+
     const url = editingLessonId
       ? `${BACKEND}/api/lessons/update/${editingLessonId}`
       : `${BACKEND}/api/lessons/create`;
@@ -106,14 +133,20 @@ export default function ModulesTab({ darkMode, i18n }) {
       body: JSON.stringify({
         token: "anka12341",
         module_id: moduleId,
-        ...lessonForm,
+        youtube: videoUrl, // ⚠️ використовуємо це поле як video_url
+        title: lessonForm.title,
+        description: lessonForm.description,
+        homework: lessonForm.homework,
+        materials: lessonForm.materials,
+        type: lessonForm.type,
       }),
     });
 
     setLessonForm({
       title: "",
       description: "",
-      youtube: "",
+      videoFile: null,
+      video_url: "",
       homework: "",
       materials: "",
       type: "theory",
@@ -139,9 +172,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     setLessonForm({
       title: lesson.title,
       description: lesson.description || "",
-      youtube: lesson.embed_url
-        ? `https://youtu.be/${lesson.youtube_id}`
-        : "",
+      video_url: lesson.embed_url || "",
       homework: lesson.homework || "",
       materials: lesson.materials || "",
       type: lesson.type || "theory",
@@ -249,31 +280,37 @@ export default function ModulesTab({ darkMode, i18n }) {
                     }`}
                   >
                     <div className="flex justify-between">
-                      <div>
+                      <div className="w-full">
                         <div className="flex items-center gap-2">
-  <b>{l.title}</b>
-  {l.type && (
-    <span
-      className={`text-xs px-2 py-[2px] rounded-full ${
-        l.type === "practice"
-          ? "bg-purple-200 text-purple-700"
-          : "bg-pink-200 text-pink-700"
-      }`}
-    >
-      {l.type === "practice"
-        ? t("Практика", "Практика")
-        : t("Теорія", "Теория")}
-    </span>
-  )}
-</div>
+                          <b>{l.title}</b>
+                          {l.type && (
+                            <span
+                              className={`text-xs px-2 py-[2px] rounded-full ${
+                                l.type === "practice"
+                                  ? "bg-purple-200 text-purple-700"
+                                  : "bg-pink-200 text-pink-700"
+                              }`}
+                            >
+                              {l.type === "practice"
+                                ? t("Практика", "Практика")
+                                : t("Теорія", "Теория")}
+                            </span>
+                          )}
+                        </div>
+
                         {l.description && <p>{l.description}</p>}
+
                         {l.embed_url && (
-                          <iframe
-                            src={l.embed_url}
-                            className="mt-2 w-full aspect-video rounded-lg border border-pink-200"
-                            allowFullScreen
-                          />
+                          <div className="relative mt-2">
+                            <video
+                              src={l.embed_url}
+                              controls
+                              className="w-full aspect-video rounded-lg border border-pink-200"
+                            />
+                            <div className="absolute inset-0 pointer-events-none"></div>
+                          </div>
                         )}
+
                         {l.homework && (
                           <p className="mt-2 text-xs opacity-80">
                             📝 <b>{t("Завдання", "Задание")}:</b> {l.homework}
@@ -286,6 +323,7 @@ export default function ModulesTab({ darkMode, i18n }) {
                           </p>
                         )}
                       </div>
+
                       <div className="flex flex-col gap-1">
                         <button
                           onClick={() => startEditLesson(l)}
@@ -329,48 +367,67 @@ export default function ModulesTab({ darkMode, i18n }) {
                     }
                     className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                   />
+
+                  <label className="block text-sm font-medium">
+                    🎥 {t("Відео Cloudinary", "Видео Cloudinary")}
+                  </label>
                   <input
-                    placeholder="YouTube URL"
-                    value={lessonForm.youtube}
+                    type="file"
+                    accept="video/*"
                     onChange={(e) =>
-                      setLessonForm({ ...lessonForm, youtube: e.target.value })
+                      setLessonForm({
+                        ...lessonForm,
+                        videoFile: e.target.files[0],
+                      })
                     }
                     className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                   />
+                  {uploading && (
+                    <p className="text-xs text-pink-500">{t("Завантаження...", "Загрузка...")}</p>
+                  )}
+
                   {/* 🩷 Теорія / 💜 Практика */}
-<div className="flex gap-2">
-  <button
-    type="button"
-    onClick={() => setLessonForm({ ...lessonForm, type: "theory" })}
-    className={`flex-1 py-2 rounded-lg font-medium ${
-      lessonForm.type === "theory"
-        ? "bg-pink-500 text-white"
-        : "bg-pink-100 text-pink-600"
-    }`}
-  >
-    🩷 {t("Теорія", "Теория")}
-  </button>
-  <button
-    type="button"
-    onClick={() => setLessonForm({ ...lessonForm, type: "practice" })}
-    className={`flex-1 py-2 rounded-lg font-medium ${
-      lessonForm.type === "practice"
-        ? "bg-purple-500 text-white"
-        : "bg-purple-100 text-purple-600"
-    }`}
-  >
-    💜 {t("Практика", "Практика")}
-  </button>
-</div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLessonForm({ ...lessonForm, type: "theory" })
+                      }
+                      className={`flex-1 py-2 rounded-lg font-medium ${
+                        lessonForm.type === "theory"
+                          ? "bg-pink-500 text-white"
+                          : "bg-pink-100 text-pink-600"
+                      }`}
+                    >
+                      🩷 {t("Теорія", "Теория")}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setLessonForm({ ...lessonForm, type: "practice" })
+                      }
+                      className={`flex-1 py-2 rounded-lg font-medium ${
+                        lessonForm.type === "practice"
+                          ? "bg-purple-500 text-white"
+                          : "bg-purple-100 text-purple-600"
+                      }`}
+                    >
+                      💜 {t("Практика", "Практика")}
+                    </button>
+                  </div>
 
                   <input
                     placeholder={t("Завдання", "Задание")}
                     value={lessonForm.homework}
                     onChange={(e) =>
-                      setLessonForm({ ...lessonForm, homework: e.target.value })
+                      setLessonForm({
+                        ...lessonForm,
+                        homework: e.target.value,
+                      })
                     }
                     className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                   />
+
                   <input
                     placeholder={t(
                       "Матеріали (посилання або короткий опис)",
@@ -389,6 +446,7 @@ export default function ModulesTab({ darkMode, i18n }) {
                   <div className="flex gap-2">
                     <button
                       type="submit"
+                      disabled={uploading}
                       className="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg"
                     >
                       {editingLessonId ? (
@@ -411,7 +469,8 @@ export default function ModulesTab({ darkMode, i18n }) {
                           setLessonForm({
                             title: "",
                             description: "",
-                            youtube: "",
+                            videoFile: null,
+                            video_url: "",
                             homework: "",
                             materials: "",
                             type: "theory",
