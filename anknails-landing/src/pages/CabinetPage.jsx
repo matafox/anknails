@@ -8,7 +8,6 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
-  PlayCircle,
   Moon,
   Globe,
   CheckSquare,
@@ -41,7 +40,6 @@ const SafeVideo = ({ lesson, t }) => {
       setLoading(false);
     }
 
-    // беремо ID користувача з localStorage
     const email = localStorage.getItem("user_email");
     if (email) {
       fetch(`${BACKEND}/api/users`)
@@ -94,7 +92,10 @@ const SafeVideo = ({ lesson, t }) => {
   if (isYouTube) {
     return (
       <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
-        {t("YouTube не підтримує відстеження прогресу", "YouTube не поддерживает прогресс")}
+        {t(
+          "YouTube не підтримує відстеження прогресу",
+          "YouTube не поддерживает прогресс"
+        )}
       </div>
     );
   }
@@ -111,14 +112,10 @@ const SafeVideo = ({ lesson, t }) => {
         onTimeUpdate={(e) => {
           const current = e.target.currentTime;
           const total = e.target.duration;
-
-          // надсилати кожні 10 сек
           if (current - lastSent >= 10) {
             setLastSent(current);
             sendProgress(current, total);
           }
-
-          // коли доглянув до кінця — 100%
           if (!completed && current >= total * 0.95) {
             setCompleted(true);
             sendProgress(total, total, true);
@@ -161,7 +158,6 @@ export default function CabinetPage() {
     if (savedLang && savedLang !== i18n.language) i18n.changeLanguage(savedLang);
   }, []);
 
-  // 🧠 Авторизація
   useEffect(() => {
     const email = localStorage.getItem("user_email");
     const expires = localStorage.getItem("expires_at");
@@ -210,7 +206,6 @@ export default function CabinetPage() {
       .catch(() => console.error("Помилка завантаження модулів"));
   }, [user]);
 
-  // 📊 Прогрес користувача
   useEffect(() => {
     if (!user?.id) return;
     fetch(`${BACKEND}/api/progress/user/${user.id}`)
@@ -262,7 +257,6 @@ export default function CabinetPage() {
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
-      {/* Шапка */}
       <header
         className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 ${
           darkMode
@@ -278,7 +272,6 @@ export default function CabinetPage() {
         </button>
       </header>
 
-      {/* Меню */}
       <aside
         className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -289,7 +282,6 @@ export default function CabinetPage() {
         } md:pt-0 pt-16`}
       >
         <div className="p-6 flex-1 overflow-y-auto">
-          {/* Профіль */}
           <div className="flex flex-col items-center text-center mb-6">
             <User className="w-16 h-16 text-pink-500 mb-2" />
             <h2 className="font-bold text-lg">
@@ -300,13 +292,9 @@ export default function CabinetPage() {
             </p>
           </div>
 
-          {/* Модулі */}
           {modules.length === 0 ? (
             <p className="text-center text-sm opacity-70">
-              {t(
-                "Модулів ще немає або курс не призначено",
-                "Модулей нет или курс не назначен"
-              )}
+              {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
             </p>
           ) : (
             <div className="space-y-2">
@@ -322,11 +310,7 @@ export default function CabinetPage() {
                     <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
                       {mod.lessons || 0}
                     </span>
-                    {expanded === mod.id ? (
-                      <ChevronUp className="w-4 h-4" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4" />
-                    )}
+                    {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
 
                   {expanded === mod.id && (
@@ -335,12 +319,7 @@ export default function CabinetPage() {
                         const prog = progress[l.id];
                         const percent =
                           prog && prog.total_seconds > 0
-                            ? Math.min(
-                                100,
-                                Math.round(
-                                  (prog.watched_seconds / prog.total_seconds) * 100
-                                )
-                              )
+                            ? Math.min(100, Math.round((prog.watched_seconds / prog.total_seconds) * 100))
                             : 0;
                         const done = prog?.completed || prog?.homework_done;
 
@@ -358,28 +337,24 @@ export default function CabinetPage() {
                             }`}
                           >
                             <div className="flex items-center gap-2">
-                              <PlayCircle
-                                className={`w-4 h-4 ${
-                                  done
-                                    ? "text-green-500"
-                                    : "text-pink-500 group-hover:scale-110 transition"
-                                }`}
-                              />
+                              {done ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M9 12l2 2 4-4" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                </svg>
+                              )}
+
                               <span className="flex-1 truncate">{l.title}</span>
-                              {l.type && (
-                                <span
-                                  className={`text-[10px] px-2 py-[1px] rounded-full ${
-                                    l.type === "practice"
-                                      ? "bg-purple-100 text-purple-700"
-                                      : "bg-pink-100 text-pink-700"
-                                  }`}
-                                >
-                                  {l.type === "practice"
-                                    ? t("Практика", "Практика")
-                                    : t("Теорія", "Теория")}
+
+                              {percent > 0 && (
+                                <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
+                                  {percent}%
                                 </span>
                               )}
-                              {done && <span className="ml-2 text-green-500">✅</span>}
                             </div>
 
                             <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
@@ -394,12 +369,6 @@ export default function CabinetPage() {
                                 style={{ width: `${percent}%` }}
                               />
                             </div>
-
-                            {percent > 0 && (
-                              <div className="absolute right-2 top-2 text-[10px] text-pink-500">
-                                {percent}%
-                              </div>
-                            )}
                           </div>
                         );
                       })}
@@ -410,7 +379,6 @@ export default function CabinetPage() {
             </div>
           )}
         </div>
-
         {/* Низ меню */}
         <div className="p-6 border-t border-pink-200/30 space-y-6 mt-auto">
           {/* Темна тема */}
@@ -480,13 +448,7 @@ export default function CabinetPage() {
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-            {banner.image_url && (
-              <img
-                src={banner.image_url}
-                alt="Banner"
-                className="w-full h-48 md:h-64 object-cover"
-              />
-            )}
+            {banner.image_url && <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />}
             <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
               {banner.title}
             </div>
@@ -495,21 +457,15 @@ export default function CabinetPage() {
 
         {!selectedLesson ? (
           <div className="flex items-center justify-center h-full text-center opacity-70">
-            <p className="text-lg">
-              {t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}
-            </p>
+            <p className="text-lg">{t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}</p>
           </div>
         ) : (
           <div
             className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
-              darkMode
-                ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
-                : "bg-white/80 border border-pink-200"
+              darkMode ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40" : "bg-white/80 border border-pink-200"
             }`}
           >
-            <h2 className="text-2xl font-bold text-pink-600 mb-4">
-              {selectedLesson.title}
-            </h2>
+            <h2 className="text-2xl font-bold text-pink-600 mb-4">{selectedLesson.title}</h2>
             <SafeVideo lesson={selectedLesson} t={t} />
 
             {selectedLesson.description && (
@@ -526,6 +482,12 @@ export default function CabinetPage() {
                   {t("Домашнє завдання", "Домашнее задание")}
                 </h4>
                 <p className="pl-7">{selectedLesson.homework}</p>
+
+                {progress[selectedLesson.id]?.homework_done && (
+                  <div className="mt-3 ml-6 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 w-fit">
+                    ✅ {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+                  </div>
+                )}
               </div>
             )}
 
@@ -551,17 +513,15 @@ export default function CabinetPage() {
             )}
           </div>
         )}
+
         <footer
           className={`mt-10 text-center py-6 text-sm border-t ${
-            darkMode
-              ? "border-fuchsia-900/30 text-fuchsia-100/80"
-              : "border-pink-200 text-gray-600"
+            darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"
           }`}
         >
           <p className="font-medium">
-            © {new Date().getFullYear()}{" "}
-            <span className="text-pink-500 font-semibold">ANK Studio LMS</span>{" "}
-            • {t("Усі права захищені.", "Все права защищены.")}
+            © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
+            {t("Усі права захищені.", "Все права защищены.")}
           </p>
         </footer>
       </main>
