@@ -15,45 +15,51 @@ import {
   FolderOpen
 } from "lucide-react";
 
-// 🎥 Плеєр з підтримкою YouTube і Cloudinary (із захистом від скачування)
-const SafeVideo = ({ url, videoId, t, BACKEND }) => {
-  if (!url && !videoId)
+const BACKEND = "https://anknails-backend-production.up.railway.app";
+
+const SafeVideo = ({ lesson, t }) => {
+  if (!lesson) return null;
+
+  const isCloudinary = lesson.youtube_id?.includes("cloudinary.com");
+  const hasEmbed = lesson.embed_url;
+
+  // 🎬 Якщо Cloudinary — граємо через бекенд-проксі
+  if (isCloudinary) {
     return (
-      <p className="text-sm text-gray-500 text-center py-4">
-        ❌ {t("Невірне посилання або відео не знайдено", "Неверная ссылка или видео не найдено")}
-      </p>
+      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
+        <video
+          src={`${BACKEND}/api/video/${lesson.id}`}
+          controls
+          controlsList="nodownload"
+          preload="metadata"
+          className="w-full h-full object-cover"
+        >
+          {t("Ваш браузер не підтримує відтворення відео", "Ваш браузер не поддерживает воспроизведение видео")}
+        </video>
+      </div>
     );
-
-  // 🎬 Якщо це Cloudinary або пряме посилання
-if (url && url.includes("cloudinary.com")) {
-  return (
-    <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
-<video
-  src={`${BACKEND}/api/video/${videoId || ""}`}
-  controls
-  controlsList="nodownload"
-  preload="metadata"
-  className="w-full h-full object-cover"
->
-        {t("Ваш браузер не підтримує відтворення відео", "Ваш браузер не поддерживает воспроизведение видео")}
-      </video>
-    </div>
-  );
-}
-
-  // 🎞️ Якщо це YouTube
-  let id = videoId || null;
-  if (!id && url) {
-    const match = url.match(/(?:v=|youtu\.be\/|embed\/)([a-zA-Z0-9_-]{11})/);
-    id = match ? match[1] : null;
   }
 
-  if (!id)
+  // 🎞️ Якщо це YouTube або embed_url з бекенду
+  if (hasEmbed) {
     return (
-      <p className="text-sm text-gray-500 text-center py-4">
-        ❌ {t("Невірне посилання або відео не знайдено", "Неверная ссылка или видео не найдено")}
-      </p>
+      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
+        <iframe
+          src={lesson.embed_url}
+          allow="autoplay; fullscreen; picture-in-picture"
+          loading="lazy"
+          className="w-full h-full"
+        />
+      </div>
     );
+  }
+
+  return (
+    <p className="text-sm text-gray-500 text-center py-4">
+      ❌ {t("Невірне посилання або відео не знайдено", "Неверная ссылка или видео не найдено")}
+    </p>
+  );
+};
 
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md">
@@ -399,12 +405,7 @@ export default function CabinetPage() {
             </h2>
 
             {/* 🎥 Плеєр */}
-            <SafeVideo
-              url={selectedLesson.videoUrl}
-              videoId={selectedLesson.videoId}
-              t={t}
-              BACKEND={BACKEND}
-            />
+           <SafeVideo lesson={selectedLesson} t={t} />
 
             {selectedLesson.description && (
               <div className="mt-4">
