@@ -20,6 +20,9 @@ const BACKEND = "https://anknails-backend-production.up.railway.app";
 const SafeVideo = ({ lesson, t }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState(null);
+  const [lastSent, setLastSent] = useState(0);
+  const [completed, setCompleted] = useState(false);
 
   useEffect(() => {
     if (!lesson) return;
@@ -37,7 +40,37 @@ const SafeVideo = ({ lesson, t }) => {
       setVideoUrl(null);
       setLoading(false);
     }
+
+    // беремо ID користувача з localStorage
+    const email = localStorage.getItem("user_email");
+    if (email) {
+      fetch(`${BACKEND}/api/users`)
+        .then((r) => r.json())
+        .then((d) => {
+          const u = d.users?.find((x) => x.email === email);
+          if (u) setUserId(u.id);
+        });
+    }
   }, [lesson]);
+
+  const sendProgress = async (watched, total, done = false) => {
+    if (!userId || !lesson?.id || total <= 0) return;
+    try {
+      await fetch(`${BACKEND}/api/progress/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          lesson_id: lesson.id,
+          watched_seconds: watched,
+          total_seconds: total,
+          completed: done,
+        }),
+      });
+    } catch (e) {
+      console.warn("⚠️ Проблема з оновленням прогресу", e);
+    }
+  };
 
   if (loading)
     return (
@@ -58,30 +91,45 @@ const SafeVideo = ({ lesson, t }) => {
     );
 
   const isYouTube = videoUrl.includes("youtube");
+  if (isYouTube) {
+    return (
+      <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
+        {t("YouTube не підтримує відстеження прогресу", "YouTube не поддерживает прогресс")}
+      </div>
+    );
+  }
+
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-      {isYouTube ? (
-        <iframe
-          src={videoUrl}
-          allow="autoplay; fullscreen; picture-in-picture"
-          loading="lazy"
-          className="w-full h-full"
-        />
-      ) : (
-        <video
-          src={videoUrl}
-          controls
-          playsInline
-          controlsList="nodownload"
-          preload="metadata"
-          className="w-full h-full object-cover"
-        >
-          {t(
-            "Ваш браузер не підтримує відтворення відео",
-            "Ваш браузер не поддерживает воспроизведение видео"
-          )}
-        </video>
-      )}
+      <video
+        src={videoUrl}
+        controls
+        playsInline
+        controlsList="nodownload"
+        preload="metadata"
+        className="w-full h-full object-cover"
+        onTimeUpdate={(e) => {
+          const current = e.target.currentTime;
+          const total = e.target.duration;
+
+          // надсилати кожні 10 сек
+          if (current - lastSent >= 10) {
+            setLastSent(current);
+            sendProgress(current, total);
+          }
+
+          // коли доглянув до кінця — 100%
+          if (!completed && current >= total * 0.95) {
+            setCompleted(true);
+            sendProgress(total, total, true);
+          }
+        }}
+      >
+        {t(
+          "Ваш браузер не підтримує відтворення відео",
+          "Ваш браузер не поддерживает воспроизведение видео"
+        )}
+      </video>
     </div>
   );
 };
