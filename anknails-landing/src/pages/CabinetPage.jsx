@@ -26,17 +26,19 @@ const SafeVideo = ({ lesson, t }) => {
   useEffect(() => {
     if (!lesson) return;
 
-if (lesson.youtube_id?.includes("cloudinary.com")) {
-  // 🛡️ використовуємо проксі-стрім через бекенд
-  setVideoUrl(`${BACKEND}/api/video/${lesson.id}`);
-  setLoading(false);
-} else if (lesson.embed_url) {
-  setVideoUrl(lesson.embed_url);
-  setLoading(false);
-} else {
-  setVideoUrl(null);
-  setLoading(false);
-}
+    if (lesson.youtube_id?.includes("cloudinary.com")) {
+      fetch(`${BACKEND}/api/sign_video/${lesson.id}`)
+        .then((r) => r.json())
+        .then((data) => setVideoUrl(data.url || null))
+        .catch(() => setVideoUrl(null))
+        .finally(() => setLoading(false));
+    } else if (lesson.embed_url) {
+      setVideoUrl(lesson.embed_url);
+      setLoading(false);
+    } else {
+      setVideoUrl(null);
+      setLoading(false);
+    }
 
     const email = localStorage.getItem("user_email");
     if (email) {
@@ -100,17 +102,13 @@ if (lesson.youtube_id?.includes("cloudinary.com")) {
 
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-<video
-  key={videoUrl} // 🔑 примусове оновлення джерела
-  src={videoUrl}
-  type="video/mp4"
-  controls
-  playsInline
-  crossOrigin="anonymous"
-  controlsList="nodownload noremoteplayback"
-  preload="auto"
-  className="w-full h-full object-contain bg-black"
-  onError={(e) => console.error("🎬 Video error", e)}
+      <video
+        src={videoUrl}
+        controls
+        playsInline
+        controlsList="nodownload"
+        preload="metadata"
+        className="w-full h-full object-cover"
         onTimeUpdate={(e) => {
           const current = e.target.currentTime;
           const total = e.target.duration;
