@@ -24,17 +24,18 @@ const SafeVideo = ({ lesson, t }) => {
   useEffect(() => {
     if (!lesson) return;
 
-    // Якщо Cloudinary
+    // 🧩 Якщо Cloudinary — отримуємо підписане посилання з бекенду
     if (lesson.youtube_id?.includes("cloudinary.com")) {
       fetch(`${BACKEND}/api/sign_video/${lesson.id}`)
         .then((r) => r.json())
         .then((data) => {
-          setVideoUrl(data.url);
+          if (data.url) setVideoUrl(data.url);
+          else setVideoUrl(null);
         })
         .catch(() => setVideoUrl(null))
         .finally(() => setLoading(false));
     } 
-    // Якщо YouTube або вбудоване
+    // Якщо YouTube або embed
     else if (lesson.embed_url) {
       setVideoUrl(lesson.embed_url);
       setLoading(false);
@@ -61,7 +62,6 @@ const SafeVideo = ({ lesson, t }) => {
     );
   }
 
-  const isCloudinary = lesson.youtube_id?.includes("cloudinary.com");
   const isYouTube = videoUrl.includes("youtube");
 
   return (
@@ -77,8 +77,8 @@ const SafeVideo = ({ lesson, t }) => {
         <video
           src={videoUrl}
           controls
-          controlsList="nodownload"
           playsInline
+          controlsList="nodownload"
           preload="metadata"
           className="w-full h-full object-cover"
         >
