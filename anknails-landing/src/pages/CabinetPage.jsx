@@ -208,8 +208,27 @@ export default function CabinetPage() {
   };
 
   useEffect(() => {
+  console.group("📦 Debug Cabinet Data");
   console.log("🧠 modules =", modules);
+  if (Array.isArray(modules)) {
+    modules.forEach((m, i) => {
+      if (!m) console.warn(`⚠️ Module ${i} is undefined`);
+      else if (!m.title) console.warn(`⚠️ Module ${i} has no title:`, m);
+    });
+  }
   console.log("📘 lessons =", lessons);
+  Object.entries(lessons || {}).forEach(([key, arr]) => {
+    if (!Array.isArray(arr)) {
+      console.warn(`⚠️ lessons[${key}] is not an array:`, arr);
+    } else {
+      arr.forEach((l, i) => {
+        if (!l) console.warn(`⚠️ Lesson ${i} in module ${key} is undefined`);
+        else if (!l.title)
+          console.warn(`⚠️ Lesson ${i} in module ${key} missing title:`, l);
+      });
+    }
+  });
+  console.groupEnd();
 }, [modules, lessons]);
 
   if (!user) return null;
