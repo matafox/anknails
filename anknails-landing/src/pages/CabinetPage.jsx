@@ -396,11 +396,9 @@ export default function CabinetPage() {
         )}
 
         {/* 💖 Футер завжди внизу */}
-<footer
-  <p className="font-medium relative z-10">
-    © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> — All rights reserved.
-  </p>
-</footer>
+        <footer className="mt-10 text-sm opacity-60 text-center py-6">
+           © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> — All rights reserved.
+        </footer>
       </main>
     </div>
   );
