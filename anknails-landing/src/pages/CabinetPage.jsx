@@ -90,9 +90,6 @@ const SafeVideo = ({ lesson, t }) => {
 };
 
 export default function CabinetPage() {
-  window.addEventListener("error", (e) => {
-  console.log("🔥 Global error caught:", e.message, e.filename, e.lineno);
-});
   const { i18n } = useTranslation();
   const BACKEND = "https://anknails-backend-production.up.railway.app";
 
@@ -210,30 +207,6 @@ export default function CabinetPage() {
     window.location.href = "/login";
   };
 
-  useEffect(() => {
-  console.group("📦 Debug Cabinet Data");
-  console.log("🧠 modules =", modules);
-  if (Array.isArray(modules)) {
-    modules.forEach((m, i) => {
-      if (!m) console.warn(`⚠️ Module ${i} is undefined`);
-      else if (!m.title) console.warn(`⚠️ Module ${i} has no title:`, m);
-    });
-  }
-  console.log("📘 lessons =", lessons);
-  Object.entries(lessons || {}).forEach(([key, arr]) => {
-    if (!Array.isArray(arr)) {
-      console.warn(`⚠️ lessons[${key}] is not an array:`, arr);
-    } else {
-      arr.forEach((l, i) => {
-        if (!l) console.warn(`⚠️ Lesson ${i} in module ${key} is undefined`);
-        else if (!l.title)
-          console.warn(`⚠️ Lesson ${i} in module ${key} missing title:`, l);
-      });
-    }
-  });
-  console.groupEnd();
-}, [modules, lessons]);
-
   if (!user) return null;
 
   return (
@@ -289,7 +262,7 @@ export default function CabinetPage() {
             </p>
           ) : (
             <div className="space-y-2">
-              {(modules || []).filter((m) => m && m.title).map((mod) => (
+              {modules.map((mod) => (
                 <div key={mod.id}>
                   <button
                     onClick={() => toggleModule(mod.id)}
@@ -309,41 +282,38 @@ export default function CabinetPage() {
                   </button>
 
                   {expanded === mod.id && (
-  <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
-    {(Array.isArray(lessons[mod.id]) ? lessons[mod.id] : [])
-      .filter((l) => l && typeof l.title === "string")
-      .map((l) => (
-        <button
-          key={l.id || Math.random()}
-          onClick={() => {
-            if (!l) return;
-            setSelectedLesson(l);
-            setMenuOpen(false);
-          }}
-          className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
-            selectedLesson?.id === l?.id
-              ? "bg-pink-500/20 text-pink-600"
-              : "opacity-80"
-          }`}
-        >
-          <PlayCircle className="w-3 h-3" /> {l?.title || "Без назви"}
-          {l?.type && (
-            <span
-              className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
-                l.type === "practice"
-                  ? "bg-purple-100 text-purple-700"
-                  : "bg-pink-100 text-pink-700"
-              }`}
-            >
-              {l.type === "practice"
-                ? t("Практика", "Практика")
-                : t("Теорія", "Теория")}
-            </span>
-          )}
-        </button>
-      ))}
-  </div>
-)}
+                    <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
+                      {lessons[mod.id]?.map((l) => (
+                        <button
+                          key={l.id}
+                          onClick={() => {
+                            setSelectedLesson(l);
+                            setMenuOpen(false);
+                          }}
+                          className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
+                            selectedLesson?.id === l.id
+                              ? "bg-pink-500/20 text-pink-600"
+                              : "opacity-80"
+                          }`}
+                        >
+                          <PlayCircle className="w-3 h-3" /> {l.title}
+                          {l.type && (
+                            <span
+                              className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
+                                l.type === "practice"
+                                  ? "bg-purple-100 text-purple-700"
+                                  : "bg-pink-100 text-pink-700"
+                              }`}
+                            >
+                              {l.type === "practice"
+                                ? t("Практика", "Практика")
+                                : t("Теорія", "Теория")}
+                            </span>
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -446,11 +416,9 @@ export default function CabinetPage() {
                 : "bg-white/80 border border-pink-200"
             }`}
           >
-            {selectedLesson?.title && (
-  <h2 className="text-2xl font-bold text-pink-600 mb-4">
-    {selectedLesson.title}
-  </h2>
-)}
+            <h2 className="text-2xl font-bold text-pink-600 mb-4">
+              {selectedLesson.title}
+            </h2>
 
             {/* 🎥 Плеєр */}
            <SafeVideo lesson={selectedLesson} t={t} />
