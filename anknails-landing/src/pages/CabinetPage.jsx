@@ -26,19 +26,17 @@ const SafeVideo = ({ lesson, t }) => {
   useEffect(() => {
     if (!lesson) return;
 
-    if (lesson.youtube_id?.includes("cloudinary.com")) {
-      fetch(`${BACKEND}/api/sign_video/${lesson.id}`)
-        .then((r) => r.json())
-        .then((data) => setVideoUrl(data.url || null))
-        .catch(() => setVideoUrl(null))
-        .finally(() => setLoading(false));
-    } else if (lesson.embed_url) {
-      setVideoUrl(lesson.embed_url);
-      setLoading(false);
-    } else {
-      setVideoUrl(null);
-      setLoading(false);
-    }
+if (lesson.youtube_id?.includes("cloudinary.com")) {
+  // 🛡️ використовуємо проксі-стрім через бекенд
+  setVideoUrl(`${BACKEND}/api/video/${lesson.id}`);
+  setLoading(false);
+} else if (lesson.embed_url) {
+  setVideoUrl(lesson.embed_url);
+  setLoading(false);
+} else {
+  setVideoUrl(null);
+  setLoading(false);
+}
 
     const email = localStorage.getItem("user_email");
     if (email) {
