@@ -100,31 +100,38 @@ if (lesson.youtube_id?.includes("cloudinary.com")) {
 
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-      <video
-        src={videoUrl}
-        controls
-        playsInline
-        controlsList="nodownload"
-        preload="metadata"
-        className="w-full h-full object-cover"
-        onTimeUpdate={(e) => {
-          const current = e.target.currentTime;
-          const total = e.target.duration;
-          if (current - lastSent >= 10) {
-            setLastSent(current);
-            sendProgress(current, total);
-          }
-          if (!completed && current >= total * 0.95) {
-            setCompleted(true);
-            sendProgress(total, total, true);
-          }
-        }}
-      >
-        {t(
-          "Ваш браузер не підтримує відтворення відео",
-          "Ваш браузер не поддерживает воспроизведение видео"
-        )}
-      </video>
+     <video
+  src={videoUrl}
+  controls
+  playsInline
+  preload="metadata"
+  className="w-full h-full object-cover select-none pointer-events-auto"
+  controlsList="nodownload noremoteplayback nofullscreen"  // 🚫 забирає кнопку “завантажити”, PIP і fullscreen
+  disablePictureInPicture  // 🚫 блокує режим “картинка в картинці”
+  onContextMenu={(e) => e.preventDefault()}  // 🚫 блокує праву кнопку миші
+  style={{
+    userSelect: "none",
+    WebkitUserSelect: "none",
+    MozUserSelect: "none",
+  }}
+  onTimeUpdate={(e) => {
+    const current = e.target.currentTime;
+    const total = e.target.duration;
+    if (current - lastSent >= 10) {
+      setLastSent(current);
+      sendProgress(current, total);
+    }
+    if (!completed && current >= total * 0.95) {
+      setCompleted(true);
+      sendProgress(total, total, true);
+    }
+  }}
+>
+  {t(
+    "Ваш браузер не підтримує відтворення відео",
+    "Ваш браузер не поддерживает воспроизведение видео"
+  )}
+</video>
     </div>
   );
 };
