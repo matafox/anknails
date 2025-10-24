@@ -12,7 +12,7 @@ import {
   Moon,
   Globe,
   CheckSquare,
-  FolderOpen
+  FolderOpen,
 } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
@@ -24,46 +24,40 @@ const SafeVideo = ({ lesson, t }) => {
   useEffect(() => {
     if (!lesson) return;
 
-    // 🧩 Якщо Cloudinary — отримуємо підписане посилання з бекенду
     if (lesson.youtube_id?.includes("cloudinary.com")) {
       fetch(`${BACKEND}/api/sign_video/${lesson.id}`)
         .then((r) => r.json())
-        .then((data) => {
-          if (data.url) setVideoUrl(data.url);
-          else setVideoUrl(null);
-        })
+        .then((data) => setVideoUrl(data.url || null))
         .catch(() => setVideoUrl(null))
         .finally(() => setLoading(false));
-    } 
-    // Якщо YouTube або embed
-    else if (lesson.embed_url) {
+    } else if (lesson.embed_url) {
       setVideoUrl(lesson.embed_url);
       setLoading(false);
-    } 
-    else {
+    } else {
       setVideoUrl(null);
       setLoading(false);
     }
   }, [lesson]);
 
-  if (loading) {
+  if (loading)
     return (
       <div className="w-full aspect-video flex items-center justify-center bg-black/60 rounded-xl text-pink-300 text-sm">
         Завантаження відео...
       </div>
     );
-  }
 
-  if (!videoUrl) {
+  if (!videoUrl)
     return (
       <p className="text-sm text-gray-500 text-center py-4">
-        ❌ {t("Невірне посилання або відео не знайдено", "Неверная ссылка или видео не найдено")}
+        ❌{" "}
+        {t(
+          "Невірне посилання або відео не знайдено",
+          "Неверная ссылка или видео не найдено"
+        )}
       </p>
     );
-  }
 
   const isYouTube = videoUrl.includes("youtube");
-
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
       {isYouTube ? (
@@ -82,7 +76,10 @@ const SafeVideo = ({ lesson, t }) => {
           preload="metadata"
           className="w-full h-full object-cover"
         >
-          {t("Ваш браузер не підтримує відтворення відео", "Ваш браузер не поддерживает воспроизведение видео")}
+          {t(
+            "Ваш браузер не підтримує відтворення відео",
+            "Ваш браузер не поддерживает воспроизведение видео"
+          )}
         </video>
       )}
     </div>
@@ -91,8 +88,6 @@ const SafeVideo = ({ lesson, t }) => {
 
 export default function CabinetPage() {
   const { i18n } = useTranslation();
-  const BACKEND = "https://anknails-backend-production.up.railway.app";
-
   const [user, setUser] = useState(null);
   const [modules, setModules] = useState([]);
   const [lessons, setLessons] = useState({});
@@ -101,10 +96,10 @@ export default function CabinetPage() {
   const [banner, setBanner] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [progress, setProgress] = useState({});
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
-  // 🌓 Тема
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -113,12 +108,9 @@ export default function CabinetPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
-  // 🌍 Мова
   useEffect(() => {
     const savedLang = localStorage.getItem("lang");
-    if (savedLang && savedLang !== i18n.language) {
-      i18n.changeLanguage(savedLang);
-    }
+    if (savedLang && savedLang !== i18n.language) i18n.changeLanguage(savedLang);
   }, []);
 
   // 🧠 Авторизація
@@ -155,7 +147,6 @@ export default function CabinetPage() {
       .catch(() => (window.location.href = "/login"));
   }, []);
 
-  // 🎀 Банер
   useEffect(() => {
     fetch(`${BACKEND}/api/banner`)
       .then((res) => res.json())
@@ -163,7 +154,6 @@ export default function CabinetPage() {
       .catch(() => {});
   }, []);
 
-  // 📘 Модулі користувача
   useEffect(() => {
     if (!user?.course_id) return;
     fetch(`${BACKEND}/api/modules/${user.course_id}`)
@@ -172,22 +162,29 @@ export default function CabinetPage() {
       .catch(() => console.error("Помилка завантаження модулів"));
   }, [user]);
 
-  // 🧩 Завантаження уроків
+  // 📊 Прогрес користувача
+  useEffect(() => {
+    if (!user?.id) return;
+    fetch(`${BACKEND}/api/progress/user/${user.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const map = {};
+        (data.progress || []).forEach((p) => {
+          map[p.lesson_id] = p;
+        });
+        setProgress(map);
+      })
+      .catch(() => console.error("Помилка прогресу"));
+  }, [user]);
+
   const fetchLessons = async (moduleId) => {
     try {
       const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
       const data = await res.json();
-      const normalized = (data.lessons || []).map((l) => {
-        const id =
-          l.youtube_id && !l.youtube_id.includes("cloudinary.com")
-            ? (l.youtube_id.match(/([a-zA-Z0-9_-]{11})/) || [])[1]
-            : null;
-        return {
-          ...l,
-          videoId: id,
-          videoUrl: l.youtube_id || l.embed_url || null,
-        };
-      });
+      const normalized = (data.lessons || []).map((l) => ({
+        ...l,
+        videoUrl: l.youtube_id || l.embed_url || null,
+      }));
       setLessons((prev) => ({ ...prev, [moduleId]: normalized }));
     } catch (e) {
       console.error(e);
@@ -217,7 +214,7 @@ export default function CabinetPage() {
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
-      {/* 📱 Мобільна шапка */}
+      {/* Шапка */}
       <header
         className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 ${
           darkMode
@@ -233,7 +230,7 @@ export default function CabinetPage() {
         </button>
       </header>
 
-      {/* 📚 Меню */}
+      {/* Меню */}
       <aside
         className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -244,7 +241,7 @@ export default function CabinetPage() {
         } md:pt-0 pt-16`}
       >
         <div className="p-6 flex-1 overflow-y-auto">
-          {/* 👩‍🎓 Профіль */}
+          {/* Профіль */}
           <div className="flex flex-col items-center text-center mb-6">
             <User className="w-16 h-16 text-pink-500 mb-2" />
             <h2 className="font-bold text-lg">
@@ -255,10 +252,13 @@ export default function CabinetPage() {
             </p>
           </div>
 
-          {/* 📘 Модулі */}
+          {/* Модулі */}
           {modules.length === 0 ? (
             <p className="text-center text-sm opacity-70">
-              {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
+              {t(
+                "Модулів ще немає або курс не призначено",
+                "Модулей нет или курс не назначен"
+              )}
             </p>
           ) : (
             <div className="space-y-2">
@@ -282,36 +282,79 @@ export default function CabinetPage() {
                   </button>
 
                   {expanded === mod.id && (
-                    <div className="ml-6 mt-2 space-y-1 border-l border-pink-200/30 pl-3">
-                      {lessons[mod.id]?.map((l) => (
-                        <button
-                          key={l.id}
-                          onClick={() => {
-                            setSelectedLesson(l);
-                            setMenuOpen(false);
-                          }}
-                          className={`w-full text-left text-sm px-2 py-1 rounded-md hover:bg-pink-500/20 flex items-center gap-2 transition ${
-                            selectedLesson?.id === l.id
-                              ? "bg-pink-500/20 text-pink-600"
-                              : "opacity-80"
-                          }`}
-                        >
-                          <PlayCircle className="w-3 h-3" /> {l.title}
-                          {l.type && (
-                            <span
-                              className={`ml-auto text-[10px] px-2 py-[1px] rounded-full ${
-                                l.type === "practice"
-                                  ? "bg-purple-100 text-purple-700"
-                                  : "bg-pink-100 text-pink-700"
-                              }`}
-                            >
-                              {l.type === "practice"
-                                ? t("Практика", "Практика")
-                                : t("Теорія", "Теория")}
-                            </span>
-                          )}
-                        </button>
-                      ))}
+                    <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
+                      {lessons[mod.id]?.map((l) => {
+                        const prog = progress[l.id];
+                        const percent =
+                          prog && prog.total_seconds > 0
+                            ? Math.min(
+                                100,
+                                Math.round(
+                                  (prog.watched_seconds / prog.total_seconds) * 100
+                                )
+                              )
+                            : 0;
+                        const done = prog?.completed || prog?.homework_done;
+
+                        return (
+                          <div
+                            key={l.id}
+                            onClick={() => {
+                              setSelectedLesson(l);
+                              setMenuOpen(false);
+                            }}
+                            className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
+                              selectedLesson?.id === l.id
+                                ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
+                                : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              <PlayCircle
+                                className={`w-4 h-4 ${
+                                  done
+                                    ? "text-green-500"
+                                    : "text-pink-500 group-hover:scale-110 transition"
+                                }`}
+                              />
+                              <span className="flex-1 truncate">{l.title}</span>
+                              {l.type && (
+                                <span
+                                  className={`text-[10px] px-2 py-[1px] rounded-full ${
+                                    l.type === "practice"
+                                      ? "bg-purple-100 text-purple-700"
+                                      : "bg-pink-100 text-pink-700"
+                                  }`}
+                                >
+                                  {l.type === "practice"
+                                    ? t("Практика", "Практика")
+                                    : t("Теорія", "Теория")}
+                                </span>
+                              )}
+                              {done && <span className="ml-2 text-green-500">✅</span>}
+                            </div>
+
+                            <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all duration-500 ${
+                                  done
+                                    ? "bg-green-400"
+                                    : percent > 0
+                                    ? "bg-gradient-to-r from-pink-400 to-rose-500"
+                                    : "bg-transparent"
+                                }`}
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
+
+                            {percent > 0 && (
+                              <div className="absolute right-2 top-2 text-[10px] text-pink-500">
+                                {percent}%
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
                   )}
                 </div>
@@ -320,9 +363,9 @@ export default function CabinetPage() {
           )}
         </div>
 
-        {/* 🔧 Низ меню */}
+        {/* Низ меню */}
         <div className="p-6 border-t border-pink-200/30 space-y-6 mt-auto">
-          {/* 🌗 Темна тема */}
+          {/* Темна тема */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Moon className="w-4 h-4 text-pink-500" />
@@ -349,7 +392,7 @@ export default function CabinetPage() {
             </button>
           </div>
 
-          {/* 🌍 Мова */}
+          {/* Мова */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-pink-500" />
@@ -375,7 +418,7 @@ export default function CabinetPage() {
             </div>
           </div>
 
-          {/* 🚪 Вихід */}
+          {/* Вихід */}
           <button
             onClick={handleLogout}
             className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
@@ -385,7 +428,7 @@ export default function CabinetPage() {
         </div>
       </aside>
 
-      {/* 🌸 Контент */}
+      {/* Контент */}
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
@@ -419,15 +462,11 @@ export default function CabinetPage() {
             <h2 className="text-2xl font-bold text-pink-600 mb-4">
               {selectedLesson.title}
             </h2>
-
-            {/* 🎥 Плеєр */}
-           <SafeVideo lesson={selectedLesson} t={t} />
+            <SafeVideo lesson={selectedLesson} t={t} />
 
             {selectedLesson.description && (
               <div className="mt-4">
-                <h4 className="font-semibold mb-1">
-                  {t("Опис", "Описание")}
-                </h4>
+                <h4 className="font-semibold mb-1">{t("Опис", "Описание")}</h4>
                 <p>{selectedLesson.description}</p>
               </div>
             )}
@@ -464,8 +503,6 @@ export default function CabinetPage() {
             )}
           </div>
         )}
-
-        {/* 💖 Футер */}
         <footer
           className={`mt-10 text-center py-6 text-sm border-t ${
             darkMode
@@ -475,9 +512,7 @@ export default function CabinetPage() {
         >
           <p className="font-medium">
             © {new Date().getFullYear()}{" "}
-            <span className="text-pink-500 font-semibold">
-              ANK Studio LMS
-            </span>{" "}
+            <span className="text-pink-500 font-semibold">ANK Studio LMS</span>{" "}
             • {t("Усі права захищені.", "Все права защищены.")}
           </p>
         </footer>
