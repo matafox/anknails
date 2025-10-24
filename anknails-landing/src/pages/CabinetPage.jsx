@@ -396,9 +396,19 @@ export default function CabinetPage() {
         )}
 
         {/* 💖 Футер завжди внизу */}
-        <footer className="mt-10 text-sm opacity-60 text-center py-6">
-           © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> — All rights reserved.
-        </footer>
+<footer
+  className={`mt-10 text-center py-6 text-sm border-t ${
+    darkMode
+      ? "border-fuchsia-900/30 text-fuchsia-100/80"
+      : "border-pink-200 text-gray-600"
+  }`}
+>
+  <p className="font-medium">
+    © {new Date().getFullYear()}{" "}
+    <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
+    {t("Усі права захищені.", "Все права защищены.")}
+  </p>
+</footer>
       </main>
     </div>
   );
