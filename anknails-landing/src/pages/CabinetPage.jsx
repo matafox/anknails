@@ -602,65 +602,63 @@ export default function CabinetPage() {
         }}
       />
 
+      {/* 🧾 Домашнє завдання */}
       {selectedLesson.homework && (
-  <div
-    className={`p-4 rounded-xl border ${
-      darkMode
-        ? "bg-fuchsia-950/40 border-fuchsia-800/40"
-        : "bg-amber-50 border-amber-200"
-    }`}
-  >
-    <h3 className="flex items-center gap-2 font-semibold mb-2 text-amber-700">
-      <CheckSquare className="w-4 h-4" />
-      {t("Домашнє завдання", "Домашнее задание")}
-    </h3>
+        <div
+          className={`p-4 rounded-xl border mt-6 ${
+            darkMode
+              ? "bg-fuchsia-950/40 border-fuchsia-800/40"
+              : "bg-amber-50 border-amber-200"
+          }`}
+        >
+          <h3 className="flex items-center gap-2 font-semibold mb-2 text-amber-700">
+            <CheckSquare className="w-4 h-4" />
+            {t("Домашнє завдання", "Домашнее задание")}
+          </h3>
 
-    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-      {selectedLesson.homework}
-    </p>
+          <p className="text-sm leading-relaxed whitespace-pre-wrap">
+            {selectedLesson.homework}
+          </p>
 
-    {/* ✅ Якщо домашнє завдання перевірене */}
-    {progress[selectedLesson.id]?.homework_done && (
-      <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
-        <CheckSquare className="w-4 h-4 text-green-600" />
-        {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
-      </div>
-    )}
-  </div>
-)}
-
-          {selectedLesson.materials && (
-            <div
-              className={`p-4 rounded-xl border ${
-                darkMode
-                  ? "bg-fuchsia-950/40 border-fuchsia-800/40"
-                  : "bg-blue-50 border-blue-200"
-              }`}
-            >
-              <h3 className="flex items-center gap-2 font-semibold mb-2 text-blue-700">
-                <FolderOpen className="w-4 h-4" />
-                {t("Матеріали", "Материалы")}
-              </h3>
-              <a
-                href={selectedLesson.materials}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-sm font-medium text-blue-600 hover:underline"
-              >
-                {t("Відкрити матеріали", "Открыть материалы")}
-              </a>
+          {/* ✅ Якщо домашнє завдання перевірене */}
+          {progress[selectedLesson.id]?.homework_done && (
+            <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
+              <CheckSquare className="w-4 h-4 text-green-600" />
+              {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
             </div>
           )}
         </div>
       )}
 
+      {/* 📎 Матеріали */}
+      {selectedLesson.materials && (
+        <div
+          className={`p-4 rounded-xl border mt-6 ${
+            darkMode
+              ? "bg-fuchsia-950/40 border-fuchsia-800/40"
+              : "bg-blue-50 border-blue-200"
+          }`}
+        >
+          <h3 className="flex items-center gap-2 font-semibold mb-2 text-blue-700">
+            <FolderOpen className="w-4 h-4" />
+            {t("Матеріали", "Материалы")}
+          </h3>
+          <a
+            href={selectedLesson.materials}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-sm font-medium text-blue-600 hover:underline"
+          >
+            {t("Відкрити матеріали", "Открыть материалы")}
+          </a>
+        </div>
+      )}
+
       {/* ⏭️ Кнопка переходу до наступного уроку */}
-      {(() => {
-        const nextLesson = (() => {
-          const allLessons = Object.values(lessons).flat();
-          const idx = allLessons.findIndex((l) => l.id === selectedLesson.id);
-          return allLessons[idx + 1];
-        })();
+      {selectedLesson && (() => {
+        const allLessons = Object.values(lessons).flat();
+        const idx = allLessons.findIndex((l) => l.id === selectedLesson.id);
+        const nextLesson = allLessons[idx + 1];
         if (!nextLesson) return null;
         return (
           <button
@@ -671,7 +669,7 @@ export default function CabinetPage() {
             }}
             className="mt-8 flex items-center gap-2 mx-auto px-6 py-3 rounded-full font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all"
           >
-            <ArrowRightCircle className="w-5 h-5 rotate-270" />
+            <ArrowRightCircle className="w-5 h-5" />
             {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
           </button>
         );
@@ -694,6 +692,6 @@ export default function CabinetPage() {
     </p>
   </footer>
 </main>
-    
+    </div>
   );
 }
