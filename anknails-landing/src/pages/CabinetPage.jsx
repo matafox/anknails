@@ -630,9 +630,9 @@ export default function CabinetPage() {
         </div>
       )}
 
-      {/* 📎 Матеріали */}
-{selectedLesson.materials && (
-  <div
+     {/* 📎 Матеріали */}
+      {selectedLesson.materials && (
+        <div
     className={`p-4 rounded-xl border mt-6 ${
       darkMode
         ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
@@ -642,17 +642,18 @@ export default function CabinetPage() {
     <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
       {t("Матеріали", "Материалы")}
     </h3>
-
-    <a
-      href={selectedLesson.materials}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="inline-block text-sm font-medium hover:underline text-gray-700 dark:text-gray-300"
-    >
-      {t("Відкрити матеріали", "Открыть материалы")}
-    </a>
-  </div>
-)}
+          <a
+            href={selectedLesson.materials}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-block text-sm font-medium text-blue-600 hover:underline"
+          >
+            {t("Відкрити матеріали", "Открыть материалы")}
+          </a>
+        </div>
+      )}
+    </div>
+  )}
 
   {/* ⚙️ Footer */}
   <footer
