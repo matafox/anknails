@@ -566,13 +566,13 @@ export default function CabinetPage() {
           </h2>
           {selectedLesson.type === "theory" && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
-              <BookOpen className="w-3.5 h-3.5 text-pink-500" />
+              < className="w-3.5 h-3.5 text-pink-500" />
               {t("Теорія", "Теория")}
             </span>
           )}
           {selectedLesson.type === "practice" && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
-              <CheckSquare className="w-3.5 h-3.5 text-rose-500" />
+              < className="w-3.5 h-3.5 text-rose-500" />
               {t("Практика", "Практика")}
             </span>
           )}
@@ -601,26 +601,32 @@ export default function CabinetPage() {
         }}
       />
 
-      {/* 🧾 Домашнє завдання та матеріали */}
-      {(selectedLesson.homework || selectedLesson.materials) && (
-        <div className="mt-6 space-y-4">
-          {selectedLesson.homework && (
-            <div
-              className={`p-4 rounded-xl border ${
-                darkMode
-                  ? "bg-fuchsia-950/40 border-fuchsia-800/40"
-                  : "bg-amber-50 border-amber-200"
-              }`}
-            >
-              <h3 className="flex items-center gap-2 font-semibold mb-2 text-amber-700">
-                <CheckSquare className="w-4 h-4" />
-                {t("Домашнє завдання", "Домашнее задание")}
-              </h3>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {selectedLesson.homework}
-              </p>
-            </div>
-          )}
+      {selectedLesson.homework && (
+  <div
+    className={`p-4 rounded-xl border ${
+      darkMode
+        ? "bg-fuchsia-950/40 border-fuchsia-800/40"
+        : "bg-amber-50 border-amber-200"
+    }`}
+  >
+    <h3 className="flex items-center gap-2 font-semibold mb-2 text-amber-700">
+      <CheckSquare className="w-4 h-4" />
+      {t("Домашнє завдання", "Домашнее задание")}
+    </h3>
+
+    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+      {selectedLesson.homework}
+    </p>
+
+    {/* ✅ Статус перевірки домашнього завдання */}
+    {progress[selectedLesson.id]?.homework_done && (
+      <div className="mt-3 ml-1 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 w-fit">
+        <CheckSquare className="w-4 h-4 text-green-600" />
+        {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+      </div>
+    )}
+  </div>
+)}
 
           {selectedLesson.materials && (
             <div
