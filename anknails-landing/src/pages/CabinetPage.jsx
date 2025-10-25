@@ -223,21 +223,13 @@ export default function CabinetPage() {
 
   // 🧠 автозавантаження останнього уроку
   useEffect(() => {
-  const savedLesson = localStorage.getItem("last_lesson");
-  if (!savedLesson || !user?.course_id) return;
-
-  try {
-    const parsed = JSON.parse(savedLesson);
-    // 🧩 якщо урок з іншого курсу — очищаємо
-    if (parsed.course_id !== user.course_id) {
-      localStorage.removeItem("last_lesson");
-      return;
+    const savedLesson = localStorage.getItem("last_lesson");
+    if (savedLesson) {
+      try {
+        setSelectedLesson(JSON.parse(savedLesson));
+      } catch {}
     }
-    setSelectedLesson(parsed);
-  } catch {
-    localStorage.removeItem("last_lesson");
-  }
-}, [user?.course_id]);
+  }, []);
 
   useEffect(() => {
     fetch(`${BACKEND}/api/banner`)
@@ -246,57 +238,25 @@ export default function CabinetPage() {
       .catch(() => {});
   }, []);
 
-  // 🧩 при зміні курсу або користувача
-useEffect(() => {
-  if (!user?.id || !user?.course_id) return;
+  useEffect(() => {
+    if (!user?.course_id) return;
+    fetch(`${BACKEND}/api/modules/${user.course_id}`)
+      .then((res) => res.json())
+      .then((data) => setModules(data.modules || []))
+      .catch(() => console.error("Помилка завантаження модулів"));
+  }, [user]);
 
-  // 🧠 Отримати останній збережений курс із localStorage
-  const prevCourseId = localStorage.getItem("last_course_id");
-
-  // 🧹 Якщо курс змінився — тоді очищаємо дані
-  if (prevCourseId && prevCourseId !== String(user.course_id)) {
-    setModules([]);
-    setLessons({});
-    setExpanded(null);
-    setProgress({});
-    setSelectedLesson(null);
-    localStorage.removeItem("last_lesson");
-  }
-
-  // 🧾 Зберігаємо поточний course_id
-  localStorage.setItem("last_course_id", user.course_id);
-
-  // 🔄 Завантажуємо модулі для поточного курсу
-  fetch(`${BACKEND}/api/modules/${user.course_id}`)
-    .then((res) => res.json())
-    .then((data) => setModules(data.modules || []))
-    .catch(() => console.error("Помилка завантаження модулів"));
-
-  // 🧠 Завантажуємо прогрес користувача (з кешем у localStorage)
-const cachedProgress = localStorage.getItem(`progress_${user.id}_${user.course_id}`);
-if (cachedProgress) {
-  try {
-    setProgress(JSON.parse(cachedProgress));
-  } catch {
-    console.warn("⚠️ Некоректний кеш прогресу");
-  }
-}
-
-fetch(`${BACKEND}/api/progress/user/${user.id}`)
-  .then((r) => r.json())
-  .then((data) => {
-    if (!data?.progress) return setProgress({});
-
-    const filtered = data.progress.filter((p) => p.course_id === user.course_id);
-    const map = {};
-    filtered.forEach((p) => (map[p.lesson_id] = p));
-    setProgress(map);
-
-    // 💾 Зберігаємо прогрес у кеш
-    localStorage.setItem(`progress_${user.id}_${user.course_id}`, JSON.stringify(map));
-  })
-  .catch(() => console.error("Помилка прогресу"));
-}, [user?.id, user?.course_id]);
+  useEffect(() => {
+    if (!user?.id) return;
+    fetch(`${BACKEND}/api/progress/user/${user.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const map = {};
+        (data.progress || []).forEach((p) => (map[p.lesson_id] = p));
+        setProgress(map);
+      })
+      .catch(() => console.error("Помилка прогресу"));
+  }, [user]);
 
   const fetchLessons = async (moduleId) => {
     try {
@@ -652,7 +612,7 @@ fetch(`${BACKEND}/api/progress/user/${user.id}`)
       : "bg-gray-50 border-gray-200 text-gray-800"
   }`}
 >
-          <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
+          <h3 className="font-semibold mb-2 text-amber-700">
   {t("Домашнє завдання", "Домашнее задание")}
 </h3>
 
@@ -693,6 +653,27 @@ fetch(`${BACKEND}/api/progress/user/${user.id}`)
           </a>
         </div>
       )}
+
+      {/* ⏭️ Кнопка переходу до наступного уроку */}
+      {selectedLesson && (() => {
+        const allLessons = Object.values(lessons).flat();
+        const idx = allLessons.findIndex((l) => l.id === selectedLesson.id);
+        const nextLesson = allLessons[idx + 1];
+        if (!nextLesson) return null;
+        return (
+          <button
+            onClick={() => {
+              localStorage.setItem("last_lesson", JSON.stringify(nextLesson));
+              setSelectedLesson(nextLesson);
+              window.scrollTo({ top: 0, behavior: "smooth" });
+            }}
+            className="mt-8 flex items-center gap-2 mx-auto px-6 py-3 rounded-full font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all"
+          >
+            <ArrowRightCircle className="w-5 h-5" />
+            {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
+          </button>
+        );
+      })()}
     </div>
   )}
 
