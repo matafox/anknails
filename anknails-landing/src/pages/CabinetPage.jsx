@@ -246,10 +246,11 @@ export default function CabinetPage() {
       .catch(() => {});
   }, []);
 
-  useEffect(() => {
-  if (!user?.course_id) return;
+  // 🧩 при зміні курсу або користувача
+useEffect(() => {
+  if (!user?.id || !user?.course_id) return;
 
-  // 🧹 Очистити старі дані при зміні курсу
+  // 🧹 Очистити старі дані перед завантаженням нового курсу
   setModules([]);
   setLessons({});
   setExpanded(null);
@@ -257,25 +258,32 @@ export default function CabinetPage() {
   setSelectedLesson(null);
   localStorage.removeItem("last_lesson");
 
-  // 🔄 Завантажити нові модулі курсу
+  // 🔄 Завантажити нові модулі для поточного курсу
   fetch(`${BACKEND}/api/modules/${user.course_id}`)
     .then((res) => res.json())
     .then((data) => setModules(data.modules || []))
     .catch(() => console.error("Помилка завантаження модулів"));
-}, [user?.course_id]);
-  
 
-  useEffect(() => {
-    if (!user?.id) return;
-    fetch(`${BACKEND}/api/progress/user/${user.id}`)
-      .then((r) => r.json())
-      .then((data) => {
-        const map = {};
-        (data.progress || []).forEach((p) => (map[p.lesson_id] = p));
-        setProgress(map);
-      })
-      .catch(() => console.error("Помилка прогресу"));
-  }, [user]);
+  // 🧠 Завантажити прогрес користувача лише для поточного курсу
+  fetch(`${BACKEND}/api/progress/user/${user.id}`)
+    .then((r) => r.json())
+    .then((data) => {
+      if (!data?.progress) return setProgress({});
+
+      // 🩶 Якщо в API є поле course_id — фільтруємо по поточному курсу
+      const filtered = data.progress.filter(
+        (p) => p.course_id === user.course_id
+      );
+
+      const map = {};
+      filtered.forEach((p) => (map[p.lesson_id] = p));
+      setProgress(map);
+    })
+    .catch(() => console.error("Помилка прогресу"));
+
+  // 💫 Безпечне обнулення на випадок кешу
+  setTimeout(() => setProgress({}), 0);
+}, [user?.id, user?.course_id]);
 
   const fetchLessons = async (moduleId) => {
     try {
