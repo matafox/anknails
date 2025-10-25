@@ -14,6 +14,7 @@ import {
   Globe,
   CheckSquare,
   FolderOpen,
+  Flame,
 } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
@@ -432,8 +433,8 @@ export default function CabinetPage() {
 
                               <span className="flex-1 truncate">{l.title}</span>
                               {isNew && (
-                                <span className="text-[10px] bg-pink-500 text-white px-2 py-[1px] rounded-full ml-1">NEW</span>
-                              )}
+  <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />
+)}
                               {percent > 0 && (
                                 <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
                                   {percent}%
