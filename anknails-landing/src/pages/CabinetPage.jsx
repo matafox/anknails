@@ -9,6 +9,7 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
+  ChevronRight,
   Moon,
   Globe,
   CheckSquare,
@@ -566,13 +567,13 @@ export default function CabinetPage() {
           </h2>
           {selectedLesson.type === "theory" && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
-              < className="w-3.5 h-3.5 text-pink-500" />
+              <BookOpen className="w-3.5 h-3.5 text-pink-500" />
               {t("Теорія", "Теория")}
             </span>
           )}
           {selectedLesson.type === "practice" && (
             <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
-              < className="w-3.5 h-3.5 text-rose-500" />
+              <CheckSquare className="w-3.5 h-3.5 text-rose-500" />
               {t("Практика", "Практика")}
             </span>
           )}
@@ -618,9 +619,9 @@ export default function CabinetPage() {
       {selectedLesson.homework}
     </p>
 
-    {/* ✅ Статус перевірки домашнього завдання */}
+    {/* ✅ Якщо домашнє завдання перевірене */}
     {progress[selectedLesson.id]?.homework_done && (
-      <div className="mt-3 ml-1 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 w-fit">
+      <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
         <CheckSquare className="w-4 h-4 text-green-600" />
         {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
       </div>
@@ -670,7 +671,7 @@ export default function CabinetPage() {
             }}
             className="mt-8 flex items-center gap-2 mx-auto px-6 py-3 rounded-full font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all"
           >
-            <ChevronDown className="w-5 h-5 rotate-270" />
+            <ChevronRight className="w-5 h-5 rotate-270" />
             {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
           </button>
         );
