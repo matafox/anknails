@@ -612,7 +612,7 @@ export default function CabinetPage() {
       : "bg-gray-50 border-gray-200 text-gray-800"
   }`}
 >
-          <h3 className="font-semibold mb-2 text-amber-700">
+          <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
   {t("Домашнє завдання", "Домашнее задание")}
 </h3>
 
