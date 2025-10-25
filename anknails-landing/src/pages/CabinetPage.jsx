@@ -23,6 +23,9 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson }) => {
   const [userId, setUserId] = useState(null);
   const [lastSent, setLastSent] = useState(0);
   const [completed, setCompleted] = useState(false);
+  const [showNextButton, setShowNextButton] = useState(false);
+
+  const nextLesson = getNextLesson?.(lesson.id);
 
   useEffect(() => {
     if (!lesson) return;
@@ -64,7 +67,6 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson }) => {
         }),
       });
 
-      // 🔄 миттєве оновлення стану без reload
       if (onProgressUpdate) onProgressUpdate(lesson.id, watched, total, done);
     } catch (e) {
       console.warn("⚠️ Проблема з оновленням прогресу", e);
@@ -101,53 +103,54 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson }) => {
     );
 
   return (
-    <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-      <video
-        src={videoUrl}
-        controls
-        playsInline
-        preload="metadata"
-        className="w-full h-full object-cover select-none pointer-events-auto"
-        controlsList="nodownload noremoteplayback nofullscreen"
-        disablePictureInPicture
-        onContextMenu={(e) => e.preventDefault()}
-        style={{
-          userSelect: "none",
-          WebkitUserSelect: "none",
-          MozUserSelect: "none",
-        }}
-        onTimeUpdate={(e) => {
-          const current = e.target.currentTime;
-          const total = e.target.duration;
-          if (current - lastSent >= 10) {
-            setLastSent(current);
-            sendProgress(current, total);
-          }
-          if (!completed && current >= total * 0.95) {
-            setCompleted(true);
-            sendProgress(total, total, true);
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
+        <video
+          src={videoUrl}
+          controls
+          playsInline
+          preload="metadata"
+          className="w-full h-full object-cover select-none pointer-events-auto"
+          controlsList="nodownload noremoteplayback nofullscreen"
+          disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
+          style={{
+            userSelect: "none",
+            WebkitUserSelect: "none",
+            MozUserSelect: "none",
+          }}
+          onTimeUpdate={(e) => {
+            const current = e.target.currentTime;
+            const total = e.target.duration;
+            if (current - lastSent >= 10) {
+              setLastSent(current);
+              sendProgress(current, total);
+            }
+            if (!completed && current >= total * 0.95) {
+              setCompleted(true);
+              sendProgress(total, total, true);
+              if (nextLesson) setShowNextButton(true);
+            }
+          }}
+        >
+          {t(
+            "Ваш браузер не підтримує відтворення відео",
+            "Ваш браузер не поддерживает воспроизведение видео"
+          )}
+        </video>
+      </div>
 
-            // ⏭️ автоперехід
-            setTimeout(() => {
-              const next = getNextLesson?.(lesson.id);
-              if (next) {
-                const confirmNext = window.confirm(
-                  t("Перейти до наступного уроку?", "Перейти к следующему уроку?")
-                );
-                if (confirmNext) {
-                  localStorage.setItem("last_lesson", JSON.stringify(next));
-                  window.location.reload(); // простий reload для оновлення сторінки
-                }
-              }
-            }, 1500);
-          }
-        }}
-      >
-        {t(
-          "Ваш браузер не підтримує відтворення відео",
-          "Ваш браузер не поддерживает воспроизведение видео"
-        )}
-      </video>
+      {nextLesson && showNextButton && (
+        <button
+          onClick={() => {
+            localStorage.setItem("last_lesson", JSON.stringify(nextLesson));
+            window.location.reload();
+          }}
+          className="animate-fadeIn px-5 py-3 text-sm md:text-base font-semibold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-md"
+        >
+          ⏭️ {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
+        </button>
+      )}
     </div>
   );
 };
