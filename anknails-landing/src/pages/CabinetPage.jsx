@@ -223,13 +223,21 @@ export default function CabinetPage() {
 
   // 🧠 автозавантаження останнього уроку
   useEffect(() => {
-    const savedLesson = localStorage.getItem("last_lesson");
-    if (savedLesson) {
-      try {
-        setSelectedLesson(JSON.parse(savedLesson));
-      } catch {}
+  const savedLesson = localStorage.getItem("last_lesson");
+  if (!savedLesson || !user?.course_id) return;
+
+  try {
+    const parsed = JSON.parse(savedLesson);
+    // 🧩 якщо урок з іншого курсу — очищаємо
+    if (parsed.course_id !== user.course_id) {
+      localStorage.removeItem("last_lesson");
+      return;
     }
-  }, []);
+    setSelectedLesson(parsed);
+  } catch {
+    localStorage.removeItem("last_lesson");
+  }
+}, [user?.course_id]);
 
   useEffect(() => {
     fetch(`${BACKEND}/api/banner`)
@@ -239,12 +247,23 @@ export default function CabinetPage() {
   }, []);
 
   useEffect(() => {
-    if (!user?.course_id) return;
-    fetch(`${BACKEND}/api/modules/${user.course_id}`)
-      .then((res) => res.json())
-      .then((data) => setModules(data.modules || []))
-      .catch(() => console.error("Помилка завантаження модулів"));
-  }, [user]);
+  if (!user?.course_id) return;
+
+  // 🧹 Очистити старі дані при зміні курсу
+  setModules([]);
+  setLessons({});
+  setExpanded(null);
+  setProgress({});
+  setSelectedLesson(null);
+  localStorage.removeItem("last_lesson");
+
+  // 🔄 Завантажити нові модулі курсу
+  fetch(`${BACKEND}/api/modules/${user.course_id}`)
+    .then((res) => res.json())
+    .then((data) => setModules(data.modules || []))
+    .catch(() => console.error("Помилка завантаження модулів"));
+}, [user?.course_id]);
+  
 
   useEffect(() => {
     if (!user?.id) return;
