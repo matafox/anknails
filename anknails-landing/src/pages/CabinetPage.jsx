@@ -4,6 +4,7 @@ import {
   LogOut,
   SquareUserRound,
   Menu,
+  ArrowRightCircle,
   X,
   BookOpen,
   ChevronDown,
@@ -140,15 +141,17 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson }) => {
         </video>
       </div>
 
+      {/* Кнопка "Перейти до наступного уроку" */}
       {nextLesson && showNextButton && (
         <button
           onClick={() => {
             localStorage.setItem("last_lesson", JSON.stringify(nextLesson));
             window.location.reload();
           }}
-          className="animate-fadeIn px-5 py-3 text-sm md:text-base font-semibold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-md"
+          className="animate-fadeIn flex items-center gap-2 px-5 py-3 text-sm md:text-base font-semibold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-md"
         >
-          ⏭️ {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
+          <ArrowRightCircle className="w-5 h-5" />
+          {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
         </button>
       )}
     </div>
