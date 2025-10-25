@@ -653,27 +653,6 @@ export default function CabinetPage() {
           </a>
         </div>
       )}
-
-      {/* ⏭️ Кнопка переходу до наступного уроку */}
-      {selectedLesson && (() => {
-        const allLessons = Object.values(lessons).flat();
-        const idx = allLessons.findIndex((l) => l.id === selectedLesson.id);
-        const nextLesson = allLessons[idx + 1];
-        if (!nextLesson) return null;
-        return (
-          <button
-            onClick={() => {
-              localStorage.setItem("last_lesson", JSON.stringify(nextLesson));
-              setSelectedLesson(nextLesson);
-              window.scrollTo({ top: 0, behavior: "smooth" });
-            }}
-            className="mt-8 flex items-center gap-2 mx-auto px-6 py-3 rounded-full font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all"
-          >
-            <ArrowRightCircle className="w-5 h-5" />
-            {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
-          </button>
-        );
-      })()}
     </div>
   )}
 
