@@ -16,7 +16,8 @@ import {
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
-const SafeVideo = ({ lesson, t, onProgressUpdate }) => {
+// ================= SAFEVIDEO =================
+const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
@@ -26,17 +27,16 @@ const SafeVideo = ({ lesson, t, onProgressUpdate }) => {
   useEffect(() => {
     if (!lesson) return;
 
-if (lesson.youtube_id?.includes("cloudinary.com")) {
-  // 🔐 новий безпечний варіант — бекенд сам редіректить на Cloudinary
-  setVideoUrl(`${BACKEND}/api/video/${lesson.id}`);
-  setLoading(false);
-} else if (lesson.embed_url) {
-  setVideoUrl(lesson.embed_url);
-  setLoading(false);
-} else {
-  setVideoUrl(null);
-  setLoading(false);
-}
+    if (lesson.youtube_id?.includes("cloudinary.com")) {
+      setVideoUrl(`${BACKEND}/api/video/${lesson.id}`);
+      setLoading(false);
+    } else if (lesson.embed_url) {
+      setVideoUrl(lesson.embed_url);
+      setLoading(false);
+    } else {
+      setVideoUrl(null);
+      setLoading(false);
+    }
 
     const email = localStorage.getItem("user_email");
     if (email) {
@@ -50,26 +50,26 @@ if (lesson.youtube_id?.includes("cloudinary.com")) {
   }, [lesson]);
 
   const sendProgress = async (watched, total, done = false) => {
-  if (!userId || !lesson?.id || total <= 0) return;
-  try {
-    await fetch(`${BACKEND}/api/progress/update`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: userId,
-        lesson_id: lesson.id,
-        watched_seconds: watched,
-        total_seconds: total,
-        completed: done,
-      }),
-    });
+    if (!userId || !lesson?.id || total <= 0) return;
+    try {
+      await fetch(`${BACKEND}/api/progress/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          lesson_id: lesson.id,
+          watched_seconds: watched,
+          total_seconds: total,
+          completed: done,
+        }),
+      });
 
-    // 🔄 миттєво оновлюємо стан без очікування перезавантаження
-    if (onProgressUpdate) onProgressUpdate(lesson.id, watched, total, done);
-  } catch (e) {
-    console.warn("⚠️ Проблема з оновленням прогресу", e);
-  }
-};
+      // 🔄 миттєве оновлення стану без reload
+      if (onProgressUpdate) onProgressUpdate(lesson.id, watched, total, done);
+    } catch (e) {
+      console.warn("⚠️ Проблема з оновленням прогресу", e);
+    }
+  };
 
   if (loading)
     return (
@@ -90,7 +90,7 @@ if (lesson.youtube_id?.includes("cloudinary.com")) {
     );
 
   const isYouTube = videoUrl.includes("youtube");
-  if (isYouTube) {
+  if (isYouTube)
     return (
       <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
         {t(
@@ -99,46 +99,60 @@ if (lesson.youtube_id?.includes("cloudinary.com")) {
         )}
       </div>
     );
-  }
 
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-     <video
-  src={videoUrl}
-  controls
-  playsInline
-  preload="metadata"
-  className="w-full h-full object-cover select-none pointer-events-auto"
-  controlsList="nodownload noremoteplayback nofullscreen"  // 🚫 забирає кнопку “завантажити”, PIP і fullscreen
-  disablePictureInPicture  // 🚫 блокує режим “картинка в картинці”
-  onContextMenu={(e) => e.preventDefault()}  // 🚫 блокує праву кнопку миші
-  style={{
-    userSelect: "none",
-    WebkitUserSelect: "none",
-    MozUserSelect: "none",
-  }}
-  onTimeUpdate={(e) => {
-    const current = e.target.currentTime;
-    const total = e.target.duration;
-    if (current - lastSent >= 10) {
-      setLastSent(current);
-      sendProgress(current, total);
-    }
-    if (!completed && current >= total * 0.95) {
-      setCompleted(true);
-      sendProgress(total, total, true);
-    }
-  }}
->
-  {t(
-    "Ваш браузер не підтримує відтворення відео",
-    "Ваш браузер не поддерживает воспроизведение видео"
-  )}
-</video>
+      <video
+        src={videoUrl}
+        controls
+        playsInline
+        preload="metadata"
+        className="w-full h-full object-cover select-none pointer-events-auto"
+        controlsList="nodownload noremoteplayback nofullscreen"
+        disablePictureInPicture
+        onContextMenu={(e) => e.preventDefault()}
+        style={{
+          userSelect: "none",
+          WebkitUserSelect: "none",
+          MozUserSelect: "none",
+        }}
+        onTimeUpdate={(e) => {
+          const current = e.target.currentTime;
+          const total = e.target.duration;
+          if (current - lastSent >= 10) {
+            setLastSent(current);
+            sendProgress(current, total);
+          }
+          if (!completed && current >= total * 0.95) {
+            setCompleted(true);
+            sendProgress(total, total, true);
+
+            // ⏭️ автоперехід
+            setTimeout(() => {
+              const next = getNextLesson?.(lesson.id);
+              if (next) {
+                const confirmNext = window.confirm(
+                  t("Перейти до наступного уроку?", "Перейти к следующему уроку?")
+                );
+                if (confirmNext) {
+                  localStorage.setItem("last_lesson", JSON.stringify(next));
+                  window.location.reload(); // простий reload для оновлення сторінки
+                }
+              }
+            }, 1500);
+          }
+        }}
+      >
+        {t(
+          "Ваш браузер не підтримує відтворення відео",
+          "Ваш браузер не поддерживает воспроизведение видео"
+        )}
+      </video>
     </div>
   );
 };
 
+// ================= CABINET PAGE =================
 export default function CabinetPage() {
   const { i18n } = useTranslation();
   const [user, setUser] = useState(null);
@@ -152,7 +166,7 @@ export default function CabinetPage() {
   const [progress, setProgress] = useState({});
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
-  
+
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -199,6 +213,16 @@ export default function CabinetPage() {
       .catch(() => (window.location.href = "/login"));
   }, []);
 
+  // 🧠 автозавантаження останнього уроку
+  useEffect(() => {
+    const savedLesson = localStorage.getItem("last_lesson");
+    if (savedLesson) {
+      try {
+        setSelectedLesson(JSON.parse(savedLesson));
+      } catch {}
+    }
+  }, []);
+
   useEffect(() => {
     fetch(`${BACKEND}/api/banner`)
       .then((res) => res.json())
@@ -220,9 +244,7 @@ export default function CabinetPage() {
       .then((r) => r.json())
       .then((data) => {
         const map = {};
-        (data.progress || []).forEach((p) => {
-          map[p.lesson_id] = p;
-        });
+        (data.progress || []).forEach((p) => (map[p.lesson_id] = p));
         setProgress(map);
       })
       .catch(() => console.error("Помилка прогресу"));
@@ -257,6 +279,20 @@ export default function CabinetPage() {
 
   if (!user) return null;
 
+  // 📊 обчислення середнього прогресу курсу
+  const overallProgress =
+    Object.keys(progress).length > 0
+      ? Math.round(
+          (Object.values(progress).reduce(
+            (acc, p) =>
+              acc + (p.total_seconds ? p.watched_seconds / p.total_seconds : 0),
+            0
+          ) /
+            Object.keys(progress).length) *
+            100
+        )
+      : 0;
+
   return (
     <div
       className={`min-h-screen flex ${
@@ -265,6 +301,7 @@ export default function CabinetPage() {
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
+      {/* HEADER */}
       <header
         className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 ${
           darkMode
@@ -280,6 +317,7 @@ export default function CabinetPage() {
         </button>
       </header>
 
+      {/* SIDEBAR */}
       <aside
         className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
@@ -290,7 +328,7 @@ export default function CabinetPage() {
         } md:pt-0 pt-16`}
       >
         <div className="p-6 flex-1 overflow-y-auto">
-          <div className="flex flex-col items-center text-center mb-6">
+          <div className="flex flex-col items-center text-center mb-4">
             <SquareUserRound className="w-16 h-16 text-pink-500 mb-2" />
             <h2 className="font-bold text-lg">
               {user.name || user.email.split("@")[0]}
@@ -300,6 +338,22 @@ export default function CabinetPage() {
             </p>
           </div>
 
+          {/* 📊 Загальний прогрес курсу */}
+          {overallProgress > 0 && (
+            <div className="mb-4 px-3">
+              <p className="text-xs text-center font-medium text-pink-600">
+                {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
+              </p>
+              <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
+                  style={{ width: `${overallProgress}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* MODULES */}
           {modules.length === 0 ? (
             <p className="text-center text-sm opacity-70">
               {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
@@ -307,98 +361,102 @@ export default function CabinetPage() {
           ) : (
             <div className="space-y-2">
               {modules.map((mod) => (
-  <div key={mod.id} className="mb-2">
-    <button
-      onClick={() => toggleModule(mod.id)}
-      className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
-    >
-      <span className="flex items-center gap-2">
-        <BookOpen className="w-4 h-4" /> {mod.title}
-      </span>
-      <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
-        {mod.lessons || 0}
-      </span>
-      {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-    </button>
+                <div key={mod.id} className="mb-2">
+                  <button
+                    onClick={() => toggleModule(mod.id)}
+                    className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
+                  >
+                    <span className="flex items-center gap-2">
+                      <BookOpen className="w-4 h-4" /> {mod.title}
+                    </span>
+                    <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
+                      {mod.lessons || 0}
+                    </span>
+                    {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                  </button>
 
-    {/* 📝 Опис модуля */}
-    {mod.description && (
-      <p
-        className={`text-xs mt-1 ml-8 pr-4 leading-snug ${
-          darkMode ? "text-fuchsia-200/70" : "text-gray-600"
-        }`}
-      >
-        {mod.description}
-      </p>
-    )}
+                  {mod.description && (
+                    <p
+                      className={`text-xs mt-1 ml-8 pr-4 leading-snug ${
+                        darkMode ? "text-fuchsia-200/70" : "text-gray-600"
+                      }`}
+                    >
+                      {mod.description}
+                    </p>
+                  )}
 
-    {expanded === mod.id && (
-      <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
-        {lessons[mod.id]?.map((l) => {
-          const prog = progress[l.id];
-          const percent =
-            prog && prog.total_seconds > 0
-              ? Math.min(100, Math.round((prog.watched_seconds / prog.total_seconds) * 100))
-              : 0;
-          const done = prog?.completed || prog?.homework_done;
+                  {expanded === mod.id && (
+                    <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
+                      {lessons[mod.id]?.map((l) => {
+                        const prog = progress[l.id];
+                        const percent =
+                          prog && prog.total_seconds > 0
+                            ? Math.min(100, Math.round((prog.watched_seconds / prog.total_seconds) * 100))
+                            : 0;
+                        const done = prog?.completed || prog?.homework_done;
+                        const isNew =
+                          new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-          return (
-            <div
-              key={l.id}
-              onClick={() => {
-                setSelectedLesson(l);
-                setMenuOpen(false);
-              }}
-              className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
-                selectedLesson?.id === l.id
-                  ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
-                  : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
-              }`}
-            >
-              <div className="flex items-center gap-2">
-                {done ? (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                    <path d="M9 12l2 2 4-4" />
-                  </svg>
-                ) : (
-                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                    <circle cx="12" cy="12" r="10" />
-                  </svg>
-                )}
+                        return (
+                          <div
+                            key={l.id}
+                            onClick={() => {
+                              setSelectedLesson(l);
+                              localStorage.setItem("last_lesson", JSON.stringify(l));
+                              setMenuOpen(false);
+                            }}
+                            className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
+                              selectedLesson?.id === l.id
+                                ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
+                                : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
+                            }`}
+                          >
+                            <div className="flex items-center gap-2">
+                              {done ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M9 12l2 2 4-4" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                </svg>
+                              )}
 
-                <span className="flex-1 truncate">{l.title}</span>
-
-                {percent > 0 && (
-                  <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
-                    {percent}%
-                  </span>
-                )}
-              </div>
-
-              <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
-                <div
-                  className={`h-full transition-all duration-500 ${
-                    done
-                      ? "bg-green-400"
-                      : percent > 0
-                      ? "bg-gradient-to-r from-pink-400 to-rose-500"
-                      : "bg-transparent"
-                  }`}
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-            </div>
-          );
-        })}
-      </div>
-    )}
-  </div>
-))}
+                              <span className="flex-1 truncate">{l.title}</span>
+                              {isNew && (
+                                <span className="text-[10px] bg-pink-500 text-white px-2 py-[1px] rounded-full ml-1">NEW</span>
+                              )}
+                              {percent > 0 && (
+                                <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
+                                  {percent}%
+                                </span>
+                              )}
+                            </div>
+                            <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full transition-all duration-700 ease-out ${
+                                  done
+                                    ? "bg-green-400"
+                                    : percent > 0
+                                    ? "bg-gradient-to-r from-pink-400 to-rose-500"
+                                    : "bg-transparent"
+                                }`}
+                                style={{ width: `${percent}%` }}
+                              />
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
-        {/* Низ меню */}
+
+        {/* FOOTER OF SIDEBAR */}
         <div className="p-6 border-t border-pink-200/30 space-y-6 mt-auto">
           {/* Темна тема */}
           <div className="flex items-center justify-between">
@@ -463,7 +521,7 @@ export default function CabinetPage() {
         </div>
       </aside>
 
-      {/* Контент */}
+      {/* MAIN CONTENT */}
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
         {banner && banner.active && (
           <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
@@ -485,93 +543,31 @@ export default function CabinetPage() {
             }`}
           >
             <div className="flex items-center justify-between mb-4">
-  <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
-  {selectedLesson.type && (
-    <span
-      className={`text-xs md:text-sm px-3 py-1 rounded-full font-medium ${
-        selectedLesson.type === "practice"
-          ? "bg-purple-100 text-purple-700 border border-purple-300"
-          : "bg-pink-100 text-pink-700 border border-pink-300"
-      }`}
-    >
-      {selectedLesson.type === "practice"
-        ? t("Практика", "Практика")
-        : t("Теорія", "Теория")}
-    </span>
-  )}
-</div>
+              <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
+            </div>
+
             <SafeVideo
-  lesson={selectedLesson}
-  t={t}
-  onProgressUpdate={(lessonId, watched, total, done) => {
-    setProgress(prev => ({
-      ...prev,
-      [lessonId]: {
-        ...(prev[lessonId] || {}),
-        watched_seconds: watched,
-        total_seconds: total,
-        completed: done || prev[lessonId]?.completed,
-      },
-    }));
-  }}
-/>
-
-            {selectedLesson.description && (
-              <div className="mt-4">
-                <h4 className="font-semibold mb-1">{t("Опис", "Описание")}</h4>
-                <p>{selectedLesson.description}</p>
-              </div>
-            )}
-
-            {selectedLesson.homework && (
-              <div className="mt-5 flex flex-col gap-1">
-                <h4 className="flex items-center gap-2 font-semibold text-pink-500 mb-1">
-                  <CheckSquare className="w-5 h-5 text-pink-500" />
-                  {t("Домашнє завдання", "Домашнее задание")}
-                </h4>
-                <p className="pl-7">{selectedLesson.homework}</p>
-
-                {progress[selectedLesson.id]?.homework_done && (
-                  <div className="mt-3 ml-6 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium flex items-center gap-2 w-fit">
-                     {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
-                  </div>
-                )}
-              </div>
-            )}
-
-            {selectedLesson.materials && (
-              <div className="mt-5 flex flex-col gap-1">
-                <h4 className="flex items-center gap-2 font-semibold text-pink-500 mb-1">
-                  <FolderOpen className="w-5 h-5 text-pink-500" />
-                  {t("Матеріали", "Материалы")}
-                </h4>
-                {selectedLesson.materials.startsWith("http") ? (
-                  <a
-                    href={selectedLesson.materials}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="pl-7 text-pink-600 underline hover:text-pink-700 transition"
-                  >
-                    {t("Відкрити матеріал", "Открыть материал")}
-                  </a>
-                ) : (
-                  <p className="pl-7">{selectedLesson.materials}</p>
-                )}
-              </div>
-            )}
+              lesson={selectedLesson}
+              t={t}
+              getNextLesson={(id) => {
+                const allLessons = Object.values(lessons).flat();
+                const idx = allLessons.findIndex((l) => l.id === id);
+                return allLessons[idx + 1] || null;
+              }}
+              onProgressUpdate={(lessonId, watched, total, done) => {
+                setProgress((prev) => ({
+                  ...prev,
+                  [lessonId]: {
+                    ...(prev[lessonId] || {}),
+                    watched_seconds: watched,
+                    total_seconds: total,
+                    completed: done || prev[lessonId]?.completed,
+                  },
+                }));
+              }}
+            />
           </div>
         )}
-
-        <footer
-          className={`mt-10 text-center py-6 text-sm border-t ${
-            darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"
-          }`}
-        >
-          <p className="font-medium">
-            © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
-            {t("Усі права захищені.", "Все права защищены.")}
-          </p>
-        </footer>
       </main>
     </div>
   );
