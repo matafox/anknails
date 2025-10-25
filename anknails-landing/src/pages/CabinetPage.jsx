@@ -607,8 +607,8 @@ export default function CabinetPage() {
         <div
   className={`p-4 rounded-xl border mt-6 ${
     darkMode
-      ? "bg-fuchsia-950/40 border-fuchsia-800/40"
-      : "bg-gray-50 border-gray-200"
+      ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
+      : "bg-gray-50 border-gray-200 text-gray-800"
   }`}
 >
           <h3 className="font-semibold mb-2 text-amber-700">
