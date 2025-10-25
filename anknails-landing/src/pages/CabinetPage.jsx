@@ -272,22 +272,30 @@ useEffect(() => {
     .then((data) => setModules(data.modules || []))
     .catch(() => console.error("Помилка завантаження модулів"));
 
-  // 🧠 Завантажуємо прогрес користувача
-  fetch(`${BACKEND}/api/progress/user/${user.id}`)
-    .then((r) => r.json())
-    .then((data) => {
-      if (!data?.progress) return setProgress({});
+  // 🧠 Завантажуємо прогрес користувача (з кешем у localStorage)
+const cachedProgress = localStorage.getItem(`progress_${user.id}_${user.course_id}`);
+if (cachedProgress) {
+  try {
+    setProgress(JSON.parse(cachedProgress));
+  } catch {
+    console.warn("⚠️ Некоректний кеш прогресу");
+  }
+}
 
-      // 🩶 Якщо в API є поле course_id — фільтруємо по поточному курсу
-      const filtered = data.progress.filter(
-        (p) => p.course_id === user.course_id
-      );
+fetch(`${BACKEND}/api/progress/user/${user.id}`)
+  .then((r) => r.json())
+  .then((data) => {
+    if (!data?.progress) return setProgress({});
 
-      const map = {};
-      filtered.forEach((p) => (map[p.lesson_id] = p));
-      setProgress(map);
-    })
-    .catch(() => console.error("Помилка прогресу"));
+    const filtered = data.progress.filter((p) => p.course_id === user.course_id);
+    const map = {};
+    filtered.forEach((p) => (map[p.lesson_id] = p));
+    setProgress(map);
+
+    // 💾 Зберігаємо прогрес у кеш
+    localStorage.setItem(`progress_${user.id}_${user.course_id}`, JSON.stringify(map));
+  })
+  .catch(() => console.error("Помилка прогресу"));
 }, [user?.id, user?.course_id]);
 
   const fetchLessons = async (moduleId) => {
