@@ -671,7 +671,7 @@ export default function CabinetPage() {
             }}
             className="mt-8 flex items-center gap-2 mx-auto px-6 py-3 rounded-full font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all"
           >
-            <ChevronRight className="w-5 h-5 rotate-270" />
+            <ArrowRightCircle className="w-5 h-5 rotate-270" />
             {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
           </button>
         );
@@ -694,6 +694,6 @@ export default function CabinetPage() {
     </p>
   </footer>
 </main>
-    </div>
+    
   );
 }
