@@ -548,30 +548,88 @@ export default function CabinetPage() {
               darkMode ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40" : "bg-white/80 border border-pink-200"
             }`}
           >
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
-            </div>
+            {/* 🔖 Заголовок і бейдж типу уроку */}
+<div className="flex items-center justify-between mb-4">
+  <div className="flex items-center gap-3">
+    <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
+    {selectedLesson.type === "theory" && (
+      <span className="px-3 py-1 text-xs font-semibold bg-pink-100 text-pink-600 border border-pink-300 rounded-full">
+        🧠 {t("Теорія", "Теория")}
+      </span>
+    )}
+    {selectedLesson.type === "practice" && (
+      <span className="px-3 py-1 text-xs font-semibold bg-rose-100 text-rose-600 border border-rose-300 rounded-full">
+        🧤 {t("Практика", "Практика")}
+      </span>
+    )}
+  </div>
+</div>
 
-            <SafeVideo
-              lesson={selectedLesson}
-              t={t}
-              getNextLesson={(id) => {
-                const allLessons = Object.values(lessons).flat();
-                const idx = allLessons.findIndex((l) => l.id === id);
-                return allLessons[idx + 1] || null;
-              }}
-              onProgressUpdate={(lessonId, watched, total, done) => {
-                setProgress((prev) => ({
-                  ...prev,
-                  [lessonId]: {
-                    ...(prev[lessonId] || {}),
-                    watched_seconds: watched,
-                    total_seconds: total,
-                    completed: done || prev[lessonId]?.completed,
-                  },
-                }));
-              }}
-            />
+{/* 🎬 Відео */}
+<SafeVideo
+  lesson={selectedLesson}
+  t={t}
+  getNextLesson={(id) => {
+    const allLessons = Object.values(lessons).flat();
+    const idx = allLessons.findIndex((l) => l.id === id);
+    return allLessons[idx + 1] || null;
+  }}
+  onProgressUpdate={(lessonId, watched, total, done) => {
+    setProgress((prev) => ({
+      ...prev,
+      [lessonId]: {
+        ...(prev[lessonId] || {}),
+        watched_seconds: watched,
+        total_seconds: total,
+        completed: done || prev[lessonId]?.completed,
+      },
+    }));
+  }}
+/>
+
+{/* 🧾 Домашнє завдання та матеріали */}
+{(selectedLesson.homework || selectedLesson.materials) && (
+  <div className="mt-6 space-y-4">
+    {selectedLesson.homework && (
+      <div
+        className={`p-4 rounded-xl border ${
+          darkMode
+            ? "bg-fuchsia-950/40 border-fuchsia-800/40"
+            : "bg-amber-50 border-amber-200"
+        }`}
+      >
+        <h3 className="font-semibold mb-2 text-amber-700">
+          📚 {t("Домашнє завдання", "Домашнее задание")}
+        </h3>
+        <p className="text-sm leading-relaxed whitespace-pre-wrap">
+          {selectedLesson.homework}
+        </p>
+      </div>
+    )}
+
+    {selectedLesson.materials && (
+      <div
+        className={`p-4 rounded-xl border ${
+          darkMode
+            ? "bg-fuchsia-950/40 border-fuchsia-800/40"
+            : "bg-blue-50 border-blue-200"
+        }`}
+      >
+        <h3 className="font-semibold mb-2 text-blue-700">
+          📎 {t("Матеріали", "Материалы")}
+        </h3>
+        <a
+          href={selectedLesson.materials}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-block text-sm font-medium text-blue-600 hover:underline"
+        >
+          {t("Відкрити матеріали", "Открыть материалы")}
+        </a>
+      </div>
+    )}
+  </div>
+)}
           </div>
         )}
       </main>
