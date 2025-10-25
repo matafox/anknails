@@ -560,25 +560,25 @@ export default function CabinetPage() {
       }`}
     >
       {/* 🔖 Заголовок і бейдж типу уроку */}
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-pink-600">
-            {selectedLesson.title}
-          </h2>
-          {selectedLesson.type === "theory" && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
-              < className="w-3.5 h-3.5 text-pink-500" />
-              {t("Теорія", "Теория")}
-            </span>
-          )}
-          {selectedLesson.type === "practice" && (
-            <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
-              < className="w-3.5 h-3.5 text-rose-500" />
-              {t("Практика", "Практика")}
-            </span>
-          )}
-        </div>
-      </div>
+<div className="flex items-center justify-between mb-4">
+  <div className="flex items-center gap-3">
+    <h2 className="text-2xl font-bold text-pink-600">
+      {selectedLesson.title}
+    </h2>
+
+    {selectedLesson.type === "theory" && (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
+        {t("Теорія", "Теория")}
+      </span>
+    )}
+
+    {selectedLesson.type === "practice" && (
+      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
+        {t("Практика", "Практика")}
+      </span>
+    )}
+  </div>
+</div>
 
       {/* 🎬 Відео з автопереходом і прогресом */}
       <SafeVideo
@@ -611,10 +611,9 @@ export default function CabinetPage() {
       : "bg-gray-50 border-gray-200"
   }`}
 >
-          <h3 className="flex items-center gap-2 font-semibold mb-2 text-amber-700">
-            < className="w-4 h-4" />
-            {t("Домашнє завдання", "Домашнее задание")}
-          </h3>
+          <h3 className="font-semibold mb-2 text-amber-700">
+  {t("Домашнє завдання", "Домашнее задание")}
+</h3>
 
           <p className="text-sm leading-relaxed whitespace-pre-wrap">
             {selectedLesson.homework}
