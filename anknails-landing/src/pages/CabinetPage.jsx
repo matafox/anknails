@@ -250,21 +250,29 @@ export default function CabinetPage() {
 useEffect(() => {
   if (!user?.id || !user?.course_id) return;
 
-  // 🧹 Очистити старі дані перед завантаженням нового курсу
-  setModules([]);
-  setLessons({});
-  setExpanded(null);
-  setProgress({});
-  setSelectedLesson(null);
-  localStorage.removeItem("last_lesson");
+  // 🧠 Отримати останній збережений курс із localStorage
+  const prevCourseId = localStorage.getItem("last_course_id");
 
-  // 🔄 Завантажити нові модулі для поточного курсу
+  // 🧹 Якщо курс змінився — тоді очищаємо дані
+  if (prevCourseId && prevCourseId !== String(user.course_id)) {
+    setModules([]);
+    setLessons({});
+    setExpanded(null);
+    setProgress({});
+    setSelectedLesson(null);
+    localStorage.removeItem("last_lesson");
+  }
+
+  // 🧾 Зберігаємо поточний course_id
+  localStorage.setItem("last_course_id", user.course_id);
+
+  // 🔄 Завантажуємо модулі для поточного курсу
   fetch(`${BACKEND}/api/modules/${user.course_id}`)
     .then((res) => res.json())
     .then((data) => setModules(data.modules || []))
     .catch(() => console.error("Помилка завантаження модулів"));
 
-  // 🧠 Завантажити прогрес користувача лише для поточного курсу
+  // 🧠 Завантажуємо прогрес користувача
   fetch(`${BACKEND}/api/progress/user/${user.id}`)
     .then((r) => r.json())
     .then((data) => {
@@ -280,9 +288,6 @@ useEffect(() => {
       setProgress(map);
     })
     .catch(() => console.error("Помилка прогресу"));
-
-  // 💫 Безпечне обнулення на випадок кешу
-  setTimeout(() => setProgress({}), 0);
 }, [user?.id, user?.course_id]);
 
   const fetchLessons = async (moduleId) => {
