@@ -17,8 +17,10 @@ export default function EarningsTab({ i18n, darkMode }) {
         (data.users || []).map((u) => ({
           id: u.id,
           name: u.name || u.email || "Без імені",
-          course: u.course_title || (i18n.language === "ru" ? "Без курса" : "Без курсу"),
-          amount: 0,
+          course:
+            u.course_title ||
+            (i18n.language === "ru" ? "Без курса" : "Без курсу"),
+          amount: "",
         }))
       );
     } catch (err) {
@@ -32,21 +34,21 @@ export default function EarningsTab({ i18n, darkMode }) {
     loadUsers();
   }, []);
 
-  // ✏️ зміна суми (автозбереження)
+  // ✏️ Зміна суми (автозбереження)
   const handleAmountChange = (id, value) => {
     const updatedUsers = users.map((u) =>
-      u.id === id ? { ...u, amount: Number(value) || 0 } : u
+      u.id === id ? { ...u, amount: value === "" ? "" : Number(value) } : u
     );
     setUsers(updatedUsers);
 
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
       const user = updatedUsers.find((u) => u.id === id);
-      if (user) savePayment(user);
+      if (user && user.amount !== "") savePayment(user);
     }, 500);
   };
 
-  // 💾 збереження оплати
+  // 💾 Збереження оплати
   const savePayment = async (user) => {
     try {
       await fetch(`${BACKEND}/api/payments/save`, {
@@ -81,7 +83,9 @@ export default function EarningsTab({ i18n, darkMode }) {
 
       {loading ? (
         <p className="opacity-70">
-          {i18n.language === "ru" ? "Загрузка данных..." : "Завантаження даних..."}
+          {i18n.language === "ru"
+            ? "Загрузка данных..."
+            : "Завантаження даних..."}
         </p>
       ) : users.length > 0 ? (
         <table
@@ -115,9 +119,12 @@ export default function EarningsTab({ i18n, darkMode }) {
                 }`}
               >
                 {/* № */}
-                <td className="py-3 px-3 text-center font-medium" title={`ID: ${u.id}`}>
-  {i + 1}
-</td>
+                <td
+                  className="py-3 px-3 text-center font-medium"
+                  title={`ID: ${u.id}`}
+                >
+                  {i + 1}
+                </td>
 
                 {/* 👤 Користувач */}
                 <td className="py-3 px-3">
@@ -140,12 +147,21 @@ export default function EarningsTab({ i18n, darkMode }) {
                   <input
                     type="number"
                     value={u.amount}
-                    onChange={(ev) => handleAmountChange(u.id, ev.target.value)}
-                    className={`px-3 py-2 w-32 rounded-lg text-sm font-semibold border outline-none text-center transition-all ${
-                      darkMode
-                        ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
-                        : "bg-white border-pink-300 focus:border-pink-500"
-                    }`}
+                    onChange={(ev) =>
+                      handleAmountChange(u.id, ev.target.value)
+                    }
+                    placeholder="—"
+                    style={{
+                      MozAppearance: "textfield",
+                    }}
+                    className={`px-3 py-2 w-32 rounded-lg text-sm font-semibold border outline-none text-center transition-all 
+                      [&::-webkit-outer-spin-button]:appearance-none 
+                      [&::-webkit-inner-spin-button]:appearance-none 
+                      ${
+                        darkMode
+                          ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
+                          : "bg-white border-pink-300 focus:border-pink-500"
+                      }`}
                   />
                 </td>
               </tr>
