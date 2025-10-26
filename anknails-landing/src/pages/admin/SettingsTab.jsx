@@ -312,8 +312,14 @@ const loadProgress = async (userId) => {
 </select>
                   </td>
                   <td className="py-2 px-3">
-                    {new Date(u.expires_at).toLocaleDateString()}
-                  </td>
+  {new Date(u.expires_at) < new Date() ? (
+    <span className="text-red-500 font-medium">
+      {i18n.language === "ru" ? "Истёк" : "Вигасло"}
+    </span>
+  ) : (
+    <span>{new Date(u.expires_at).toLocaleDateString()}</span>
+  )}
+</td>
                   <td className="py-2 px-3">
                     <button
                       onClick={() => loadProgress(u.id)}
