@@ -1,28 +1,33 @@
 import { useEffect, useState } from "react";
-import { CreditCard, User, BookOpen } from "lucide-react";
+import { CreditCard, User, BookOpen, Save } from "lucide-react";
 
 export default function EarningsTab({ i18n, darkMode }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
   const [users, setUsers] = useState([]);
-  const [earnings, setEarnings] = useState([]);
+  const [grouped, setGrouped] = useState({});
   const [loading, setLoading] = useState(false);
-  const [total, setTotal] = useState(0);
+  const [saving, setSaving] = useState(false);
 
-  // 🧠 Завантаження користувачів з бекенду
+  // 🧠 Завантаження користувачів
   const loadUsers = async () => {
     try {
       setLoading(true);
       const res = await fetch(`${BACKEND}/api/users`);
       const data = await res.json();
 
-      const mapped = (data.users || []).map((u) => ({
-        id: u.id,
-        name: u.name || u.email || "Без імені",
-        course: u.course_title || (i18n.language === "ru" ? "Без курса" : "Без курсу"),
-        amount: 0,
-      }));
-      setUsers(mapped);
-      setEarnings(mapped);
+      // Групуємо користувачів по курсу
+      const groupedData = {};
+      (data.users || []).forEach((u) => {
+        const course = u.course_title || (i18n.language === "ru" ? "Без курса" : "Без курсу");
+        if (!groupedData[course]) groupedData[course] = [];
+        groupedData[course].push({
+          id: u.id,
+          name: u.name || u.email || "Без імені",
+          course,
+          amount: 0,
+        });
+      });
+      setGrouped(groupedData);
     } catch (err) {
       console.error("Помилка завантаження користувачів:", err);
     } finally {
@@ -34,18 +39,38 @@ export default function EarningsTab({ i18n, darkMode }) {
     loadUsers();
   }, []);
 
-  // 🔢 Підрахунок загальної суми
-  useEffect(() => {
-    const totalSum = earnings.reduce((sum, e) => sum + Number(e.amount || 0), 0);
-    setTotal(totalSum);
-  }, [earnings]);
+  // ✏️ Зміна суми для конкретного користувача
+  const handleAmountChange = (course, id, value) => {
+    setGrouped((prev) => ({
+      ...prev,
+      [course]: prev[course].map((u) =>
+        u.id === id ? { ...u, amount: Number(value) || 0 } : u
+      ),
+    }));
+  };
 
-  // ✏️ Зміна суми вручну
-  const handleAmountChange = (id, value) => {
-    const updated = earnings.map((e) =>
-      e.id === id ? { ...e, amount: Number(value) || 0 } : e
-    );
-    setEarnings(updated);
+  // 💾 Збереження всіх оплат
+  const handleSave = async () => {
+    try {
+      setSaving(true);
+      const allPayments = Object.values(grouped).flat();
+      const res = await fetch(`${BACKEND}/api/payments/save`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ payments: allPayments }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        alert(i18n.language === "ru" ? "Сохранено!" : "Збережено!");
+      } else {
+        alert("Error: " + data.detail);
+      }
+    } catch (err) {
+      console.error("Помилка збереження:", err);
+      alert("Помилка збереження даних");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -62,76 +87,100 @@ export default function EarningsTab({ i18n, darkMode }) {
         {i18n.language === "ru" ? "История платежей" : "Історія платежів"}
       </h2>
 
-      {/* 💰 Загальний дохід */}
-      <div className="mb-6 text-lg font-medium">
-        {i18n.language === "ru" ? "Общий доход:" : "Загальний дохід:"}{" "}
-        <span className="text-pink-500 font-bold">{total} PLN</span>
-      </div>
+      {/* 💾 Кнопка збереження */}
+      <button
+        onClick={handleSave}
+        disabled={saving}
+        className={`mb-6 flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold shadow transition-all ${
+          darkMode
+            ? "bg-fuchsia-700 hover:bg-fuchsia-600 text-white"
+            : "bg-pink-500 hover:bg-pink-400 text-white"
+        } ${saving ? "opacity-60 cursor-not-allowed" : ""}`}
+      >
+        <Save className="w-4 h-4" />
+        {saving
+          ? i18n.language === "ru"
+            ? "Сохранение..."
+            : "Збереження..."
+          : i18n.language === "ru"
+          ? "Сохранить"
+          : "Зберегти"}
+      </button>
 
-      {/* 📋 Таблиця */}
       {loading ? (
         <p className="opacity-70">
           {i18n.language === "ru" ? "Загрузка данных..." : "Завантаження даних..."}
         </p>
-      ) : users.length > 0 ? (
-        <table
-          className={`min-w-[800px] w-full rounded-xl overflow-hidden border ${
-            darkMode ? "border-fuchsia-900/30" : "border-pink-200"
-          }`}
-        >
-          <thead className={darkMode ? "bg-fuchsia-950/40" : "bg-pink-100"}>
-            <tr>
-              <th className="py-2 px-3 text-left">#</th>
-              <th className="py-2 px-3 text-left">
-                {i18n.language === "ru" ? "Пользователь" : "Користувач"}
-              </th>
-              <th className="py-2 px-3 text-left">
-                {i18n.language === "ru" ? "Курс" : "Курс"}
-              </th>
-              <th className="py-2 px-3 text-left">
-                {i18n.language === "ru" ? "Сумма (PLN)" : "Сума (PLN)"}
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            {earnings.map((e, i) => (
-              <tr
-                key={e.id}
-                className={`border-t ${
-                  darkMode
-                    ? "border-fuchsia-900/30 hover:bg-fuchsia-950/30"
-                    : "border-pink-200 hover:bg-pink-50"
+      ) : Object.keys(grouped).length > 0 ? (
+        <div className="space-y-8">
+          {Object.entries(grouped).map(([course, users]) => (
+            <div key={course}>
+              {/* 🧾 Назва курсу */}
+              <h3
+                className={`text-lg font-semibold mb-3 flex items-center gap-2 ${
+                  darkMode ? "text-fuchsia-300" : "text-pink-600"
                 }`}
               >
-                <td className="py-2 px-3">{i + 1}</td>
-                <td className="py-2 px-3 flex items-center gap-2">
-                  <User className="w-4 h-4 text-pink-500" />
-                  {e.name}
-                </td>
-                <td className="py-2 px-3 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-fuchsia-400" />
-                  <span>{e.course}</span>
-                </td>
-                <td className="py-2 px-3">
-                  <input
-                    type="number"
-                    value={e.amount}
-                    onChange={(ev) => handleAmountChange(e.id, ev.target.value)}
-                    className={`px-3 py-2 w-32 rounded-lg text-sm font-semibold border outline-none text-center transition-all ${
-                      darkMode
-                        ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
-                        : "bg-white border-pink-300 focus:border-pink-500"
-                    }`}
-                  />
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                <BookOpen className="w-5 h-5" /> {course}
+              </h3>
+
+              {/* 🧍 Таблиця студентів курсу */}
+              <table
+                className={`min-w-[700px] w-full rounded-xl overflow-hidden border ${
+                  darkMode ? "border-fuchsia-900/30" : "border-pink-200"
+                }`}
+              >
+                <thead className={darkMode ? "bg-fuchsia-950/40" : "bg-pink-100"}>
+                  <tr>
+                    <th className="py-2 px-3 text-left">#</th>
+                    <th className="py-2 px-3 text-left">
+                      {i18n.language === "ru" ? "Пользователь" : "Користувач"}
+                    </th>
+                    <th className="py-2 px-3 text-left">
+                      {i18n.language === "ru" ? "Сумма (PLN)" : "Сума (PLN)"}
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {users.map((u, i) => (
+                    <tr
+                      key={u.id}
+                      className={`border-t ${
+                        darkMode
+                          ? "border-fuchsia-900/30 hover:bg-fuchsia-950/30"
+                          : "border-pink-200 hover:bg-pink-50"
+                      }`}
+                    >
+                      <td className="py-2 px-3">{i + 1}</td>
+                      <td className="py-2 px-3 flex items-center gap-2">
+                        <User className="w-4 h-4 text-pink-500" />
+                        {u.name}
+                      </td>
+                      <td className="py-2 px-3">
+                        <input
+                          type="number"
+                          value={u.amount}
+                          onChange={(ev) =>
+                            handleAmountChange(course, u.id, ev.target.value)
+                          }
+                          className={`px-3 py-2 w-32 rounded-lg text-sm font-semibold border outline-none text-center transition-all ${
+                            darkMode
+                              ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
+                              : "bg-white border-pink-300 focus:border-pink-500"
+                          }`}
+                        />
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          ))}
+        </div>
       ) : (
         <p className="opacity-70">
           {i18n.language === "ru"
-            ? "Пользователи не найдены"
+            ? "Нет пользователей"
             : "Користувачів ще немає"}
         </p>
       )}
