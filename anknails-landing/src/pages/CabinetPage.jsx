@@ -134,16 +134,19 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   setCompleted(true);
   sendProgress(total, total, true);
 
-  // 🎯 Надсилаємо XP при завершенні уроку
-  fetch(`${BACKEND}/api/progress/xp`, {
+  // 🎯 Оновлюємо прогрес і XP
+fetch(`${BACKEND}/api/progress/update`, {
   method: "POST",
   headers: { "Content-Type": "application/json" },
   body: JSON.stringify({
     user_id: userId,
     lesson_id: lesson.id,
+    watched_seconds: total,
+    total_seconds: total,
     completed: true,
   }),
 })
+
   .then((r) => r.json())
   .then((res) => {
     console.log("✅ XP оновлено:", res);
@@ -595,6 +598,7 @@ export default function CabinetPage() {
 
  {!selectedLesson ? (
   <DashboardSection
+    key={user?.xp}
     modules={modules}
     lessons={lessons}
     progress={progress}
