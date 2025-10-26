@@ -247,19 +247,17 @@ export default function AdminPage() {
         </div>
 
         {/* ⚙️ Footer */}
-        <footer
-          className={`text-center py-5 text-sm border-t mt-auto ${
-            darkMode
-              ? "border-fuchsia-900/30 text-fuchsia-100/80"
-              : "border-pink-200 text-gray-600"
-          }`}
-        >
-          <p className="font-medium">
-            © {new Date().getFullYear()}{" "}
-            <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
-            {i18n.language === "ru" ? "Все права защищены." : "Усі права захищені."}
-          </p>
-        </footer>
+<footer
+  className={`text-center py-5 text-sm mt-auto ${
+    darkMode ? "text-fuchsia-100/80" : "text-gray-600"
+  }`}
+>
+  <p className="font-medium">
+    © {new Date().getFullYear()}{" "}
+    <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
+    {i18n.language === "ru" ? "Все права защищены." : "Усі права захищені."}
+  </p>
+</footer>
       </main>
     </div>
   );
