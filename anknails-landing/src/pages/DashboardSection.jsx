@@ -4,6 +4,20 @@ import { CheckSquare, Award, Info, X } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
+// 🎨 Кольори для кожного рівня (1–10)
+const STAGE_COLORS = {
+  1: "from-pink-100 to-pink-50 border-pink-200 text-pink-600",
+  2: "from-rose-100 to-rose-50 border-rose-200 text-rose-600",
+  3: "from-fuchsia-100 to-pink-50 border-fuchsia-200 text-fuchsia-600",
+  4: "from-purple-100 to-pink-50 border-purple-200 text-purple-600",
+  5: "from-violet-100 to-purple-50 border-violet-200 text-violet-600",
+  6: "from-indigo-100 to-violet-50 border-indigo-200 text-indigo-600",
+  7: "from-blue-100 to-indigo-50 border-blue-200 text-blue-600",
+  8: "from-cyan-100 to-blue-50 border-cyan-200 text-cyan-600",
+  9: "from-emerald-100 to-cyan-50 border-emerald-200 text-emerald-600",
+  10: "from-yellow-100 to-amber-50 border-yellow-300 text-yellow-600",
+};
+
 export default function DashboardSection({
   modules,
   lessons,
@@ -55,9 +69,13 @@ export default function DashboardSection({
 
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
   const realSkills = skills ?? completedLessons * 20;
-  const realStage = stage ?? Math.floor(realSkills / 100) + 1;
+  const realStage = Math.min(stage ?? Math.floor(realSkills / 100) + 1, 10);
   const nextStageSkills = 100 * realStage;
   const progressToNext = ((realSkills % 100) / 100) * 100;
+
+  // 🎨 Вибір кольору для поточного рівня
+  const stageColor =
+    STAGE_COLORS[realStage] || STAGE_COLORS[10];
 
   return (
     <div
@@ -101,6 +119,80 @@ export default function DashboardSection({
             )}
           </div>
 
+          {/* 💅 Етап майстерності з кольором за рівнем */}
+          <div
+            className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 bg-gradient-to-br ${stageColor}`}
+          >
+            {/* кнопка інформації */}
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/30 transition z-20"
+              title={t("Як підвищити майстерність", "Как развивать мастерство")}
+            >
+              {showInfo ? (
+                <X className="w-5 h-5 text-yellow-500" />
+              ) : (
+                <Info className="w-5 h-5 text-pink-600" />
+              )}
+            </button>
+
+            {/* контент */}
+            <div
+              className={`transition-all duration-700 ease-out transform ${
+                showInfo
+                  ? "opacity-0 scale-95 pointer-events-none"
+                  : "opacity-100 scale-100"
+              }`}
+            >
+              <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2">
+                <Award className="w-5 h-5 text-yellow-500" />
+                {t("Моя майстерність", "Моё мастерство")}
+              </h3>
+              <div className="text-center">
+                <p className="text-5xl font-extrabold mb-1">
+                  {t("Етап", "Этап")} {realStage}
+                </p>
+                <p className="text-sm opacity-80 mb-3">
+                  {realSkills} {t("навичок", "навыков")} / {nextStageSkills}{" "}
+                  {t("навичок", "навыков")}
+                </p>
+                <div className="h-2 w-full bg-white/40 rounded-full overflow-hidden mb-2">
+                  <div
+                    className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-700"
+                    style={{ width: `${progressToNext}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs opacity-70">
+                  {t("До наступного етапу залишилось", "До следующего этапа осталось")}{" "}
+                  {100 - (realSkills % 100)} {t("навичок", "навыков")}
+                </p>
+              </div>
+            </div>
+
+            {/* інфо-вікно */}
+            <div
+              className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ease-out transform ${
+                showInfo
+                  ? "opacity-100 scale-100 visible"
+                  : "opacity-0 scale-95 invisible pointer-events-none"
+              }`}
+            >
+              <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40"></div>
+
+              <div className="relative z-10 animate-fade-in text-center">
+                <h3 className="text-2xl font-bold mb-3 text-pink-600">
+                  {t("Як розвивати майстерність", "Как развивать мастерство")}
+                </h3>
+                <p className="text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5 text-gray-700">
+                  {t(
+                    "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 — новий етап! Виконуйте домашні завдання — отримуйте бонусні 10 одиниць майстерності.",
+                    "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 — новый этап! Выполняйте домашние задания — бонус 10 единиц мастерства."
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
+
           {/* 📈 Прогрес курсу */}
           <div
             className={`p-6 rounded-2xl border shadow-md transition ${
@@ -127,98 +219,6 @@ export default function DashboardSection({
                 {completedLessons} {t("уроків з", "уроков из")}{" "}
                 {Object.values(progress).length}
               </p>
-            </div>
-          </div>
-
-          {/* 💅 Етап майстерності */}
-          <div
-            className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 ${
-              darkMode
-                ? "bg-gradient-to-br from-[#1a0a1f] to-fuchsia-950/50 border-fuchsia-900/30"
-                : "bg-gradient-to-br from-white to-pink-50 border-pink-200"
-            }`}
-          >
-            {/* кнопка інформації */}
-            <button
-              onClick={() => setShowInfo(!showInfo)}
-              className="absolute top-3 right-3 p-2 rounded-full hover:bg-pink-100/30 transition z-20"
-              title={t("Як підвищити майстерність", "Как развивать мастерство")}
-            >
-              {showInfo ? (
-                <X className="w-5 h-5 text-yellow-400" />
-              ) : (
-                <Info className="w-5 h-5 text-pink-500" />
-              )}
-            </button>
-
-            {/* контент */}
-            <div
-              className={`transition-all duration-700 ease-out transform ${
-                showInfo
-                  ? "opacity-0 scale-95 pointer-events-none"
-                  : "opacity-100 scale-100"
-              }`}
-            >
-              <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2">
-                <Award className="w-5 h-5 text-yellow-400" />
-                {t("Моя майстерність", "Моё мастерство")}
-              </h3>
-              <div className="text-center">
-                <p className="text-5xl font-extrabold text-pink-500 mb-1">
-                  {t("Етап", "Этап")} {realStage}
-                </p>
-                <p className="text-sm opacity-70 mb-3">
-                  {realSkills} {t("навичок", "навыков")} / {nextStageSkills}{" "}
-                  {t("навичок", "навыков")}
-                </p>
-                <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-2">
-                  <div
-                    className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-700"
-                    style={{ width: `${progressToNext}%` }}
-                  ></div>
-                </div>
-                <p className="text-xs opacity-60">
-                  {t("До наступного етапу залишилось", "До следующего этапа осталось")}{" "}
-                  {100 - (realSkills % 100)} {t("навичок", "навыков")}
-                </p>
-              </div>
-            </div>
-
-            {/* інфо-вікно */}
-            <div
-              className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ease-out transform ${
-                showInfo
-                  ? "opacity-100 scale-100 visible"
-                  : "opacity-0 scale-95 invisible pointer-events-none"
-              }`}
-            >
-              <div
-                className={`absolute inset-0 rounded-2xl transition-all duration-700 ${
-                  darkMode
-                    ? "bg-black/80 backdrop-blur-md border border-fuchsia-900/30"
-                    : "bg-gradient-to-br from-pink-100 to-white backdrop-blur-md border border-pink-200/50"
-                }`}
-              ></div>
-
-              <div className="relative z-10 animate-fade-in text-center">
-                <h3
-                  className={`text-2xl font-bold mb-3 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]`}
-                >
-                  {t("Як розвивати майстерність", "Как развивать мастерство")}
-                </h3>
-                <p
-                  className={`text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5 ${
-                    darkMode
-                      ? "text-fuchsia-100 drop-shadow-[0_0_6px_rgba(255,255,255,0.3)]"
-                      : "text-gray-700 drop-shadow-[0_0_6px_rgba(0,0,0,0.15)]"
-                  }`}
-                >
-                  {t(
-                    "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 — новий етап! Виконуйте домашні завдання — отримуйте бонусні 10 одиниць майстерності.",
-                    "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 — новый этап! Выполняйте домашние задания — бонус 10 единиц мастерства."
-                  )}
-                </p>
-              </div>
             </div>
           </div>
 
