@@ -17,7 +17,7 @@ import CoursesTab from "./admin/CoursesTab"; // ✅ новий компонен�
 
 export default function AdminPage() {
   const { i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState("courses"); // ✅ стартова вкладка — Курси
+  const [activeTab, setActiveTab] = useState("courses");
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -36,8 +36,20 @@ export default function AdminPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
+  // 💾 Відновлення останньої вкладки з localStorage
+  useEffect(() => {
+    const savedTab = localStorage.getItem("admin_active_tab");
+    if (savedTab) setActiveTab(savedTab);
+  }, []);
+
+  // 💾 Збереження активної вкладки при зміні
+  useEffect(() => {
+    localStorage.setItem("admin_active_tab", activeTab);
+  }, [activeTab]);
+
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
+    localStorage.removeItem("admin_active_tab");
     window.location.href = "/";
   };
 
