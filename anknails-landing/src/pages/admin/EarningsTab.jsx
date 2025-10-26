@@ -1,39 +1,40 @@
 import { useEffect, useState } from "react";
-import { TrendingUp, DollarSign, User } from "lucide-react";
+import { CreditCard, User, BookOpen } from "lucide-react";
 
 export default function EarningsTab({ i18n, darkMode }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
+  const [users, setUsers] = useState([]);
   const [earnings, setEarnings] = useState([]);
   const [loading, setLoading] = useState(false);
   const [total, setTotal] = useState(0);
-  const [goal, setGoal] = useState(1000); // 🎯 ціль по доходу
 
-  // 🧠 Початкові мок-дані
+  // 🧠 Завантаження користувачів з бекенду
+  const loadUsers = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch(`${BACKEND}/api/users`);
+      const data = await res.json();
+
+      const mapped = (data.users || []).map((u) => ({
+        id: u.id,
+        name: u.name || u.email || "Без імені",
+        course: u.course_title || (i18n.language === "ru" ? "Без курса" : "Без курсу"),
+        amount: 0,
+      }));
+      setUsers(mapped);
+      setEarnings(mapped);
+    } catch (err) {
+      console.error("Помилка завантаження користувачів:", err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        // можеш потім замінити на бекенд:
-        // const res = await fetch(`${BACKEND}/api/earnings`);
-        // const data = await res.json();
-        // setEarnings(data.earnings);
-        setTimeout(() => {
-          setEarnings([
-            { id: 1, name: "Анна Осипова", amount: 250 },
-            { id: 2, name: "Марія Коваль", amount: 150 },
-            { id: 3, name: "Олена Сидоренко", amount: 0 },
-          ]);
-          setLoading(false);
-        }, 400);
-      } catch (err) {
-        console.error("Помилка завантаження:", err);
-        setLoading(false);
-      }
-    };
-    load();
+    loadUsers();
   }, []);
 
-  // 🔢 Підрахунок суми
+  // 🔢 Підрахунок загальної суми
   useEffect(() => {
     const totalSum = earnings.reduce((sum, e) => sum + Number(e.amount || 0), 0);
     setTotal(totalSum);
@@ -47,8 +48,6 @@ export default function EarningsTab({ i18n, darkMode }) {
     setEarnings(updated);
   };
 
-  const progress = Math.min((total / goal) * 100, 100);
-
   return (
     <section
       className={`p-6 rounded-2xl shadow-lg border transition-all duration-300 ${
@@ -57,29 +56,16 @@ export default function EarningsTab({ i18n, darkMode }) {
           : "border-pink-200 bg-white/70 text-gray-800"
       }`}
     >
-      {/* 🏆 Заголовок */}
+      {/* 🏦 Заголовок */}
       <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-        <TrendingUp className="w-6 h-6 text-pink-500" />
-        {i18n.language === "ru" ? "Заработок" : "Заробіток"}
+        <CreditCard className="w-6 h-6 text-pink-500" />
+        {i18n.language === "ru" ? "История платежей" : "Історія платежів"}
       </h2>
 
-      {/* 📈 Загальний прогрес */}
-      <div className="mb-6">
-        <div className="flex justify-between mb-2 text-sm">
-          <span>
-            {i18n.language === "ru" ? "Общий доход:" : "Загальний дохід:"}{" "}
-            <strong>{total} PLN</strong>
-          </span>
-          <span>
-            {i18n.language === "ru" ? "Цель:" : "Ціль:"} {goal} PLN
-          </span>
-        </div>
-        <div className="w-full h-3 rounded-full bg-pink-200 dark:bg-fuchsia-900/40 overflow-hidden">
-          <div
-            className="h-3 bg-gradient-to-r from-pink-500 via-fuchsia-500 to-rose-400 transition-all duration-500"
-            style={{ width: `${progress}%` }}
-          ></div>
-        </div>
+      {/* 💰 Загальний дохід */}
+      <div className="mb-6 text-lg font-medium">
+        {i18n.language === "ru" ? "Общий доход:" : "Загальний дохід:"}{" "}
+        <span className="text-pink-500 font-bold">{total} PLN</span>
       </div>
 
       {/* 📋 Таблиця */}
@@ -87,9 +73,9 @@ export default function EarningsTab({ i18n, darkMode }) {
         <p className="opacity-70">
           {i18n.language === "ru" ? "Загрузка данных..." : "Завантаження даних..."}
         </p>
-      ) : (
+      ) : users.length > 0 ? (
         <table
-          className={`min-w-[700px] w-full rounded-xl overflow-hidden border ${
+          className={`min-w-[800px] w-full rounded-xl overflow-hidden border ${
             darkMode ? "border-fuchsia-900/30" : "border-pink-200"
           }`}
         >
@@ -98,6 +84,9 @@ export default function EarningsTab({ i18n, darkMode }) {
               <th className="py-2 px-3 text-left">#</th>
               <th className="py-2 px-3 text-left">
                 {i18n.language === "ru" ? "Пользователь" : "Користувач"}
+              </th>
+              <th className="py-2 px-3 text-left">
+                {i18n.language === "ru" ? "Курс" : "Курс"}
               </th>
               <th className="py-2 px-3 text-left">
                 {i18n.language === "ru" ? "Сумма (PLN)" : "Сума (PLN)"}
@@ -119,6 +108,10 @@ export default function EarningsTab({ i18n, darkMode }) {
                   <User className="w-4 h-4 text-pink-500" />
                   {e.name}
                 </td>
+                <td className="py-2 px-3 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4 text-fuchsia-400" />
+                  <span>{e.course}</span>
+                </td>
                 <td className="py-2 px-3">
                   <input
                     type="number"
@@ -135,6 +128,12 @@ export default function EarningsTab({ i18n, darkMode }) {
             ))}
           </tbody>
         </table>
+      ) : (
+        <p className="opacity-70">
+          {i18n.language === "ru"
+            ? "Пользователи не найдены"
+            : "Користувачів ще немає"}
+        </p>
       )}
     </section>
   );
