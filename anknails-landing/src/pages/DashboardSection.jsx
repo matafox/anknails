@@ -1,6 +1,8 @@
 // src/pages/DashboardSection.jsx
+import { useEffect, useState } from "react";
 import { CheckSquare, Star, Info, X } from "lucide-react";
-import { useState } from "react";
+
+const BACKEND = "https://anknails-backend-production.up.railway.app";
 
 export default function DashboardSection({
   modules,
@@ -11,12 +13,29 @@ export default function DashboardSection({
   t,
   user,
 }) {
+  const [showInfo, setShowInfo] = useState(false);
+  const [xp, setXp] = useState(user?.xp || 0);
+  const [level, setLevel] = useState(user?.level || 1);
+
+  // 🧩 Підтягування XP і рівня з бекенду
+  useEffect(() => {
+    if (!user?.id) return;
+    fetch(`${BACKEND}/api/progress/user/${user.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.xp !== undefined) {
+          setXp(data.xp);
+          setLevel(data.level);
+        }
+      })
+      .catch((err) => console.warn("⚠️ XP fetch failed", err));
+  }, [user?.id]);
+
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
-  const realXp = user?.xp ?? completedLessons * 20;
-  const realLevel = user?.level ?? Math.floor(realXp / 100) + 1;
+  const realXp = xp ?? completedLessons * 20;
+  const realLevel = level ?? Math.floor(realXp / 100) + 1;
   const nextLevelXP = 100 * realLevel;
   const progressToNext = ((realXp % 100) / 100) * 100;
-  const [showInfo, setShowInfo] = useState(false);
 
   return (
     <div
@@ -83,123 +102,102 @@ export default function DashboardSection({
               </div>
               <p className="text-sm opacity-70">
                 {t("Ви переглянули", "Вы просмотрели")}{" "}
-                {Object.values(progress).filter((p) => p.completed).length}{" "}
-                {t("уроків з", "уроков из")}{" "}
+                {completedLessons} {t("уроків з", "уроков из")}{" "}
                 {Object.values(progress).length}
               </p>
             </div>
           </div>
 
-{/* ⭐ Рівень користувача */}
-<div
-  className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 ${
-    darkMode
-      ? "bg-gradient-to-br from-[#1a0a1f] to-fuchsia-950/50 border-fuchsia-900/30"
-      : "bg-gradient-to-br from-white to-pink-50 border-pink-200"
-  }`}
->
-  {/* кнопка інформації */}
-  <button
-    onClick={() => setShowInfo(!showInfo)}
-    className="absolute top-3 right-3 p-2 rounded-full hover:bg-pink-100/30 transition z-20"
-    title={t("Як заробляти XP", "Как зарабатывать XP")}
-  >
-    {showInfo ? (
-      <X className="w-5 h-5 text-yellow-400" />
-    ) : (
-      <Info className="w-5 h-5 text-pink-500" />
-    )}
-  </button>
+          {/* ⭐ Рівень користувача */}
+          <div
+            className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 ${
+              darkMode
+                ? "bg-gradient-to-br from-[#1a0a1f] to-fuchsia-950/50 border-fuchsia-900/30"
+                : "bg-gradient-to-br from-white to-pink-50 border-pink-200"
+            }`}
+          >
+            {/* кнопка інформації */}
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-pink-100/30 transition z-20"
+              title={t("Як заробляти XP", "Как зарабатывать XP")}
+            >
+              {showInfo ? (
+                <X className="w-5 h-5 text-yellow-400" />
+              ) : (
+                <Info className="w-5 h-5 text-pink-500" />
+              )}
+            </button>
 
-  {/* Контент, який плавно змінюється */}
-  <div
-    className={`transition-all duration-700 ease-out transform ${
-      showInfo ? "opacity-0 scale-95 pointer-events-none" : "opacity-100 scale-100"
-    }`}
-  >
-    <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2">
-      <Star className="w-5 h-5 text-yellow-400" />
-      {t("Мій рівень", "Мой уровень")}
-    </h3>
-    <div className="text-center">
-      <p className="text-5xl font-extrabold text-pink-500 mb-1">
-        {t("Lv.", "Ур.")} {realLevel}
-      </p>
-      <p className="text-sm opacity-70 mb-3">
-        {realXp} XP / {nextLevelXP} XP
-      </p>
-      <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-2">
-        <div
-          className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-700"
-          style={{ width: `${progressToNext}%` }}
-        ></div>
-      </div>
-      <p className="text-xs opacity-60">
-        {t("До наступного рівня залишилось", "До следующего уровня осталось")}{" "}
-        {100 - (realXp % 100)} XP
-      </p>
-    </div>
-  </div>
-
-  {/* Інформаційна сторінка */}
-  <div
-    className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ease-out transform ${
-      showInfo
-        ? "opacity-100 scale-100 visible"
-        : "opacity-0 scale-95 invisible pointer-events-none"
-    }`}
-  >
-    <div
-      className={`absolute inset-0 rounded-2xl transition-all duration-700 ${
-        darkMode
-          ? "bg-black/80 backdrop-blur-md border border-fuchsia-900/30"
-          : "bg-gradient-to-br from-pink-100 to-white backdrop-blur-md border border-pink-200/50"
-      }`}
-    ></div>
-
-    <div className="relative z-10 animate-fade-in">
-      <h3 className="text-2xl font-bold mb-3 text-yellow-400 drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]">
-        {t("Як заробляти XP", "Как зарабатывать XP")}
-      </h3>
-      <p className="text-sm md:text-base font-medium leading-relaxed text-yellow-200 max-w-md mx-auto mb-5">
-        {t(
-          "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP — новий рівень! Виконуйте домашні завдання — отримуйте бонусні 10 XP.",
-          "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP — новый уровень! Выполняйте домашние задания — бонус 10 XP."
-        )}
-      </p>
-
-      <button
-        onClick={() => setShowInfo(false)}
-        className="px-6 py-2 rounded-xl bg-gradient-to-r from-yellow-400 to-pink-500 text-white font-semibold shadow-md hover:scale-105 transition-transform"
-      >
-        {t("Повернутись", "Вернуться")}
-      </button>
-    </div>
-  </div>
-</div>
-
-            {/* Основний контент */}
-            <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2 relative z-10">
-              <Star className="w-5 h-5 text-yellow-400" />
-              {t("Мій рівень", "Мой уровень")}
-            </h3>
-            <div className="text-center relative z-10">
-              <p className="text-5xl font-extrabold text-pink-500 mb-1">
-                {t("Lv.", "Ур.")} {realLevel}
-              </p>
-              <p className="text-sm opacity-70 mb-3">
-                {realXp} XP / {nextLevelXP} XP
-              </p>
-              <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-2">
-                <div
-                  className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-700"
-                  style={{ width: `${progressToNext}%` }}
-                ></div>
+            {/* контент з плавним переходом */}
+            <div
+              className={`transition-all duration-700 ease-out transform ${
+                showInfo
+                  ? "opacity-0 scale-95 pointer-events-none"
+                  : "opacity-100 scale-100"
+              }`}
+            >
+              <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2">
+                <Star className="w-5 h-5 text-yellow-400" />
+                {t("Мій рівень", "Мой уровень")}
+              </h3>
+              <div className="text-center">
+                <p className="text-5xl font-extrabold text-pink-500 mb-1">
+                  {t("Lv.", "Ур.")} {realLevel}
+                </p>
+                <p className="text-sm opacity-70 mb-3">
+                  {realXp} XP / {nextLevelXP} XP
+                </p>
+                <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-2">
+                  <div
+                    className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-700"
+                    style={{ width: `${progressToNext}%` }}
+                  ></div>
+                </div>
+                <p className="text-xs opacity-60">
+                  {t(
+                    "До наступного рівня залишилось",
+                    "До следующего уровня осталось"
+                  )}{" "}
+                  {100 - (realXp % 100)} XP
+                </p>
               </div>
-              <p className="text-xs opacity-60">
-                {t("До наступного рівня залишилось", "До следующего уровня осталось")}{" "}
-                {100 - (realXp % 100)} XP
-              </p>
+            </div>
+
+            {/* інфо-екран */}
+            <div
+              className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ease-out transform ${
+                showInfo
+                  ? "opacity-100 scale-100 visible"
+                  : "opacity-0 scale-95 invisible pointer-events-none"
+              }`}
+            >
+              <div
+                className={`absolute inset-0 rounded-2xl transition-all duration-700 ${
+                  darkMode
+                    ? "bg-black/80 backdrop-blur-md border border-fuchsia-900/30"
+                    : "bg-gradient-to-br from-pink-100 to-white backdrop-blur-md border border-pink-200/50"
+                }`}
+              ></div>
+
+              <div className="relative z-10 animate-fade-in">
+                <h3 className="text-2xl font-bold mb-3 text-yellow-400 drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]">
+                  {t("Як заробляти XP", "Как зарабатывать XP")}
+                </h3>
+                <p className="text-sm md:text-base font-medium leading-relaxed text-yellow-200 max-w-md mx-auto mb-5">
+                  {t(
+                    "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP — новий рівень! Виконуйте домашні завдання — отримуйте бонусні 10 XP.",
+                    "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP — новый уровень! Выполняйте домашние задания — бонус 10 XP."
+                  )}
+                </p>
+
+                <button
+                  onClick={() => setShowInfo(false)}
+                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-yellow-400 to-pink-500 text-white font-semibold shadow-md hover:scale-105 transition-transform"
+                >
+                  {t("Повернутись", "Вернуться")}
+                </button>
+              </div>
             </div>
           </div>
 
