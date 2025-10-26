@@ -357,11 +357,19 @@ const loadProgress = async (userId) => {
             >
               <thead className={darkMode ? "bg-fuchsia-950/40" : "bg-pink-100"}>
                 <tr>
-                  <th className="py-2 px-3 text-left">Lesson ID</th>
-                  <th className="py-2 px-3 text-left">Назва уроку</th>
-                  <th className="py-2 px-3 text-left">Прогрес</th>
-                  <th className="py-2 px-3 text-left">Домашка</th>
-                </tr>
+  <th className="py-2 px-3 text-left">
+    {i18n.language === "ru" ? "Урок ID" : "Lesson ID"}
+  </th>
+  <th className="py-2 px-3 text-left">
+    {i18n.language === "ru" ? "Название урока" : "Назва уроку"}
+  </th>
+  <th className="py-2 px-3 text-left">
+    {i18n.language === "ru" ? "Прогресс" : "Прогрес"}
+  </th>
+  <th className="py-2 px-3 text-left">
+    {i18n.language === "ru" ? "Домашка" : "Домашка"}
+  </th>
+</tr>
               </thead>
               <tbody>
                 {progress.map((p) => {
