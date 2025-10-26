@@ -337,15 +337,24 @@ export default function CabinetPage() {
         } md:pt-0 pt-16`}
       >
         <div className="p-6 flex-1 overflow-y-auto">
-          <div className="flex flex-col items-center text-center mb-4">
-            <SquareUserRound className="w-16 h-16 text-pink-500 mb-2" />
-            <h2 className="font-bold text-lg">
-              {user.name || user.email.split("@")[0]}
-            </h2>
-            <p className="text-sm opacity-70">
-              {t("Доступ до", "Доступ до")}: {user.expires_at}
-            </p>
-          </div>
+          <div
+  onClick={() => {
+    setSelectedLesson(null);
+    setMenuOpen(false);
+  }}
+  className="flex flex-col items-center text-center mb-4 cursor-pointer group"
+  title={t("Перейти до дашборду", "Перейти к дашборду")}
+>
+  <SquareUserRound
+    className="w-16 h-16 text-pink-500 mb-2 group-hover:scale-110 transition-transform duration-300"
+  />
+  <h2 className="font-bold text-lg group-hover:text-pink-600 transition-colors">
+    {user.name || user.email.split("@")[0]}
+  </h2>
+  <p className="text-sm opacity-70">
+    {t("Доступ до", "Доступ до")}: {user.expires_at}
+  </p>
+</div>
 
           {/* 📊 Загальний прогрес курсу */}
           {overallProgress > 0 && (
