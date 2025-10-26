@@ -20,6 +20,7 @@ import {
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
+
 // ================= SAFEVIDEO =================
 const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   const [videoUrl, setVideoUrl] = useState(null);
@@ -194,6 +195,41 @@ export default function CabinetPage() {
   const [progress, setProgress] = useState({});
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
+
+  // 🚫 Заборона копіювання, виділення, контекстного меню
+useEffect(() => {
+  const handleContextMenu = (e) => e.preventDefault();
+  const handleSelectStart = (e) => e.preventDefault();
+  const handleCopy = (e) => e.preventDefault();
+
+  document.addEventListener("contextmenu", handleContextMenu);
+  document.addEventListener("selectstart", handleSelectStart);
+  document.addEventListener("copy", handleCopy);
+
+  return () => {
+    document.removeEventListener("contextmenu", handleContextMenu);
+    document.removeEventListener("selectstart", handleSelectStart);
+    document.removeEventListener("copy", handleCopy);
+  };
+}, []);
+
+
+  // 🧠 автозавантаження останньої сторінки (дашборд / урок)
+useEffect(() => {
+  const lastView = localStorage.getItem("last_view");
+  const savedLesson = localStorage.getItem("last_lesson");
+
+  if (lastView === "lesson" && savedLesson) {
+    try {
+      setSelectedLesson(JSON.parse(savedLesson));
+    } catch {
+      setSelectedLesson(null);
+    }
+  } else {
+    setSelectedLesson(null);
+  }
+}, []);
+
 
   useEffect(() => {
     const saved = localStorage.getItem("theme");
