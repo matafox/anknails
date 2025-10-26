@@ -21,7 +21,7 @@ import {
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
 // ================= SAFEVIDEO =================
-const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson }) => {
+const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
@@ -136,20 +136,36 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson }) => {
 
   // 🎯 Надсилаємо XP при завершенні уроку
   fetch(`${BACKEND}/api/progress/xp`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      user_id: userId,
-      lesson_id: lesson.id,
-      completed: true,
-    }),
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    user_id: userId,
+    lesson_id: lesson.id,
+    completed: true,
+  }),
+})
+  .then((r) => r.json())
+  .then((res) => {
+    console.log("✅ XP оновлено:", res);
+
+    // 🧩 одразу оновлюємо користувача в стані
+    if (setUser && userId) {
+      fetch(`${BACKEND}/api/progress/user/${userId}`)
+        .then((r) => r.json())
+        .then((data) => {
+          if (data.xp !== undefined) {
+            setUser((prev) => ({
+              ...prev,
+              xp: data.xp,
+              level: data.level,
+            }));
+          }
+        })
+        .catch((err) => console.warn("⚠️ XP refresh failed", err));
+    }
   })
-    .then((r) => r.json())
-    .then((res) => {
-      console.log("✅ XP оновлено:", res);
-      // можна показати повідомлення або оновити рівень на дашборді
-    })
-    .catch((err) => console.warn("⚠️ XP update failed", err));
+  .catch((err) => console.warn("⚠️ XP update failed", err));
+
 
   if (nextLesson) setShowNextButton(true);
 }
@@ -636,6 +652,7 @@ export default function CabinetPage() {
             },
           }));
         }}
+        setUser={setUser} 
       />
 
       {/* 🧾 Домашнє завдання */}
