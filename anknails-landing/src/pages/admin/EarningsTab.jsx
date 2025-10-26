@@ -115,7 +115,9 @@ export default function EarningsTab({ i18n, darkMode }) {
                 }`}
               >
                 {/* № */}
-                <td className="py-3 px-3 text-center font-medium">{i + 1}</td>
+                <td className="py-3 px-3 text-center font-medium" title={`ID: ${u.id}`}>
+  {i + 1}
+</td>
 
                 {/* 👤 Користувач */}
                 <td className="py-3 px-3">
