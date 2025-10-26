@@ -28,6 +28,7 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   const [lastSent, setLastSent] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [showNextButton, setShowNextButton] = useState(false);
+  const [maxWatched, setMaxWatched] = useState(0); // 🔒 запам’ятовуємо максимум проглянутого
 
   const nextLesson = getNextLesson?.(lesson.id);
 
@@ -36,14 +37,12 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
 
     if (lesson.youtube_id?.includes("cloudinary.com")) {
       setVideoUrl(`${BACKEND}/api/video/${lesson.id}`);
-      setLoading(false);
     } else if (lesson.embed_url) {
       setVideoUrl(lesson.embed_url);
-      setLoading(false);
     } else {
       setVideoUrl(null);
-      setLoading(false);
     }
+    setLoading(false);
 
     const email = localStorage.getItem("user_email");
     if (email) {
@@ -56,6 +55,7 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
     }
   }, [lesson]);
 
+  // 🔁 відправка прогресу
   const sendProgress = async (watched, total, done = false) => {
     if (!userId || !lesson?.id || total <= 0) return;
     try {
@@ -70,7 +70,6 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
           completed: done,
         }),
       });
-
       if (onProgressUpdate) onProgressUpdate(lesson.id, watched, total, done);
     } catch (e) {
       console.warn("⚠️ Проблема з оновленням прогресу", e);
@@ -118,61 +117,43 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
           controlsList="nodownload noremoteplayback nofullscreen"
           disablePictureInPicture
           onContextMenu={(e) => e.preventDefault()}
-          style={{
-            userSelect: "none",
-            WebkitUserSelect: "none",
-            MozUserSelect: "none",
-          }}
           onTimeUpdate={(e) => {
             const current = e.target.currentTime;
             const total = e.target.duration;
+
+            // ⛔ Не оновлюємо, якщо користувач перемотав назад
+            if (current < maxWatched - 2) return;
+
+            // 🧠 Запам’ятовуємо найбільшу точку перегляду
+            if (current > maxWatched) setMaxWatched(current);
+
+            // ⏱ Відправляємо прогрес кожні 10 секунд
             if (current - lastSent >= 10) {
               setLastSent(current);
               sendProgress(current, total);
             }
+
+            // 🎯 Завершення уроку
             if (!completed && current >= total * 0.95) {
-  setCompleted(true);
-  sendProgress(total, total, true);
+              setCompleted(true);
+              sendProgress(total, total, true);
 
-  // 🎯 Оновлюємо прогрес і XP
-fetch(`${BACKEND}/api/progress/update`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    user_id: userId,
-    lesson_id: lesson.id,
-    watched_seconds: total,
-    total_seconds: total,
-    completed: true,
-  }),
-})
+              // 🧩 Оновлення XP користувача
+              fetch(`${BACKEND}/api/progress/user/${userId}`)
+                .then((r) => r.json())
+                .then((data) => {
+                  if (setUser && data.xp !== undefined) {
+                    setUser((prev) => ({
+                      ...prev,
+                      xp: data.xp,
+                      level: data.level,
+                    }));
+                  }
+                })
+                .catch((err) => console.warn("⚠️ XP refresh failed", err));
 
-  .then((r) => r.json())
-  .then((res) => {
-    console.log("✅ XP оновлено:", res);
-
-    // 🧩 одразу оновлюємо користувача в стані
-    if (setUser && userId) {
-      fetch(`${BACKEND}/api/progress/user/${userId}`)
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.xp !== undefined) {
-            setUser((prev) => ({
-              ...prev,
-              xp: data.xp,
-              level: data.level,
-            }));
-          }
-        })
-        .catch((err) => console.warn("⚠️ XP refresh failed", err));
-    }
-  })
-  .catch((err) => console.warn("⚠️ XP update failed", err));
-
-
-  if (nextLesson) setShowNextButton(true);
-}
-
+              if (nextLesson) setShowNextButton(true);
+            }
           }}
         >
           {t(
@@ -182,7 +163,7 @@ fetch(`${BACKEND}/api/progress/update`, {
         </video>
       </div>
 
-      {/* Кнопка "Перейти до наступного уроку" */}
+      {/* Кнопка переходу до наступного уроку */}
       {nextLesson && showNextButton && (
         <button
           onClick={() => {
