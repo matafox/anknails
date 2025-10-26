@@ -1,5 +1,5 @@
 // src/pages/DashboardSection.jsx
-import { CheckSquare } from "lucide-react";
+import { CheckSquare, Star } from "lucide-react";
 
 export default function DashboardSection({
   modules,
@@ -9,6 +9,13 @@ export default function DashboardSection({
   darkMode,
   t,
 }) {
+  // 🧮 Розрахунок XP і рівня (1 рівень = 100 XP)
+  const completedLessons = Object.values(progress).filter((p) => p.completed).length;
+  const xp = completedLessons * 20; // 20 XP за кожен завершений урок
+  const level = Math.floor(xp / 100) + 1;
+  const nextLevelXP = 100 * level;
+  const progressToNext = ((xp % 100) / 100) * 100;
+
   return (
     <div
       className={`min-h-[calc(100vh-8rem)] flex flex-col justify-between ${
@@ -18,6 +25,38 @@ export default function DashboardSection({
       {/* ======= Основний контент ======= */}
       <div className="flex-1">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* ⭐ Рівень користувача */}
+          <div
+            className={`p-6 rounded-2xl border shadow-md ${
+              darkMode
+                ? "bg-gradient-to-br from-[#1a0a1f] to-fuchsia-950/50 border-fuchsia-900/30"
+                : "bg-gradient-to-br from-white to-pink-50 border-pink-200"
+            }`}
+          >
+            <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2">
+              <Star className="w-5 h-5 text-yellow-400" />
+              {t("Рівень користувача", "Уровень пользователя")}
+            </h3>
+            <div className="text-center">
+              <p className="text-5xl font-extrabold text-pink-500 mb-1">
+                {t("Lv.", "Ур.")} {level}
+              </p>
+              <p className="text-sm opacity-70 mb-3">
+                {xp} XP / {nextLevelXP} XP
+              </p>
+              <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-2">
+                <div
+                  className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-700"
+                  style={{ width: `${progressToNext}%` }}
+                ></div>
+              </div>
+              <p className="text-xs opacity-60">
+                {t("До наступного рівня залишилось", "До следующего уровня осталось")}{" "}
+                {100 - (xp % 100)} XP
+              </p>
+            </div>
+          </div>
+
           {/* 📦 Модулі */}
           <div
             className={`p-6 rounded-2xl border shadow-md ${
@@ -101,8 +140,6 @@ export default function DashboardSection({
           </div>
         </div>
       </div>
-
-      
     </div>
   );
 }
