@@ -16,6 +16,7 @@ export default function DashboardSection({
   const [showInfo, setShowInfo] = useState(false);
   const [xp, setXp] = useState(user?.xp || 0);
   const [level, setLevel] = useState(user?.level || 1);
+  const [localLessons, setLocalLessons] = useState(lessons || {});
 
   // 🧩 Підтягування XP і рівня з бекенду
   useEffect(() => {
@@ -30,6 +31,27 @@ export default function DashboardSection({
       })
       .catch((err) => console.warn("⚠️ XP fetch failed", err));
   }, [user?.id]);
+
+  // 🧠 Підтягування кількості уроків після першого рендера
+  useEffect(() => {
+    if (!modules?.length) return;
+
+    const fetchAllLessons = async () => {
+      const updated = {};
+      for (const mod of modules) {
+        try {
+          const res = await fetch(`${BACKEND}/api/lessons/${mod.id}`);
+          const data = await res.json();
+          updated[mod.id] = data.lessons || [];
+        } catch (err) {
+          console.warn("⚠️ lesson fetch failed", mod.id, err);
+        }
+      }
+      setLocalLessons(updated);
+    };
+
+    fetchAllLessons();
+  }, [modules]);
 
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
   const realXp = xp ?? completedLessons * 20;
@@ -46,13 +68,13 @@ export default function DashboardSection({
       <div className="flex-1">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 📦 Модулі */}
-<div
-  className={`relative p-6 rounded-2xl border shadow-md transition overflow-y-auto max-h-[400px] ${
-    darkMode
-      ? "bg-[#1a0a1f]/70 border-fuchsia-900/30"
-      : "bg-white border-pink-200"
-  }`}
->
+          <div
+            className={`relative p-6 rounded-2xl border shadow-md transition overflow-y-auto max-h-[400px] ${
+              darkMode
+                ? "bg-[#1a0a1f]/70 border-fuchsia-900/30"
+                : "bg-white border-pink-200"
+            }`}
+          >
             <h3 className="text-xl font-bold mb-3 text-pink-600">
               {t("Мої модулі", "Мои модули")}
             </h3>
@@ -71,7 +93,7 @@ export default function DashboardSection({
                   >
                     <span className="font-medium">{mod.title}</span>
                     <span className="text-sm text-pink-500">
-                      {(lessons[mod.id]?.length || 0)} {t("уроків", "уроков")}
+                      {(localLessons[mod.id]?.length || 0)} {t("уроків", "уроков")}
                     </span>
                   </li>
                 ))}
@@ -180,26 +202,25 @@ export default function DashboardSection({
                 }`}
               ></div>
 
-             <div className="relative z-10 animate-fade-in text-center">
-  <h3
-    className={`text-2xl font-bold mb-3 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]`}
-  >
-    {t("Як заробляти XP", "Как зарабатывать XP")}
-  </h3>
-  <p
-    className={`text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5 ${
-      darkMode
-        ? "text-fuchsia-100 drop-shadow-[0_0_6px_rgba(255,255,255,0.3)]"
-        : "text-gray-700 drop-shadow-[0_0_6px_rgba(0,0,0,0.15)]"
-    }`}
-  >
-    {t(
-      "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP - новий рівень! Виконуйте домашні завдання - отримуйте бонусні 10 XP.",
-      "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP - новый уровень! Выполняйте домашние задания - бонус 10 XP."
-    )}
-  </p>
-</div>
-
+              <div className="relative z-10 animate-fade-in text-center">
+                <h3
+                  className={`text-2xl font-bold mb-3 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]`}
+                >
+                  {t("Як заробляти XP", "Как зарабатывать XP")}
+                </h3>
+                <p
+                  className={`text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5 ${
+                    darkMode
+                      ? "text-fuchsia-100 drop-shadow-[0_0_6px_rgba(255,255,255,0.3)]"
+                      : "text-gray-700 drop-shadow-[0_0_6px_rgba(0,0,0,0.15)]"
+                  }`}
+                >
+                  {t(
+                    "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP - новий рівень! Виконуйте домашні завдання - отримуйте бонусні 10 XP.",
+                    "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP - новый уровень! Выполняйте домашние задания - бонус 10 XP."
+                  )}
+                </p>
+              </div>
             </div>
           </div>
 
