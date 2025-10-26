@@ -180,24 +180,26 @@ export default function DashboardSection({
                 }`}
               ></div>
 
-              <div className="relative z-10 animate-fade-in">
-                <h3 className="text-2xl font-bold mb-3 text-yellow-400 drop-shadow-[0_0_10px_rgba(255,215,0,0.8)]">
-                  {t("Як заробляти XP", "Как зарабатывать XP")}
-                </h3>
-                <p className="text-sm md:text-base font-medium leading-relaxed text-yellow-200 max-w-md mx-auto mb-5">
-                  {t(
-                    "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP — новий рівень! Виконуйте домашні завдання — отримуйте бонусні 10 XP.",
-                    "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP — новый уровень! Выполняйте домашние задания — бонус 10 XP."
-                  )}
-                </p>
+             <div className="relative z-10 animate-fade-in text-center">
+  <h3
+    className={`text-2xl font-bold mb-3 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]`}
+  >
+    {t("Як заробляти XP", "Как зарабатывать XP")}
+  </h3>
+  <p
+    className={`text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5 ${
+      darkMode
+        ? "text-fuchsia-100 drop-shadow-[0_0_6px_rgba(255,255,255,0.3)]"
+        : "text-gray-700 drop-shadow-[0_0_6px_rgba(0,0,0,0.15)]"
+    }`}
+  >
+    {t(
+      "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP - новий рівень! Виконуйте домашні завдання - отримуйте бонусні 10 XP.",
+      "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP - новый уровень! Выполняйте домашние задания - бонус 10 XP."
+    )}
+  </p>
+</div>
 
-                <button
-                  onClick={() => setShowInfo(false)}
-                  className="px-6 py-2 rounded-xl bg-gradient-to-r from-yellow-400 to-pink-500 text-white font-semibold shadow-md hover:scale-105 transition-transform"
-                >
-                  {t("Повернутись", "Вернуться")}
-                </button>
-              </div>
             </div>
           </div>
 
