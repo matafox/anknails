@@ -236,6 +236,8 @@ export default function CabinetPage() {
           name: found.name || null,
           expires_at: new Date(found.expires_at).toLocaleDateString(),
           course_id: found.course_id || null,
+          xp: found.xp || 0,
+          level: found.level || 1,
         });
       })
       .catch(() => (window.location.href = "/login"));
