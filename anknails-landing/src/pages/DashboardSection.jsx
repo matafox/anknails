@@ -1,6 +1,6 @@
 // src/pages/DashboardSection.jsx
 import { useEffect, useState } from "react";
-import { CheckSquare, Star, Info, X } from "lucide-react";
+import { CheckSquare, Award, Info, X } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
@@ -14,22 +14,22 @@ export default function DashboardSection({
   user,
 }) {
   const [showInfo, setShowInfo] = useState(false);
-  const [exp, setExp] = useState(user?.xp || 0);
-  const [level, setLevel] = useState(user?.level || 1);
+  const [skills, setSkills] = useState(user?.xp || 0);
+  const [stage, setStage] = useState(user?.level || 1);
   const [localLessons, setLocalLessons] = useState(lessons || {});
 
-  // 🧩 Підтягування досвіду і рівня з бекенду
+  // 🧩 Підтягування навичок і етапу майстерності
   useEffect(() => {
     if (!user?.id) return;
     fetch(`${BACKEND}/api/progress/user/${user.id}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.xp !== undefined) {
-          setExp(data.xp);
-          setLevel(data.level);
+          setSkills(data.xp);
+          setStage(data.level);
         }
       })
-      .catch((err) => console.warn("⚠️ Experience fetch failed", err));
+      .catch((err) => console.warn("⚠️ Skills fetch failed", err));
   }, [user?.id]);
 
   // 🧠 Підтягування кількості уроків після першого рендера
@@ -54,10 +54,10 @@ export default function DashboardSection({
   }, [modules]);
 
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
-  const realExp = exp ?? completedLessons * 20;
-  const realLevel = level ?? Math.floor(realExp / 100) + 1;
-  const nextLevelExp = 100 * realLevel;
-  const progressToNext = ((realExp % 100) / 100) * 100;
+  const realSkills = skills ?? completedLessons * 20;
+  const realStage = stage ?? Math.floor(realSkills / 100) + 1;
+  const nextStageSkills = 100 * realStage;
+  const progressToNext = ((realSkills % 100) / 100) * 100;
 
   return (
     <div
@@ -130,7 +130,7 @@ export default function DashboardSection({
             </div>
           </div>
 
-          {/* ⭐ Рівень користувача */}
+          {/* 💅 Етап майстерності */}
           <div
             className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 ${
               darkMode
@@ -142,7 +142,7 @@ export default function DashboardSection({
             <button
               onClick={() => setShowInfo(!showInfo)}
               className="absolute top-3 right-3 p-2 rounded-full hover:bg-pink-100/30 transition z-20"
-              title={t("Як заробляти досвід", "Как зарабатывать опыт")}
+              title={t("Як підвищити майстерність", "Как развивать мастерство")}
             >
               {showInfo ? (
                 <X className="w-5 h-5 text-yellow-400" />
@@ -151,7 +151,7 @@ export default function DashboardSection({
               )}
             </button>
 
-            {/* контент з плавним переходом */}
+            {/* контент */}
             <div
               className={`transition-all duration-700 ease-out transform ${
                 showInfo
@@ -160,16 +160,16 @@ export default function DashboardSection({
               }`}
             >
               <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2">
-                <Star className="w-5 h-5 text-yellow-400" />
-                {t("Мій рівень", "Мой уровень")}
+                <Award className="w-5 h-5 text-yellow-400" />
+                {t("Моя майстерність", "Моё мастерство")}
               </h3>
               <div className="text-center">
                 <p className="text-5xl font-extrabold text-pink-500 mb-1">
-                  {t("Рів.", "Ур.")} {realLevel}
+                  {t("Етап", "Этап")} {realStage}
                 </p>
                 <p className="text-sm opacity-70 mb-3">
-                  {realExp} {t("досвіду", "опыта")} / {nextLevelExp}{" "}
-                  {t("досвіду", "опыта")}
+                  {realSkills} {t("навичок", "навыков")} / {nextStageSkills}{" "}
+                  {t("навичок", "навыков")}
                 </p>
                 <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-2">
                   <div
@@ -178,16 +178,13 @@ export default function DashboardSection({
                   ></div>
                 </div>
                 <p className="text-xs opacity-60">
-                  {t(
-                    "До наступного рівня залишилось",
-                    "До следующего уровня осталось"
-                  )}{" "}
-                  {100 - (realExp % 100)} {t("досвіду", "опыта")}
+                  {t("До наступного етапу залишилось", "До следующего этапа осталось")}{" "}
+                  {100 - (realSkills % 100)} {t("навичок", "навыков")}
                 </p>
               </div>
             </div>
 
-            {/* інфо-екран */}
+            {/* інфо-вікно */}
             <div
               className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ease-out transform ${
                 showInfo
@@ -207,7 +204,7 @@ export default function DashboardSection({
                 <h3
                   className={`text-2xl font-bold mb-3 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]`}
                 >
-                  {t("Як заробляти досвід", "Как зарабатывать опыт")}
+                  {t("Як розвивати майстерність", "Как развивать мастерство")}
                 </h3>
                 <p
                   className={`text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5 ${
@@ -217,8 +214,8 @@ export default function DashboardSection({
                   }`}
                 >
                   {t(
-                    "Завершуйте уроки, щоб отримувати досвід. Кожен завершений урок приносить 20 одиниць досвіду. Кожні 100 — новий рівень! Виконуйте домашні завдання — отримуйте бонусні 10 одиниць досвіду.",
-                    "Проходите уроки, чтобы получать опыт. За каждый урок начисляется 20 единиц опыта. Каждые 100 — новый уровень! Выполняйте домашние задания — бонус 10 единиц опыта."
+                    "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 — новий етап! Виконуйте домашні завдання — отримуйте бонусні 10 одиниць майстерності.",
+                    "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 — новый этап! Выполняйте домашние задания — бонус 10 единиц мастерства."
                   )}
                 </p>
               </div>
