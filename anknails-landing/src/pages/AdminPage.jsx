@@ -20,6 +20,7 @@ import ModulesTab from "./admin/ModulesTab";
 import BannerTab from "./admin/BannerTab";
 import SettingsTab from "./admin/SettingsTab";
 import CoursesTab from "./admin/CoursesTab";
+import EarningsTab from "./admin/EarningsTab";
 
 export default function AdminPage() {
   const { i18n } = useTranslation();
@@ -88,11 +89,7 @@ export default function AdminPage() {
     { id: "courses", label: i18n.language === "ru" ? "Курсы" : "Курси", icon: Layers },
     { id: "modules", label: i18n.language === "ru" ? "Модули" : "Модулі", icon: BookOpen },
     { id: "banner", label: i18n.language === "ru" ? "Баннер" : "Банер", icon: Image },
-    {
-    id: "earnings",
-    label: i18n.language === "ru" ? "Заработок" : "Заробіток",
-    icon: DollarSign,
-    },    
+    { id: "earnings", label: i18n.language === "ru" ? "Заработок" : "Заробіток", icon: DollarSign },  
     { id: "settings", label: i18n.language === "ru" ? "Настройки" : "Налаштування", icon: Settings },
   ];
 
@@ -228,24 +225,7 @@ export default function AdminPage() {
           {activeTab === "courses" && <CoursesTab darkMode={darkMode} i18n={i18n} />}
           {activeTab === "modules" && <ModulesTab darkMode={darkMode} i18n={i18n} />}
           {activeTab === "banner" && <BannerTab darkMode={darkMode} i18n={i18n} />}
-          {activeTab === "earnings" && (
-  <div
-    className={`p-6 rounded-2xl border shadow-lg ${
-      darkMode
-        ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 text-fuchsia-100"
-        : "border-pink-200 bg-white/70 text-gray-800"
-    }`}
-  >
-    <h2 className="text-2xl font-semibold mb-4">
-      {i18n.language === "ru" ? "Заработок" : "Заробіток"}
-    </h2>
-    <p className="opacity-80">
-      {i18n.language === "ru"
-        ? "Здесь будет информация о доходах"
-        : "Тут буде інформація про заробіток"}
-    </p>
-  </div>
-)}
+          {activeTab === "earnings" && <EarningsTab darkMode={darkMode} i18n={i18n} />}
           {activeTab === "settings" && <SettingsTab darkMode={darkMode} i18n={i18n} />}
         </div>
 
