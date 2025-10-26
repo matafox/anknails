@@ -131,7 +131,7 @@ export default function DashboardSection({
 
             <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-400" />
-              {t("Рівень учня", "Уровень ученика")}
+              {t("Мій рівень", "Мой уровень")}
             </h3>
             <div className="text-center">
               <p className="text-5xl font-extrabold text-pink-500 mb-1">
