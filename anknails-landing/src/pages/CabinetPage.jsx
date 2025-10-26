@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import DashboardSection from "./DashboardSection";
 import { useTranslation } from "react-i18next";
 import {
   LogOut,
@@ -546,13 +547,16 @@ export default function CabinetPage() {
     </div>
   )}
 
-  {!selectedLesson ? (
-    <div className="flex items-center justify-center h-full text-center opacity-70">
-      <p className="text-lg">
-        {t("Оберіть урок у меню зліва", "Выберите урок в меню слева")}
-      </p>
-    </div>
-  ) : (
+ {!selectedLesson ? (
+  <DashboardSection
+    modules={modules}
+    lessons={lessons}
+    progress={progress}
+    overallProgress={overallProgress}
+    darkMode={darkMode}
+    t={t}
+  />
+) : (
     <div
       className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
         darkMode
