@@ -110,26 +110,28 @@ export default function DashboardSection({
             </button>
 
             {/* інфо-панель */}
-            {showInfo && (
-              <div
-                onClick={() => setShowInfo(false)}
-                className="absolute inset-0 bg-black/80 backdrop-blur-md flex flex-col items-center justify-center text-center px-6 cursor-pointer transition-opacity duration-300"
-              >
-                <p className="text-lg font-bold text-yellow-400 mb-2">
-                  {t("Як заробляти XP", "Как зарабатывать XP")}
-                </p>
-                <p className="text-sm opacity-90">
-                  {t(
-                    "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP — новий рівень!",
-                    "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP — новый уровень!"
-                  )}
-                </p>
-              </div>
-            )}
+            <div
+              className={`absolute inset-0 flex flex-col items-center justify-center text-center px-6 backdrop-blur-md transition-all duration-500 ${
+                showInfo
+                  ? "opacity-100 visible bg-gradient-to-br from-black/80 via-fuchsia-950/80 to-pink-950/60 scale-100 shadow-[0_0_40px_rgba(255,215,0,0.4)]"
+                  : "opacity-0 invisible scale-95"
+              }`}
+              onClick={() => setShowInfo(false)}
+            >
+              <p className="text-lg font-bold text-yellow-400 mb-2 drop-shadow-[0_0_5px_rgba(255,215,0,0.6)]">
+                {t("Як заробляти XP", "Как зарабатывать XP")}
+              </p>
+              <p className="text-sm font-medium text-yellow-300 drop-shadow-[0_0_4px_rgba(255,215,0,0.7)] leading-relaxed">
+                {t(
+                  "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP — новий рівень!",
+                  "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP — новый уровень!"
+                )}
+              </p>
+            </div>
 
             <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-400" />
-              {t("Рівень користувача", "Уровень пользователя")}
+              {t("Рівень учня", "Уровень ученика")}
             </h3>
             <div className="text-center">
               <p className="text-5xl font-extrabold text-pink-500 mb-1">
