@@ -12,6 +12,8 @@ export default function ModulesTab({ darkMode, i18n }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
   const [courses, setCourses] = useState([]);
   const [selectedCourse, setSelectedCourse] = useState(null);
+  const [draggedLesson, setDraggedLesson] = useState(null);
+  const [orderChanged, setOrderChanged] = useState(false);
   const [modules, setModules] = useState([]);
   const [form, setForm] = useState({ title: "", description: "" });
   const [editId, setEditId] = useState(null);
@@ -179,6 +181,38 @@ export default function ModulesTab({ darkMode, i18n }) {
     });
   };
 
+  // 🔀 Почати перетягування
+const handleDragStart = (lesson) => setDraggedLesson(lesson);
+
+// 💫 Коли відпускаємо
+const handleDrop = (moduleId, targetLesson) => {
+  if (!draggedLesson || draggedLesson.id === targetLesson.id) return;
+  const updated = [...lessons[moduleId]];
+  const fromIndex = updated.findIndex((l) => l.id === draggedLesson.id);
+  const toIndex = updated.findIndex((l) => l.id === targetLesson.id);
+  const [moved] = updated.splice(fromIndex, 1);
+  updated.splice(toIndex, 0, moved);
+  setLessons((prev) => ({ ...prev, [moduleId]: updated }));
+  setDraggedLesson(null);
+  setOrderChanged(true);
+};
+
+// 💾 Зберегти порядок у базі
+const saveLessonOrder = async (moduleId) => {
+  const order = lessons[moduleId].map((l, index) => ({
+    id: l.id,
+    position: index + 1,
+  }));
+  await fetch(`${BACKEND}/api/lessons/reorder`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token: "anka12341", order }),
+  });
+  setOrderChanged(false);
+  alert("✅ Порядок оновлено");
+};
+
+
   return (
     <div className="space-y-10">
       {/* 🏫 Вибір курсу */}
@@ -275,6 +309,10 @@ export default function ModulesTab({ darkMode, i18n }) {
                 {(lessons[mod.id] || []).map((l) => (
                   <div
                     key={l.id}
+                    draggable
+  onDragStart={() => handleDragStart(l)}
+  onDragOver={(e) => e.preventDefault()}
+  onDrop={() => handleDrop(mod.id, l)}
                     className={`p-3 rounded-lg text-sm ${
                       darkMode ? "bg-fuchsia-950/40" : "bg-pink-50"
                     }`}
@@ -341,6 +379,16 @@ export default function ModulesTab({ darkMode, i18n }) {
                     </div>
                   </div>
                 ))}
+
+                {orderChanged && (
+  <button
+    onClick={() => saveLessonOrder(mod.id)}
+    className="w-full mt-3 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg font-semibold flex items-center justify-center gap-2"
+  >
+    <Save className="w-4 h-4" /> {t("Зберегти порядок", "Сохранить порядок")}
+  </button>
+)}
+
 
                 {/* ➕ Форма уроку */}
                 <form
