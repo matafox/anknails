@@ -14,22 +14,22 @@ export default function DashboardSection({
   user,
 }) {
   const [showInfo, setShowInfo] = useState(false);
-  const [xp, setXp] = useState(user?.xp || 0);
+  const [exp, setExp] = useState(user?.xp || 0);
   const [level, setLevel] = useState(user?.level || 1);
   const [localLessons, setLocalLessons] = useState(lessons || {});
 
-  // 🧩 Підтягування XP і рівня з бекенду
+  // 🧩 Підтягування досвіду і рівня з бекенду
   useEffect(() => {
     if (!user?.id) return;
     fetch(`${BACKEND}/api/progress/user/${user.id}`)
       .then((r) => r.json())
       .then((data) => {
         if (data.xp !== undefined) {
-          setXp(data.xp);
+          setExp(data.xp);
           setLevel(data.level);
         }
       })
-      .catch((err) => console.warn("⚠️ XP fetch failed", err));
+      .catch((err) => console.warn("⚠️ Experience fetch failed", err));
   }, [user?.id]);
 
   // 🧠 Підтягування кількості уроків після першого рендера
@@ -54,10 +54,10 @@ export default function DashboardSection({
   }, [modules]);
 
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
-  const realXp = xp ?? completedLessons * 20;
-  const realLevel = level ?? Math.floor(realXp / 100) + 1;
-  const nextLevelXP = 100 * realLevel;
-  const progressToNext = ((realXp % 100) / 100) * 100;
+  const realExp = exp ?? completedLessons * 20;
+  const realLevel = level ?? Math.floor(realExp / 100) + 1;
+  const nextLevelExp = 100 * realLevel;
+  const progressToNext = ((realExp % 100) / 100) * 100;
 
   return (
     <div
@@ -142,7 +142,7 @@ export default function DashboardSection({
             <button
               onClick={() => setShowInfo(!showInfo)}
               className="absolute top-3 right-3 p-2 rounded-full hover:bg-pink-100/30 transition z-20"
-              title={t("Як заробляти XP", "Как зарабатывать XP")}
+              title={t("Як заробляти досвід", "Как зарабатывать опыт")}
             >
               {showInfo ? (
                 <X className="w-5 h-5 text-yellow-400" />
@@ -165,10 +165,11 @@ export default function DashboardSection({
               </h3>
               <div className="text-center">
                 <p className="text-5xl font-extrabold text-pink-500 mb-1">
-                  {t("Lv.", "Ур.")} {realLevel}
+                  {t("Рів.", "Ур.")} {realLevel}
                 </p>
                 <p className="text-sm opacity-70 mb-3">
-                  {realXp} XP / {nextLevelXP} XP
+                  {realExp} {t("досвіду", "опыта")} / {nextLevelExp}{" "}
+                  {t("досвіду", "опыта")}
                 </p>
                 <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-2">
                   <div
@@ -181,7 +182,7 @@ export default function DashboardSection({
                     "До наступного рівня залишилось",
                     "До следующего уровня осталось"
                   )}{" "}
-                  {100 - (realXp % 100)} XP
+                  {100 - (realExp % 100)} {t("досвіду", "опыта")}
                 </p>
               </div>
             </div>
@@ -206,7 +207,7 @@ export default function DashboardSection({
                 <h3
                   className={`text-2xl font-bold mb-3 bg-gradient-to-r from-pink-400 via-fuchsia-400 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_8px_rgba(255,255,255,0.4)]`}
                 >
-                  {t("Як заробляти XP", "Как зарабатывать XP")}
+                  {t("Як заробляти досвід", "Как зарабатывать опыт")}
                 </h3>
                 <p
                   className={`text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5 ${
@@ -216,8 +217,8 @@ export default function DashboardSection({
                   }`}
                 >
                   {t(
-                    "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP - новий рівень! Виконуйте домашні завдання - отримуйте бонусні 10 XP.",
-                    "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP - новый уровень! Выполняйте домашние задания - бонус 10 XP."
+                    "Завершуйте уроки, щоб отримувати досвід. Кожен завершений урок приносить 20 одиниць досвіду. Кожні 100 — новий рівень! Виконуйте домашні завдання — отримуйте бонусні 10 одиниць досвіду.",
+                    "Проходите уроки, чтобы получать опыт. За каждый урок начисляется 20 единиц опыта. Каждые 100 — новый уровень! Выполняйте домашние задания — бонус 10 единиц опыта."
                   )}
                 </p>
               </div>
