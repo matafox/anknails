@@ -11,8 +11,8 @@ export default function DashboardSection({
   t,
 }) {
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
-  const xp = completedLessons * 20;
-  const level = Math.floor(xp / 100) + 1;
+  const realXp = user?.xp ?? completedLessons * 20;
+const realLevel = user?.level ?? Math.floor(realXp / 100) + 1;
   const nextLevelXP = 100 * level;
   const progressToNext = ((xp % 100) / 100) * 100;
   const [showInfo, setShowInfo] = useState(false);
