@@ -14,6 +14,7 @@ import {
   ChevronLeft,
   ChevronRight,
   DollarSign,
+  Grid,
 } from "lucide-react";
 
 import ModulesTab from "./admin/ModulesTab";
@@ -21,10 +22,11 @@ import BannerTab from "./admin/BannerTab";
 import SettingsTab from "./admin/SettingsTab";
 import CoursesTab from "./admin/CoursesTab";
 import EarningsTab from "./admin/EarningsTab";
+import DashboardTab from "./admin/DashboardTab"; // ✅ новий імпорт
 
 export default function AdminPage() {
   const { i18n } = useTranslation();
-  const [activeTab, setActiveTab] = useState("courses");
+  const [activeTab, setActiveTab] = useState("dashboard");
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
@@ -85,11 +87,13 @@ export default function AdminPage() {
     window.location.href = "/";
   };
 
+  // 🧭 Вкладки меню
   const tabs = [
+    { id: "dashboard", label: "Dashboard", icon: Grid },
     { id: "courses", label: i18n.language === "ru" ? "Курсы" : "Курси", icon: Layers },
     { id: "modules", label: i18n.language === "ru" ? "Модули" : "Модулі", icon: BookOpen },
     { id: "banner", label: i18n.language === "ru" ? "Баннер" : "Банер", icon: Image },
-    { id: "earnings", label: i18n.language === "ru" ? "Заработок" : "Заробіток", icon: DollarSign },  
+    { id: "earnings", label: i18n.language === "ru" ? "Заработок" : "Заробіток", icon: DollarSign },
     { id: "settings", label: i18n.language === "ru" ? "Настройки" : "Налаштування", icon: Settings },
   ];
 
@@ -127,15 +131,6 @@ export default function AdminPage() {
               <X className="w-5 h-5" />
             </button>
 
-            {/* Кнопка згортання */}
-            <button
-              onClick={toggleCollapse}
-              className="absolute top-2 right-[-12px] hidden md:flex items-center justify-center w-6 h-6 rounded-full bg-pink-500 text-white shadow-md hover:scale-110 transition-transform"
-              title={collapsed ? "Розгорнути" : "Згорнути"}
-            >
-              {collapsed ? <ChevronRight size={16} /> : <ChevronLeft size={16} />}
-            </button>
-
             {/* Заголовок */}
             {!collapsed && (
               <h2 className="text-2xl font-bold bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 text-transparent bg-clip-text mb-6 text-center md:text-left">
@@ -143,7 +138,7 @@ export default function AdminPage() {
               </h2>
             )}
 
-            {/* Навігаційні кнопки */}
+            {/* Навігація */}
             <nav className="space-y-2 mb-6">
               {tabs.map(({ id, label, icon: Icon }) => (
                 <button
@@ -171,7 +166,7 @@ export default function AdminPage() {
               ))}
             </nav>
 
-            {/* 🌗 Перемикач теми */}
+            {/* 🌗 Тема */}
             <button
               onClick={toggleTheme}
               className={`flex items-center ${
@@ -191,7 +186,7 @@ export default function AdminPage() {
                   : "Темна тема")}
             </button>
 
-            {/* 🌐 Перемикач мови */}
+            {/* 🌐 Мова */}
             <button
               onClick={toggleLanguage}
               className={`flex items-center ${
@@ -205,23 +200,45 @@ export default function AdminPage() {
             </button>
           </div>
 
-          {/* 🚪 Вихід */}
-          <button
-            onClick={handleLogout}
-            className={`mt-6 flex items-center ${
-              collapsed ? "justify-center" : "gap-2"
-            } text-sm font-semibold text-pink-500 hover:text-rose-500 transition`}
-            title={collapsed ? (i18n.language === "ru" ? "Выйти" : "Вийти") : ""}
-          >
-            <LogOut className="w-4 h-4" />
-            {!collapsed && (i18n.language === "ru" ? "Выйти" : "Вийти")}
-          </button>
+{/* Нижній блок */}
+<div className="mt-8 flex flex-col items-center gap-3">
+  {/* ↔ Кнопка згортання */}
+  <button
+    onClick={toggleCollapse}
+    className={`flex items-center justify-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium transition-all hover:scale-[1.03]
+    border-pink-300 text-pink-500 dark:border-fuchsia-800 dark:text-fuchsia-200`}
+  >
+    {collapsed ? (
+      <>
+        <ChevronRight className="w-4 h-4" />
+        {!collapsed && "Розгорнути"}
+      </>
+    ) : (
+      <>
+        <ChevronLeft className="w-4 h-4" />
+        {!collapsed && (i18n.language === "ru" ? "Свернуть меню" : "Згорнути меню")}
+      </>
+    )}
+  </button>
+
+  {/* 🚪 Вихід */}
+  <button
+    onClick={handleLogout}
+    className={`flex items-center justify-center gap-2 text-sm font-semibold text-pink-500 hover:text-rose-500 transition`}
+  >
+    <LogOut className="w-4 h-4" />
+    {!collapsed && (i18n.language === "ru" ? "Выйти" : "Вийти")}
+  </button>
+</div>
         </div>
       </aside>
 
-      {/* 🌸 Контент + прилиплий футер */}
+      {/* 🌸 Контент */}
       <main className="flex-1 flex flex-col min-h-screen p-4 sm:p-6 md:p-8">
         <div className="flex-1 overflow-y-auto">
+          {activeTab === "dashboard" && (
+            <DashboardTab darkMode={darkMode} i18n={i18n} setActiveTab={setActiveTab} />
+          )}
           {activeTab === "courses" && <CoursesTab darkMode={darkMode} i18n={i18n} />}
           {activeTab === "modules" && <ModulesTab darkMode={darkMode} i18n={i18n} />}
           {activeTab === "banner" && <BannerTab darkMode={darkMode} i18n={i18n} />}
@@ -240,9 +257,7 @@ export default function AdminPage() {
           <p className="font-medium">
             © {new Date().getFullYear()}{" "}
             <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
-            {i18n.language === "ru"
-              ? "Все права защищены."
-              : "Усі права захищені."}
+            {i18n.language === "ru" ? "Все права защищены." : "Усі права захищені."}
           </p>
         </footer>
       </main>
