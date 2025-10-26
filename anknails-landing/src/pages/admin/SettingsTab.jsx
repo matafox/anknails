@@ -293,19 +293,23 @@ const loadProgress = async (userId) => {
                   <td className="py-2 px-3 font-mono opacity-80">{u.password}</td>
                   <td className="py-2 px-3">
                     <select
-                      defaultValue={u.course_id || ""}
-                      onChange={(e) => handleCourseChange(u.id, e.target.value)}
-                      className="px-2 py-1 rounded-md border border-pink-300 text-sm outline-none bg-white/70"
-                    >
-                      <option value="">
-                        {i18n.language === "ru" ? "Без курса" : "Без курсу"}
-                      </option>
-                      {courses.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.title}
-                        </option>
-                      ))}
-                    </select>
+  value={u.course_id ?? ""}
+  onChange={(e) => handleCourseChange(u.id, e.target.value ? Number(e.target.value) : null)}
+  className={`px-2 py-1 rounded-md border text-sm outline-none ${
+    darkMode
+      ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
+      : "bg-white/70 border-pink-200 focus:border-pink-500"
+  }`}
+>
+  <option value="">
+    {i18n.language === "ru" ? "Без курса" : "Без курсу"}
+  </option>
+  {courses.map((c) => (
+    <option key={c.id} value={c.id}>
+      {c.title}
+    </option>
+  ))}
+</select>
                   </td>
                   <td className="py-2 px-3">
                     {new Date(u.expires_at).toLocaleDateString()}
