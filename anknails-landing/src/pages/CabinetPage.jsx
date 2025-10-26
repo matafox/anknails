@@ -279,6 +279,34 @@ useEffect(() => {
       .catch(() => (window.location.href = "/login"));
   }, []);
 
+  // 🧠 Перевірка, що акаунт відкрито тільки на одному пристрої
+useEffect(() => {
+  const email = localStorage.getItem("user_email");
+  const token = localStorage.getItem("session_token");
+
+  if (!email || !token) return;
+
+  fetch(`${BACKEND}/api/check-session`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, token }),
+  })
+    .then((r) => r.json())
+    .then((res) => {
+      if (!res.valid) {
+        alert(
+          i18n.language === "ru"
+            ? "Ваш аккаунт открыт на другом устройстве."
+            : "Ваш акаунт відкрито на іншому пристрої."
+        );
+        localStorage.clear();
+        window.location.href = "/login";
+      }
+    })
+    .catch(() => {});
+}, []);
+
+
   // 🧠 автозавантаження останнього уроку
   useEffect(() => {
     const savedLesson = localStorage.getItem("last_lesson");
