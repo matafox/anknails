@@ -46,13 +46,13 @@ export default function DashboardSection({
       <div className="flex-1">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 📦 Модулі */}
-          <div
-            className={`relative p-6 rounded-2xl border shadow-md transition ${
-              darkMode
-                ? "bg-[#1a0a1f]/70 border-fuchsia-900/30"
-                : "bg-white border-pink-200"
-            }`}
-          >
+<div
+  className={`relative p-6 rounded-2xl border shadow-md transition overflow-y-auto max-h-[400px] ${
+    darkMode
+      ? "bg-[#1a0a1f]/70 border-fuchsia-900/30"
+      : "bg-white border-pink-200"
+  }`}
+>
             <h3 className="text-xl font-bold mb-3 text-pink-600">
               {t("Мої модулі", "Мои модули")}
             </h3>
