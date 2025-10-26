@@ -32,21 +32,21 @@ export default function EarningsTab({ i18n, darkMode }) {
     loadUsers();
   }, []);
 
-  // ✏️ зміна суми
+  // ✏️ зміна суми (автозбереження)
   const handleAmountChange = (id, value) => {
     const updatedUsers = users.map((u) =>
       u.id === id ? { ...u, amount: Number(value) || 0 } : u
     );
     setUsers(updatedUsers);
 
-    // автоматичне збереження з debounce 0.5 сек
     if (debounceRef.current) clearTimeout(debounceRef.current);
     debounceRef.current = setTimeout(() => {
-      savePayment(updatedUsers.find((u) => u.id === id));
+      const user = updatedUsers.find((u) => u.id === id);
+      if (user) savePayment(user);
     }, 500);
   };
 
-  // 💾 збереження однієї оплати
+  // 💾 збереження оплати
   const savePayment = async (user) => {
     try {
       await fetch(`${BACKEND}/api/payments/save`, {
@@ -61,7 +61,7 @@ export default function EarningsTab({ i18n, darkMode }) {
       });
       console.log("✅ Saved payment for:", user.name);
     } catch (err) {
-      console.error("Помилка збереження платежу:", err);
+      console.error("❌ Помилка збереження платежу:", err);
     }
   };
 
@@ -91,7 +91,7 @@ export default function EarningsTab({ i18n, darkMode }) {
         >
           <thead className={darkMode ? "bg-fuchsia-950/40" : "bg-pink-100"}>
             <tr>
-              <th className="py-2 px-3 text-left">#</th>
+              <th className="py-2 px-3 text-center">#</th>
               <th className="py-2 px-3 text-left">
                 {i18n.language === "ru" ? "Пользователь" : "Користувач"}
               </th>
@@ -103,6 +103,7 @@ export default function EarningsTab({ i18n, darkMode }) {
               </th>
             </tr>
           </thead>
+
           <tbody>
             {users.map((u, i) => (
               <tr
@@ -113,16 +114,27 @@ export default function EarningsTab({ i18n, darkMode }) {
                     : "border-pink-200 hover:bg-pink-50"
                 }`}
               >
-                <td className="py-2 px-3">{i + 1}</td>
-                <td className="py-2 px-3 flex items-center gap-2">
-                  <User className="w-4 h-4 text-pink-500" />
-                  {u.name}
+                {/* № */}
+                <td className="py-3 px-3 text-center font-medium">{i + 1}</td>
+
+                {/* 👤 Користувач */}
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-2">
+                    <User className="w-4 h-4 text-pink-500" />
+                    <span className="font-medium">{u.name}</span>
+                  </div>
                 </td>
-                <td className="py-2 px-3 flex items-center gap-2">
-                  <BookOpen className="w-4 h-4 text-fuchsia-400" />
-                  <span>{u.course}</span>
+
+                {/* 📘 Курс */}
+                <td className="py-3 px-3">
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-fuchsia-400" />
+                    <span className="font-medium">{u.course}</span>
+                  </div>
                 </td>
-                <td className="py-2 px-3">
+
+                {/* 💰 Сума */}
+                <td className="py-3 px-3">
                   <input
                     type="number"
                     value={u.amount}
