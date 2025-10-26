@@ -131,10 +131,29 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson }) => {
               sendProgress(current, total);
             }
             if (!completed && current >= total * 0.95) {
-              setCompleted(true);
-              sendProgress(total, total, true);
-              if (nextLesson) setShowNextButton(true);
-            }
+  setCompleted(true);
+  sendProgress(total, total, true);
+
+  // 🎯 Надсилаємо XP при завершенні уроку
+  fetch(`${BACKEND}/api/progress/xp`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      user_id: userId,
+      lesson_id: lesson.id,
+      completed: true,
+    }),
+  })
+    .then((r) => r.json())
+    .then((res) => {
+      console.log("✅ XP оновлено:", res);
+      // можна показати повідомлення або оновити рівень на дашборді
+    })
+    .catch((err) => console.warn("⚠️ XP update failed", err));
+
+  if (nextLesson) setShowNextButton(true);
+}
+
           }}
         >
           {t(
@@ -564,6 +583,7 @@ export default function CabinetPage() {
     overallProgress={overallProgress}
     darkMode={darkMode}
     t={t}
+    user={user}
   />
 ) : (
     <div
