@@ -83,7 +83,8 @@ export default function DashboardSection({
                   >
                     <span className="font-medium">{mod.title}</span>
                     <span className="text-sm text-pink-500">
-                      {(lessons[mod.id]?.length || 0)} уроків
+                      {(lessons[mod.id]?.length || 0)}{" "}
+                      {t("уроків", "уроков")}
                     </span>
                   </li>
                 ))}
@@ -91,7 +92,7 @@ export default function DashboardSection({
             )}
           </div>
 
-          {/* 📈 Прогрес */}
+          {/* 📈 Прогрес курсу */}
           <div
             className={`p-6 rounded-2xl border shadow-md ${
               darkMode
