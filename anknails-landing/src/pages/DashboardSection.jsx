@@ -1,5 +1,5 @@
 // src/pages/DashboardSection.jsx
-import { CheckSquare, Star, Info } from "lucide-react";
+import { CheckSquare, Star, Info, X } from "lucide-react";
 import { useState } from "react";
 
 export default function DashboardSection({
@@ -9,12 +9,13 @@ export default function DashboardSection({
   overallProgress,
   darkMode,
   t,
+  user,
 }) {
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
   const realXp = user?.xp ?? completedLessons * 20;
-const realLevel = user?.level ?? Math.floor(realXp / 100) + 1;
-  const nextLevelXP = 100 * level;
-  const progressToNext = ((xp % 100) / 100) * 100;
+  const realLevel = user?.level ?? Math.floor(realXp / 100) + 1;
+  const nextLevelXP = 100 * realLevel;
+  const progressToNext = ((realXp % 100) / 100) * 100;
   const [showInfo, setShowInfo] = useState(false);
 
   return (
@@ -99,8 +100,8 @@ const realLevel = user?.level ?? Math.floor(realXp / 100) + 1;
           >
             {/* кнопка інформації */}
             <button
-              onClick={() => setShowInfo(!showInfo)}
-              className="absolute top-3 right-3 p-2 rounded-full hover:bg-pink-100/30 transition"
+              onClick={() => setShowInfo(true)}
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-pink-100/30 transition z-20"
               title={t("Як заробляти XP", "Как зарабатывать XP")}
             >
               <Info className="w-5 h-5 text-pink-500" />
@@ -108,34 +109,52 @@ const realLevel = user?.level ?? Math.floor(realXp / 100) + 1;
 
             {/* інфо-панель */}
             <div
-              className={`absolute inset-0 flex flex-col items-center justify-center text-center px-6 backdrop-blur-[6px] transition-all duration-500 ${
+              className={`absolute inset-0 flex flex-col items-center justify-center text-center px-6 transition-all duration-500 ${
                 showInfo
-                  ? "opacity-100 visible bg-gradient-to-br from-black/95 via-black/90 to-fuchsia-950/90 scale-100 shadow-[0_0_60px_rgba(255,215,0,0.45)]"
+                  ? "opacity-100 visible scale-100"
                   : "opacity-0 invisible scale-95"
               }`}
-              onClick={() => setShowInfo(false)}
             >
-              <p className="text-lg font-bold text-yellow-400 mb-3 drop-shadow-[0_0_6px_rgba(255,215,0,0.8)]">
-                {t("Як заробляти XP", "Как зарабатывать XP")}
-              </p>
-              <p className="text-sm font-medium text-yellow-300 drop-shadow-[0_0_6px_rgba(255,215,0,1)] leading-relaxed max-w-sm">
-                {t(
-                  "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP — новий рівень!",
-                  "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP — новый уровень!"
-                )}
-              </p>
+              {/* темний фон */}
+              <div
+                className="absolute inset-0 bg-black/90 backdrop-blur-[8px] transition-all duration-500"
+                onClick={() => setShowInfo(false)}
+              ></div>
+
+              {/* кнопка закриття */}
+              <button
+                onClick={() => setShowInfo(false)}
+                className="absolute top-4 right-4 z-30 p-1.5 rounded-full hover:bg-yellow-500/20 transition"
+                title={t("Закрити", "Закрыть")}
+              >
+                <X className="w-6 h-6 text-yellow-400 drop-shadow-[0_0_6px_rgba(255,215,0,0.8)]" />
+              </button>
+
+              {/* контент інфо */}
+              <div className="relative z-20 animate-fade-in">
+                <p className="text-lg font-bold text-yellow-400 mb-3 drop-shadow-[0_0_8px_rgba(255,215,0,1)]">
+                  {t("Як заробляти XP", "Как зарабатывать XP")}
+                </p>
+                <p className="text-sm font-medium text-yellow-300 drop-shadow-[0_0_6px_rgba(255,215,0,1)] leading-relaxed max-w-sm">
+                  {t(
+                    "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP — новий рівень!",
+                    "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP — новый уровень!"
+                  )}
+                </p>
+              </div>
             </div>
 
-            <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2">
+            {/* Основний контент */}
+            <h3 className="text-xl font-bold mb-4 text-pink-600 flex items-center gap-2 relative z-10">
               <Star className="w-5 h-5 text-yellow-400" />
               {t("Мій рівень", "Мой уровень")}
             </h3>
-            <div className="text-center">
+            <div className="text-center relative z-10">
               <p className="text-5xl font-extrabold text-pink-500 mb-1">
-                {t("Lv.", "Ур.")} {level}
+                {t("Lv.", "Ур.")} {realLevel}
               </p>
               <p className="text-sm opacity-70 mb-3">
-                {xp} XP / {nextLevelXP} XP
+                {realXp} XP / {nextLevelXP} XP
               </p>
               <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-2">
                 <div
@@ -145,7 +164,7 @@ const realLevel = user?.level ?? Math.floor(realXp / 100) + 1;
               </div>
               <p className="text-xs opacity-60">
                 {t("До наступного рівня залишилось", "До следующего уровня осталось")}{" "}
-                {100 - (xp % 100)} XP
+                {100 - (realXp % 100)} XP
               </p>
             </div>
           </div>
