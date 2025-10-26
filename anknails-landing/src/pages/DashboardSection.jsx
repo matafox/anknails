@@ -10,14 +10,11 @@ export default function DashboardSection({
   darkMode,
   t,
 }) {
-  // 🧮 XP та рівень
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
   const xp = completedLessons * 20;
   const level = Math.floor(xp / 100) + 1;
   const nextLevelXP = 100 * level;
   const progressToNext = ((xp % 100) / 100) * 100;
-
-  // 🎓 інфо про XP
   const [showInfo, setShowInfo] = useState(false);
 
   return (
@@ -111,17 +108,17 @@ export default function DashboardSection({
 
             {/* інфо-панель */}
             <div
-              className={`absolute inset-0 flex flex-col items-center justify-center text-center px-6 backdrop-blur-md transition-all duration-500 ${
+              className={`absolute inset-0 flex flex-col items-center justify-center text-center px-6 backdrop-blur-[6px] transition-all duration-500 ${
                 showInfo
-                  ? "opacity-100 visible bg-gradient-to-br from-black/80 via-fuchsia-950/80 to-pink-950/60 scale-100 shadow-[0_0_40px_rgba(255,215,0,0.4)]"
+                  ? "opacity-100 visible bg-gradient-to-br from-black/95 via-black/90 to-fuchsia-950/90 scale-100 shadow-[0_0_60px_rgba(255,215,0,0.45)]"
                   : "opacity-0 invisible scale-95"
               }`}
               onClick={() => setShowInfo(false)}
             >
-              <p className="text-lg font-bold text-yellow-400 mb-2 drop-shadow-[0_0_5px_rgba(255,215,0,0.6)]">
+              <p className="text-lg font-bold text-yellow-400 mb-3 drop-shadow-[0_0_6px_rgba(255,215,0,0.8)]">
                 {t("Як заробляти XP", "Как зарабатывать XP")}
               </p>
-              <p className="text-sm font-medium text-yellow-300 drop-shadow-[0_0_4px_rgba(255,215,0,0.7)] leading-relaxed">
+              <p className="text-sm font-medium text-yellow-300 drop-shadow-[0_0_6px_rgba(255,215,0,1)] leading-relaxed max-w-sm">
                 {t(
                   "Завершуйте уроки, щоб отримувати XP. Кожен завершений урок приносить 20 XP. Кожні 100 XP — новий рівень!",
                   "Проходите уроки, чтобы получать XP. За каждый урок начисляется 20 XP. Каждые 100 XP — новый уровень!"
