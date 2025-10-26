@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useMemo } from "react";
 import { CreditCard, User, BookOpen } from "lucide-react";
 
 export default function EarningsTab({ i18n, darkMode }) {
@@ -67,6 +67,11 @@ export default function EarningsTab({ i18n, darkMode }) {
     }
   };
 
+  // 💰 Підрахунок загальної суми
+  const total = useMemo(() => {
+    return users.reduce((sum, u) => sum + (Number(u.amount) || 0), 0);
+  }, [users]);
+
   return (
     <section
       className={`p-6 rounded-2xl shadow-lg border transition-all duration-300 ${
@@ -76,10 +81,20 @@ export default function EarningsTab({ i18n, darkMode }) {
       }`}
     >
       {/* 🏦 Заголовок */}
-      <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-        <CreditCard className="w-6 h-6 text-pink-500" />
-        {i18n.language === "ru" ? "История платежей" : "Історія платежів"}
-      </h2>
+      <div className="flex items-center justify-between mb-6">
+        <h2 className="text-2xl font-semibold flex items-center gap-2">
+          <CreditCard className="w-6 h-6 text-pink-500" />
+          {i18n.language === "ru" ? "История платежей" : "Історія платежів"}
+        </h2>
+
+        <div
+          className={`text-lg font-semibold ${
+            darkMode ? "text-pink-400" : "text-pink-600"
+          }`}
+        >
+          {i18n.language === "ru" ? "Всего:" : "Разом:"} {total.toFixed(2)} PLN
+        </div>
+      </div>
 
       {loading ? (
         <p className="opacity-70">
@@ -147,13 +162,9 @@ export default function EarningsTab({ i18n, darkMode }) {
                   <input
                     type="number"
                     value={u.amount}
-                    onChange={(ev) =>
-                      handleAmountChange(u.id, ev.target.value)
-                    }
+                    onChange={(ev) => handleAmountChange(u.id, ev.target.value)}
                     placeholder="—"
-                    style={{
-                      MozAppearance: "textfield",
-                    }}
+                    style={{ MozAppearance: "textfield" }}
                     className={`px-3 py-2 w-32 rounded-lg text-sm font-semibold border outline-none text-center transition-all 
                       [&::-webkit-outer-spin-button]:appearance-none 
                       [&::-webkit-inner-spin-button]:appearance-none 
