@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { LogIn, Mail, Lock } from "lucide-react";
 
@@ -33,11 +33,14 @@ export default function LoginPage() {
       }
 
       // 🩷 Звичайний користувач
-      const res = await fetch("https://anknails-backend-production.up.railway.app/api/login", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, lang: i18n.language, }),
-      });
+      const res = await fetch(
+        "https://anknails-backend-production.up.railway.app/api/login",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password, lang: i18n.language }),
+        }
+      );
 
       const data = await res.json();
       setLoading(false);
@@ -56,6 +59,11 @@ export default function LoginPage() {
       localStorage.setItem("user_email", data.user.email);
       localStorage.setItem("expires_at", data.user.expires_at);
       localStorage.removeItem("admin_token");
+
+      // 🔒 Зберігаємо токен сесії (для перевірки входу лише на одному пристрої)
+      if (data.session_token) {
+        localStorage.setItem("session_token", data.session_token);
+      }
 
       // Перехід до кабінету
       window.location.href = "/profile";
@@ -82,7 +90,7 @@ export default function LoginPage() {
       >
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 bg-clip-text text-transparent">
-            {i18n.language === "ru" ? "ANK Studio Online" : "ANK Studio Online"}
+            ANK Studio Online
           </h1>
           <p className="mt-2 text-sm opacity-70">
             {i18n.language === "ru"
@@ -128,7 +136,9 @@ export default function LoginPage() {
 
           {/* Error */}
           {error && (
-            <p className="text-sm text-rose-500 text-center font-medium">{error}</p>
+            <p className="text-sm text-rose-500 text-center font-medium">
+              {error}
+            </p>
           )}
 
           {/* Submit */}
