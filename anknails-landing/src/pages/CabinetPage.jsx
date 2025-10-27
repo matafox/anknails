@@ -193,6 +193,7 @@ export default function CabinetPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [progress, setProgress] = useState({});
+  const [view, setView] = useState("dashboard");
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
