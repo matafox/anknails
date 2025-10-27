@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import DashboardSection from "./DashboardSection";
-import ModulesPage from "./ModulesPage";
 import { useTranslation } from "react-i18next";
 import {
   LogOut,
@@ -374,8 +373,6 @@ useEffect(() => {
 
   if (!user) return null;
 
-  const [view, setView] = useState("dashboard");
-
   // 📊 обчислення середнього прогресу курсу
   const overallProgress =
     Object.keys(progress).length > 0
@@ -644,31 +641,17 @@ useEffect(() => {
     </div>
   )}
 
-{!selectedLesson ? (
-  <>
-    {view === "dashboard" && (
-      <DashboardSection
-        key={user?.xp}
-        modules={modules}
-        lessons={lessons}
-        progress={progress}
-        overallProgress={overallProgress}
-        darkMode={darkMode}
-        t={t}
-        user={user}
-        onOpenModules={() => setView("modules")}
-      />
-    )}
-
-    {view === "modules" && (
-      <ModulesPage
-        modules={modules}
-        darkMode={darkMode}
-        t={t}
-        onBack={() => setView("dashboard")}
-      />
-    )}
-  </>
+ {!selectedLesson ? (
+  <DashboardSection
+    key={user?.xp}
+    modules={modules}
+    lessons={lessons}
+    progress={progress}
+    overallProgress={overallProgress}
+    darkMode={darkMode}
+    t={t}
+    user={user}
+  />
 ) : (
     <div
       className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
