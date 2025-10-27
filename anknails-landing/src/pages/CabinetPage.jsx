@@ -643,6 +643,7 @@ useEffect(() => {
   )}
 
  {!selectedLesson ? (
+  {view === "dashboard" && (
   <DashboardSection
     key={user?.xp}
     modules={modules}
@@ -654,6 +655,16 @@ useEffect(() => {
     user={user}
     onOpenModules={() => setView("modules")}
   />
+)}
+
+{view === "modules" && (
+  <ModulesPage
+    modules={modules}
+    darkMode={darkMode}
+    t={t}
+    onBack={() => setView("dashboard")}
+  />
+)}
 ) : (
     <div
       className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
