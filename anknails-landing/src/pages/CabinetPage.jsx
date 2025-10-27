@@ -651,6 +651,7 @@ useEffect(() => {
     darkMode={darkMode}
     t={t}
     user={user}
+    onOpenModules={() => setView("modules")}
   />
 ) : (
     <div
