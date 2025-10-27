@@ -643,29 +643,31 @@ useEffect(() => {
     </div>
   )}
 
- {!selectedLesson ? (
-  {view === "dashboard" && (
-  <DashboardSection
-    key={user?.xp}
-    modules={modules}
-    lessons={lessons}
-    progress={progress}
-    overallProgress={overallProgress}
-    darkMode={darkMode}
-    t={t}
-    user={user}
-    onOpenModules={() => setView("modules")}
-  />
-)}
+{!selectedLesson ? (
+  <>
+    {view === "dashboard" && (
+      <DashboardSection
+        key={user?.xp}
+        modules={modules}
+        lessons={lessons}
+        progress={progress}
+        overallProgress={overallProgress}
+        darkMode={darkMode}
+        t={t}
+        user={user}
+        onOpenModules={() => setView("modules")}
+      />
+    )}
 
-{view === "modules" && (
-  <ModulesPage
-    modules={modules}
-    darkMode={darkMode}
-    t={t}
-    onBack={() => setView("dashboard")}
-  />
-)}
+    {view === "modules" && (
+      <ModulesPage
+        modules={modules}
+        darkMode={darkMode}
+        t={t}
+        onBack={() => setView("dashboard")}
+      />
+    )}
+  </>
 ) : (
     <div
       className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
