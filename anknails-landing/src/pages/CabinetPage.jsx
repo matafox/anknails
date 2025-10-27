@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import DashboardSection from "./DashboardSection";
+import ModulesPage from "./ModulesPage";
 import { useTranslation } from "react-i18next";
 import {
   LogOut,
