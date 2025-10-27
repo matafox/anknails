@@ -21,6 +21,7 @@ export default function DashboardSection({
   darkMode,
   t,
   user,
+  onOpenModules,
 }) {
   const [showInfo, setShowInfo] = useState(false);
   const [skills, setSkills] = useState(user?.xp || 0);
@@ -81,38 +82,43 @@ export default function DashboardSection({
       <div className="flex-1">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 📦 Модулі */}
-          <div
-            className={`relative p-6 rounded-2xl border shadow-md transition overflow-y-auto max-h-[400px] ${
-              darkMode
-                ? "bg-[#1a0a1f]/70 border-fuchsia-900/30"
-                : "bg-white border-pink-200"
-            }`}
-          >
-            <h3 className="text-xl font-bold mb-3 text-pink-600">
-              {t("Мої модулі", "Мои модули")}
-            </h3>
-            {modules.length === 0 ? (
-              <p className="text-sm opacity-70">
-                {t("Модулів поки що немає", "Модулей пока нет")}
-              </p>
-            ) : (
-              <ul className="space-y-2">
-                {modules.map((mod) => (
-                  <li
-                    key={mod.id}
-                    className={`flex items-center justify-between px-3 py-2 rounded-lg ${
-                      darkMode ? "bg-fuchsia-950/40" : "bg-pink-50"
-                    }`}
-                  >
-                    <span className="font-medium">{mod.title}</span>
-                    <span className="text-sm text-pink-500">
-                      {(localLessons[mod.id]?.length || 0)} {t("уроків", "уроков")}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
+<div
+  onClick={() => onOpenModules && onOpenModules()} // 🟣 відкриває сторінку модулів
+  className={`relative p-6 rounded-2xl border shadow-md transition overflow-y-auto max-h-[400px] cursor-pointer hover:scale-[1.02] ${
+    darkMode
+      ? "bg-[#1a0a1f]/70 border-fuchsia-900/30 hover:border-pink-500/40"
+      : "bg-white border-pink-200 hover:border-pink-400/70"
+  }`}
+>
+  <h3 className="text-xl font-bold mb-3 text-pink-600 flex justify-between items-center">
+    <span>{t("Мої модулі", "Мои модули")}</span>
+    <span className="text-sm text-pink-400 opacity-80">
+      {t("переглянути всі", "посмотреть все")} →
+    </span>
+  </h3>
+
+  {modules.length === 0 ? (
+    <p className="text-sm opacity-70">
+      {t("Модулів поки що немає", "Модулей пока нет")}
+    </p>
+  ) : (
+    <ul className="space-y-2">
+      {modules.slice(0, 3).map((mod) => ( // показує лише 3 модулі прев’ю
+        <li
+          key={mod.id}
+          className={`flex items-center justify-between px-3 py-2 rounded-lg ${
+            darkMode ? "bg-fuchsia-950/40" : "bg-pink-50"
+          }`}
+        >
+          <span className="font-medium">{mod.title}</span>
+          <span className="text-sm text-pink-500">
+            {(localLessons[mod.id]?.length || 0)} {t("уроків", "уроков")}
+          </span>
+        </li>
+      ))}
+    </ul>
+  )}
+</div>
 
           {/* 💅 Етап майстерності */}
           <div
