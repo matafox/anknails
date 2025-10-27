@@ -1,6 +1,6 @@
 // src/pages/DashboardSection.jsx
 import { useEffect, useState } from "react";
-import { CheckSquare, Award, Info, X } from "lucide-react";
+import { CheckSquare, Award, Info, X, ChevronRight } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
@@ -92,9 +92,10 @@ export default function DashboardSection({
 >
   <h3 className="text-xl font-bold mb-3 text-pink-600 flex justify-between items-center">
     <span>{t("Мої модулі", "Мои модули")}</span>
-    <span className="text-sm text-pink-400 opacity-80">
-      {t("переглянути всі", "посмотреть все")} →
-    </span>
+    <span className="flex items-center gap-1 text-sm text-pink-400 opacity-80">
+  {t("переглянути всі", "посмотреть все")}
+  <ChevronRight className="w-4 h-4 text-pink-400" />
+</span>
   </h3>
 
   {modules.length === 0 ? (
