@@ -426,12 +426,7 @@ useEffect(() => {
       >
         <div className="p-6 flex-1 overflow-y-auto">
           <div
-  onClick={() => {
-    setSelectedLesson(null);
-    setMenuOpen(false);
-  }}
-  className="flex flex-col items-center text-center mb-4 cursor-pointer group"
-  title={t("Перейти до дашборду", "Перейти к дашборду")}
+  className="flex flex-col items-center text-center mb-4 group select-none"
 >
   <SquareUserRound
     className="w-16 h-16 text-pink-500 mb-2 group-hover:scale-110 transition-transform duration-300"
@@ -659,9 +654,16 @@ useEffect(() => {
     </div>
 
     {/* 💅 Окрема менша рамка справа */}
-    <div className="w-full md:w-1/3 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide">
-      ANK Studio
-    </div>
+    <div
+  onClick={() => {
+    setSelectedLesson(null);
+    setMenuOpen(false);
+  }}
+  className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
+  title={t("Перейти до дашборду", "Перейти на главную")}
+>
+  ANK Studio
+</div>
   </div>
 )}
 
