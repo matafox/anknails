@@ -543,9 +543,6 @@ const saveLessonOrder = async (moduleId) => {
                     🎥 {t("Відео Cloudinary", "Видео Cloudinary")}
                   </label>
                   <div>
-  <label className="block text-sm font-medium mb-1">
-    🎥 {t("Відео Cloudinary", "Видео Cloudinary")}
-  </label>
 
   <button
     type="button"
