@@ -118,6 +118,7 @@ const handleVideoUpload = async (file, setLessonForm, setUploading) => {
     // 2️⃣ Готуємо форму для Cloudinary
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("source", "api");
     formData.append("api_key", sigData.api_key);
     formData.append("timestamp", sigData.timestamp);
     formData.append("signature", sigData.signature);
