@@ -47,6 +47,7 @@ export default function SettingsTab({ i18n, darkMode }) {
     const name = e.target.name.value.trim();
     const days = parseInt(e.target.days.value);
     const course_id = parseInt(e.target.course.value) || null;
+    const packageValue = e.target.package.value; // 👈 solo | pro
     if (!email) return alert("Введіть email");
 
     try {
@@ -60,6 +61,7 @@ export default function SettingsTab({ i18n, darkMode }) {
           name,
           days,
           course_id,
+          package: packageValue, // 👈 надсилаємо пакет
         }),
       });
       const data = await res.json();
@@ -105,23 +107,36 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-// 📊 Завантаження прогресу користувача (тепер без зайвого мапу)
-const loadProgress = async (userId) => {
-  try {
-    setLoadingProgress(true);
-    const res = await fetch(`${BACKEND}/api/progress/user/${userId}`);
-    const data = await res.json();
+  // 📦 Оновлення пакета користувача
+  const handlePackageChange = async (id, pkg) => {
+    try {
+      await fetch(`${BACKEND}/api/users/update/${id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: "anka12341", package: pkg }), // solo | pro
+      });
+      await loadUsers();
+    } catch (err) {
+      console.error("Помилка оновлення пакета:", err);
+    }
+  };
 
-    // бекенд уже повертає lesson_title
-    setProgress(data.progress || []);
-    setSelectedUser(userId);
-  } catch (err) {
-    console.error("Помилка завантаження прогресу:", err);
-  } finally {
-    setLoadingProgress(false);
-  }
-};
+  // 📊 Завантаження прогресу користувача (тепер без зайвого мапу)
+  const loadProgress = async (userId) => {
+    try {
+      setLoadingProgress(true);
+      const res = await fetch(`${BACKEND}/api/progress/user/${userId}`);
+      const data = await res.json();
 
+      // бекенд уже повертає lesson_title
+      setProgress(data.progress || []);
+      setSelectedUser(userId);
+    } catch (err) {
+      console.error("Помилка завантаження прогресу:", err);
+    } finally {
+      setLoadingProgress(false);
+    }
+  };
 
   // ✅ Позначити домашку виконаною
   const markHomeworkDone = async (lesson_id) => {
@@ -219,6 +234,23 @@ const loadProgress = async (userId) => {
             </select>
           </div>
 
+          {/* 🧩 Пакет */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {i18n.language === "ru" ? "Пакет" : "Пакет"}
+            </label>
+            <select
+              name="package"
+              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 outline-none"
+              defaultValue="solo"
+            >
+              <option value="solo">
+                {i18n.language === "ru" ? "Самостоятельный" : "Самостійний"}
+              </option>
+              <option value="pro">Pro</option>
+            </select>
+          </div>
+
           <button
             type="submit"
             disabled={saving}
@@ -260,6 +292,10 @@ const loadProgress = async (userId) => {
                 <th className="py-2 px-3 text-left">
                   {i18n.language === "ru" ? "Курс" : "Курс"}
                 </th>
+                {/* 🧩 нова колонка Пакет */}
+                <th className="py-2 px-3 text-left">
+                  {i18n.language === "ru" ? "Пакет" : "Пакет"}
+                </th>
                 <th className="py-2 px-3 text-left">
                   {i18n.language === "ru" ? "Доступ до" : "Доступ до"}
                 </th>
@@ -293,33 +329,59 @@ const loadProgress = async (userId) => {
                   <td className="py-2 px-3 font-mono opacity-80">{u.password}</td>
                   <td className="py-2 px-3">
                     <select
-  value={u.course_id ?? ""}
-  onChange={(e) => handleCourseChange(u.id, e.target.value ? Number(e.target.value) : null)}
-  className={`px-2 py-1 rounded-md border text-sm outline-none ${
-    darkMode
-      ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
-      : "bg-white/70 border-pink-200 focus:border-pink-500"
-  }`}
->
-  <option value="">
-    {i18n.language === "ru" ? "Без курса" : "Без курсу"}
-  </option>
-  {courses.map((c) => (
-    <option key={c.id} value={c.id}>
-      {c.title}
-    </option>
-  ))}
-</select>
+                      value={u.course_id ?? ""}
+                      onChange={(e) =>
+                        handleCourseChange(
+                          u.id,
+                          e.target.value ? Number(e.target.value) : null
+                        )
+                      }
+                      className={`px-2 py-1 rounded-md border text-sm outline-none ${
+                        darkMode
+                          ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
+                          : "bg-white/70 border-pink-200 focus:border-pink-500"
+                      }`}
+                    >
+                      <option value="">
+                        {i18n.language === "ru" ? "Без курса" : "Без курсу"}
+                      </option>
+                      {courses.map((c) => (
+                        <option key={c.id} value={c.id}>
+                          {c.title}
+                        </option>
+                      ))}
+                    </select>
                   </td>
+
+                  {/* 🧩 клітинка Пакет */}
                   <td className="py-2 px-3">
-  {new Date(u.expires_at) < new Date() ? (
-    <span className="text-red-500 font-medium">
-      {i18n.language === "ru" ? "Истёк" : "Вигасло"}
-    </span>
-  ) : (
-    <span>{new Date(u.expires_at).toLocaleDateString()}</span>
-  )}
-</td>
+                    <select
+                      value={u.package || "solo"}
+                      onChange={(e) => handlePackageChange(u.id, e.target.value)}
+                      className={`px-2 py-1 rounded-md border text-sm outline-none ${
+                        darkMode
+                          ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
+                          : "bg-white/70 border-pink-200 focus:border-pink-500"
+                      }`}
+                    >
+                      <option value="solo">
+                        {i18n.language === "ru"
+                          ? "Самостоятельный"
+                          : "Самостійний"}
+                      </option>
+                      <option value="pro">Pro</option>
+                    </select>
+                  </td>
+
+                  <td className="py-2 px-3">
+                    {new Date(u.expires_at) < new Date() ? (
+                      <span className="text-red-500 font-medium">
+                        {i18n.language === "ru" ? "Истёк" : "Вигасло"}
+                      </span>
+                    ) : (
+                      <span>{new Date(u.expires_at).toLocaleDateString()}</span>
+                    )}
+                  </td>
                   <td className="py-2 px-3">
                     <button
                       onClick={() => loadProgress(u.id)}
@@ -363,19 +425,19 @@ const loadProgress = async (userId) => {
             >
               <thead className={darkMode ? "bg-fuchsia-950/40" : "bg-pink-100"}>
                 <tr>
-  <th className="py-2 px-3 text-left">
-    {i18n.language === "ru" ? "Урок ID" : "Lesson ID"}
-  </th>
-  <th className="py-2 px-3 text-left">
-    {i18n.language === "ru" ? "Название урока" : "Назва уроку"}
-  </th>
-  <th className="py-2 px-3 text-left">
-    {i18n.language === "ru" ? "Прогресс" : "Прогрес"}
-  </th>
-  <th className="py-2 px-3 text-left">
-    {i18n.language === "ru" ? "Домашка" : "Домашка"}
-  </th>
-</tr>
+                  <th className="py-2 px-3 text-left">
+                    {i18n.language === "ru" ? "Урок ID" : "Lesson ID"}
+                  </th>
+                  <th className="py-2 px-3 text-left">
+                    {i18n.language === "ru" ? "Название урока" : "Назва уроку"}
+                  </th>
+                  <th className="py-2 px-3 text-left">
+                    {i18n.language === "ru" ? "Прогресс" : "Прогрес"}
+                  </th>
+                  <th className="py-2 px-3 text-left">
+                    {i18n.language === "ru" ? "Домашка" : "Домашка"}
+                  </th>
+                </tr>
               </thead>
               <tbody>
                 {progress.map((p) => {
