@@ -110,48 +110,44 @@ const handleVideoUpload = async (file) => {
   }));
 
   try {
-    const unsignedPreset = "ankstudio_unsigned"; // 👈 твій preset
-    const cloudName = "drmakmbcc";
+    const BACKEND_UPLOAD = `${BACKEND}/api/upload_video`;
 
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("upload_preset", unsignedPreset);
-    formData.append("resource_type", "video");
-    formData.append("folder", "ankstudio_lessons");
 
     const xhr = new XMLHttpRequest();
+    xhr.open("POST", BACKEND_UPLOAD, true);
+
+    xhr.upload.addEventListener("progress", (e) => {
+      if (e.lengthComputable) {
+        const percent = Math.round((e.loaded / e.total) * 100);
+        setLessonForm((prev) => ({ ...prev, uploadProgress: percent }));
+      }
+    });
 
     const uploadPromise = new Promise((resolve, reject) => {
-      xhr.open(
-        "POST",
-        `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
-        true
-      );
-
-      xhr.upload.addEventListener("progress", (e) => {
-        if (e.lengthComputable) {
-          const percent = Math.round((e.loaded / e.total) * 100);
-          setLessonForm((prev) => ({ ...prev, uploadProgress: percent }));
-        }
-      });
-
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          resolve(JSON.parse(xhr.responseText));
+          try {
+            const res = JSON.parse(xhr.responseText);
+            resolve(res);
+          } catch (e) {
+            reject("Invalid JSON response");
+          }
         } else {
           reject(xhr.responseText);
         }
       };
-
       xhr.onerror = () => reject("Network error");
       xhr.send(formData);
     });
 
-    const data = await uploadPromise;
-    if (data.secure_url) {
+    const result = await uploadPromise;
+
+    if (result.url) {
+      console.log("✅ Uploaded:", result.url);
       setLessonForm((prev) => ({ ...prev, uploadSuccess: true }));
-      console.log("✅ Uploaded:", data.secure_url);
-      return data.secure_url;
+      return result.url;
     } else {
       alert("Помилка при завантаженні відео");
       return null;
