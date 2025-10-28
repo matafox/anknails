@@ -160,6 +160,56 @@ const handleVideoUpload = async (file) => {
   }
 };
 
+  const openUploadWidget = async () => {
+  const sigRes = await fetch(`${BACKEND}/api/cloudinary_signature`);
+  const sigData = await sigRes.json();
+
+  window.cloudinary.openUploadWidget(
+    {
+      cloudName: sigData.cloud_name,
+      uploadSignatureTimestamp: sigData.timestamp,
+      uploadSignature: sigData.signature,
+      apiKey: sigData.api_key,
+      folder: sigData.folder,
+      resourceType: "video",
+      multiple: false,
+      maxFileSize: 2000000000, // 2 GB
+      sources: ["local"],
+      showPoweredBy: false,
+      styles: {
+        palette: {
+          window: "#ffffff",
+          windowBorder: "#f5c2e7",
+          tabIcon: "#d63384",
+          menuIcons: "#d63384",
+          textDark: "#333",
+          link: "#d63384",
+          action: "#d63384",
+          inactiveTabIcon: "#999",
+          error: "#f00",
+          inProgress: "#d63384",
+          complete: "#28a745",
+          sourceBg: "#f8f9fa",
+        },
+      },
+    },
+    (error, result) => {
+      if (!error && result && result.event === "success") {
+        console.log("✅ Uploaded:", result.info.secure_url);
+        setLessonForm((prev) => ({
+          ...prev,
+          video_url: result.info.secure_url,
+          uploadSuccess: true,
+        }));
+      } else if (error) {
+        console.error("❌ Upload error:", error);
+        alert("Помилка при завантаженні відео");
+      }
+    }
+  );
+};
+
+
   // 🧾 Створення або редагування уроку
   const handleLessonSubmit = async (e, moduleId) => {
     e.preventDefault();
@@ -492,17 +542,26 @@ const saveLessonOrder = async (moduleId) => {
                   <label className="block text-sm font-medium">
                     🎥 {t("Відео Cloudinary", "Видео Cloudinary")}
                   </label>
-                  <input
-                    type="file"
-                    accept="video/*"
-                    onChange={(e) =>
-                      setLessonForm({
-                        ...lessonForm,
-                        videoFile: e.target.files[0],
-                      })
-                    }
-                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                  />
+                  <div>
+  <label className="block text-sm font-medium mb-1">
+    🎥 {t("Відео Cloudinary", "Видео Cloudinary")}
+  </label>
+
+  <button
+    type="button"
+    onClick={openUploadWidget}
+    className="w-full py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg font-semibold"
+  >
+    ☁️ {t("Завантажити відео (до 2 ГБ)", "Загрузить видео (до 2 ГБ)")}
+  </button>
+
+  {lessonForm.uploadSuccess && (
+    <p className="text-green-600 text-sm mt-2">
+      ✅ {t("Відео завантажено успішно", "Видео загружено успешно")}
+    </p>
+  )}
+</div>
+
 {uploading && (
   <div style={{ marginTop: "10px" }}>
     <div
