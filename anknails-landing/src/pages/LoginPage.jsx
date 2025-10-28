@@ -24,7 +24,6 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // 🩷 Адмін
       if (email === "annaivanovna1802@gmail.com" && password === "anka12341") {
         localStorage.setItem("admin_token", "true");
         localStorage.removeItem("user_token");
@@ -32,7 +31,6 @@ export default function LoginPage() {
         return;
       }
 
-      // 🩷 Звичайний користувач
       const res = await fetch(
         "https://anknails-backend-production.up.railway.app/api/login",
         {
@@ -54,18 +52,15 @@ export default function LoginPage() {
         );
       }
 
-      // ✅ Зберегти дані користувача
       localStorage.setItem("user_token", "true");
       localStorage.setItem("user_email", data.user.email);
       localStorage.setItem("expires_at", data.user.expires_at);
       localStorage.removeItem("admin_token");
 
-      // 🔒 Зберігаємо токен сесії (для перевірки входу лише на одному пристрої)
       if (data.session_token) {
         localStorage.setItem("session_token", data.session_token);
       }
 
-      // Перехід до кабінету
       window.location.href = "/profile";
     } catch (err) {
       setLoading(false);
@@ -75,81 +70,91 @@ export default function LoginPage() {
 
   return (
     <div
-      className={`min-h-screen flex items-center justify-center px-4 py-12 ${
+      className={`min-h-screen flex items-center justify-center relative overflow-hidden ${
         darkMode
-          ? "bg-gradient-to-b from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
-          : "bg-gradient-to-b from-pink-50 via-rose-50 to-white text-gray-800"
+          ? "bg-gradient-to-br from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
+          : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
+      {/* 🌸 Градієнтні кола */}
+      <div className="absolute top-[-200px] left-[-150px] w-[500px] h-[500px] rounded-full bg-fuchsia-300/30 blur-[150px]" />
+      <div className="absolute bottom-[-200px] right-[-150px] w-[500px] h-[500px] rounded-full bg-rose-400/20 blur-[150px]" />
+
+      {/* 💎 Скляна картка */}
       <div
-        className={`w-full max-w-md rounded-3xl p-10 backdrop-blur-xl transition-all duration-500 ${
+        className={`relative z-10 w-full max-w-md p-10 rounded-[2rem] backdrop-blur-2xl border transition-all duration-500 shadow-2xl ${
           darkMode
-            ? "bg-[#1a0a1f]/70 border border-pink-500/30 shadow-[0_0_60px_rgba(255,0,128,0.25)]"
-            : "bg-white/70 border border-pink-200/40 shadow-[0_0_50px_rgba(255,182,193,0.4)]"
+            ? "bg-[#1a0a1f]/70 border-pink-500/30 shadow-[0_0_60px_rgba(255,0,128,0.25)]"
+            : "bg-white/60 border-pink-200/40 shadow-[0_0_50px_rgba(255,182,193,0.4)]"
         }`}
       >
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 bg-clip-text text-transparent">
-            ANK Studio Online
+        {/* ✨ Логотип і назва */}
+        <div className="text-center mb-10">
+          <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
+            ANK&nbsp;Studio
           </h1>
-          <p className="mt-2 text-sm opacity-70">
+          <p className="mt-3 text-sm opacity-75 font-medium">
             {i18n.language === "ru"
-              ? "Введите данные для авторизации"
-              : "Введіть дані для авторизації"}
+              ? "Введите данные для входа в аккаунт"
+              : "Введіть дані для входу до акаунту"}
           </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        {/* 🪞 Форма */}
+        <form onSubmit={handleSubmit} className="space-y-6">
           {/* Email */}
-          <div className="relative">
-            <Mail className="absolute left-4 top-3.5 w-5 h-5 text-pink-400" />
+          <div className="relative group">
+            <Mail className="absolute left-4 top-3.5 w-5 h-5 text-pink-400 group-focus-within:text-pink-500 transition" />
             <input
               type="email"
               placeholder={i18n.language === "ru" ? "Email" : "Електронна пошта"}
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              className={`w-full pl-12 pr-4 py-3 rounded-2xl border focus:outline-none focus:ring-2 transition-all ${
-                darkMode
-                  ? "bg-[#2a0f3a]/40 border-fuchsia-700/30 focus:ring-pink-400"
-                  : "bg-white/70 border-pink-200 focus:ring-pink-400"
-              }`}
               required
+              className={`w-full pl-12 pr-4 py-3 rounded-2xl border focus:outline-none focus:ring-2 transition-all duration-300
+                ${
+                  darkMode
+                    ? "bg-[#2a0f3a]/40 border-fuchsia-700/30 focus:ring-pink-400 text-fuchsia-100"
+                    : "bg-white/70 border-pink-200 focus:ring-pink-400 text-gray-800"
+                }`}
             />
           </div>
 
           {/* Password */}
-          <div className="relative">
-            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-pink-400" />
+          <div className="relative group">
+            <Lock className="absolute left-4 top-3.5 w-5 h-5 text-pink-400 group-focus-within:text-pink-500 transition" />
             <input
               type="password"
               placeholder={i18n.language === "ru" ? "Пароль" : "Пароль"}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className={`w-full pl-12 pr-4 py-3 rounded-2xl border focus:outline-none focus:ring-2 transition-all ${
-                darkMode
-                  ? "bg-[#2a0f3a]/40 border-fuchsia-700/30 focus:ring-pink-400"
-                  : "bg-white/70 border-pink-200 focus:ring-pink-400"
-              }`}
               required
+              className={`w-full pl-12 pr-4 py-3 rounded-2xl border focus:outline-none focus:ring-2 transition-all duration-300
+                ${
+                  darkMode
+                    ? "bg-[#2a0f3a]/40 border-fuchsia-700/30 focus:ring-pink-400 text-fuchsia-100"
+                    : "bg-white/70 border-pink-200 focus:ring-pink-400 text-gray-800"
+                }`}
             />
           </div>
 
           {/* Error */}
           {error && (
-            <p className="text-sm text-rose-500 text-center font-medium">
+            <p className="text-sm text-rose-500 text-center font-medium animate-pulse">
               {error}
             </p>
           )}
 
-          {/* Submit */}
+          {/* Button */}
           <button
             type="submit"
             disabled={loading}
-            className={`w-full flex items-center justify-center gap-3 py-3 rounded-2xl text-white font-semibold shadow-[0_0_25px_rgba(255,0,128,0.5)] transition-all duration-300 ${
-              loading
-                ? "bg-gray-400 cursor-not-allowed"
-                : "bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03]"
-            }`}
+            className={`w-full flex items-center justify-center gap-3 py-3.5 rounded-2xl font-semibold text-white transition-all duration-300
+              ${
+                loading
+                  ? "bg-gray-400 cursor-not-allowed"
+                  : "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 hover:scale-[1.03] hover:shadow-[0_0_25px_rgba(255,0,128,0.4)]"
+              }`}
           >
             <LogIn className="w-5 h-5" />
             {loading
@@ -162,11 +167,11 @@ export default function LoginPage() {
           </button>
         </form>
 
-        {/* Назад на головну */}
-        <div className="text-center mt-6">
+        {/* Назад */}
+        <div className="text-center mt-8">
           <button
             onClick={() => (window.location.href = "/")}
-            className="text-sm text-pink-500 hover:text-rose-500 transition"
+            className="text-sm font-medium text-pink-500 hover:text-rose-500 transition"
           >
             {i18n.language === "ru" ? "Назад на сайт" : "Повернутися на сайт"}
           </button>
