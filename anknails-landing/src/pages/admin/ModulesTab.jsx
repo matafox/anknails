@@ -116,6 +116,7 @@ const handleVideoUpload = async (file) => {
     formData.append("timestamp", sigData.timestamp);
     formData.append("signature", sigData.signature);
     formData.append("folder", sigData.folder);
+    formData.append("upload_preset", sigData.upload_preset);
 
     const xhr = new XMLHttpRequest();
     const uploadPromise = new Promise((resolve, reject) => {
