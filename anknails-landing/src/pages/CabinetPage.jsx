@@ -690,25 +690,38 @@ useEffect(() => {
           : "bg-white/80 border border-pink-200"
       }`}
     >
-      {/* 🔖 Заголовок і бейдж типу уроку */}
-<div className="flex items-center justify-between mb-4">
-  <div className="flex items-center gap-3">
-    <h2 className="text-2xl font-bold text-pink-600">
-      {selectedLesson.title}
-    </h2>
+     {/* 🔖 Заголовок, бейдж і опис уроку */}
+<div className="mb-4">
+  <div className="flex items-center justify-between">
+    <div className="flex items-center gap-3 flex-wrap">
+      <h2 className="text-2xl font-bold text-pink-600">
+        {selectedLesson.title}
+      </h2>
 
-    {selectedLesson.type === "theory" && (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
-        {t("Теорія", "Теория")}
-      </span>
-    )}
+      {selectedLesson.type === "theory" && (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
+          {t("Теорія", "Теория")}
+        </span>
+      )}
 
-    {selectedLesson.type === "practice" && (
-      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
-        {t("Практика", "Практика")}
-      </span>
-    )}
+      {selectedLesson.type === "practice" && (
+        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
+          {t("Практика", "Практика")}
+        </span>
+      )}
+    </div>
   </div>
+
+  {/* 📄 Опис уроку */}
+  {selectedLesson.description && (
+    <p
+      className={`mt-2 text-sm leading-relaxed ${
+        darkMode ? "text-gray-300" : "text-gray-600"
+      }`}
+    >
+      {selectedLesson.description}
+    </p>
+  )}
 </div>
 
       {/* 🎬 Відео з автопереходом і прогресом */}
