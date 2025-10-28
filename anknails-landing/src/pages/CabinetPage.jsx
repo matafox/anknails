@@ -662,7 +662,7 @@ useEffect(() => {
   className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
   title={t("Перейти до дашборду", "Перейти на главную")}
 >
-  ANK Studio
+  ANK Studio Online
 </div>
   </div>
 )}
