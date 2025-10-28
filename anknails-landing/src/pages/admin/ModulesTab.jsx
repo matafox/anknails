@@ -101,14 +101,16 @@ export default function ModulesTab({ darkMode, i18n }) {
   // ☁️ Завантаження відео у Cloudinary
 const handleVideoUpload = async (file) => {
   if (!file) return null;
+
   setUploading(true);
+  setLessonForm((prev) => ({ ...prev, uploadProgress: 0 }));
 
   try {
-    // 1️⃣ Отримуємо підпис із бекенду
+    // 1️⃣ Отримуємо підпис від бекенду
     const sigRes = await fetch(`${BACKEND}/api/cloudinary_signature`);
     const sigData = await sigRes.json();
 
-    // 2️⃣ Формуємо форму для прямого аплоаду
+    // 2️⃣ Готуємо форму для прямого завантаження
     const formData = new FormData();
     formData.append("file", file);
     formData.append("api_key", sigData.api_key);
@@ -117,30 +119,54 @@ const handleVideoUpload = async (file) => {
     formData.append("folder", sigData.folder);
     formData.append("resource_type", "video");
 
-    // 3️⃣ Завантажуємо напряму в Cloudinary
-    const uploadRes = await fetch(
-      `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/video/upload`,
-      { method: "POST", body: formData }
-    );
+    // 3️⃣ Використовуємо XMLHttpRequest для прогресу
+    const uploadPromise = new Promise((resolve, reject) => {
+      const xhr = new XMLHttpRequest();
+      xhr.open(
+        "POST",
+        `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/video/upload`,
+        true
+      );
 
-    const data = await uploadRes.json();
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setLessonForm((prev) => ({ ...prev, uploadProgress: percent }));
+        }
+      });
 
+      xhr.onload = () => {
+        if (xhr.status >= 200 && xhr.status < 300) {
+          const res = JSON.parse(xhr.responseText);
+          resolve(res);
+        } else {
+          reject(xhr.responseText);
+        }
+      };
+
+      xhr.onerror = () => reject("Network error during upload");
+      xhr.send(formData);
+    });
+
+    const data = await uploadPromise;
     if (data.secure_url) {
       console.log("✅ Uploaded:", data.secure_url);
       return data.secure_url;
     } else {
-      console.error("Cloudinary error:", data);
+      console.error("❌ Cloudinary error:", data);
       alert("Помилка при завантаженні відео");
       return null;
     }
   } catch (err) {
-    console.error("Upload failed:", err);
+    console.error("❌ Upload failed:", err);
     alert("Не вдалося завантажити відео");
     return null;
   } finally {
     setUploading(false);
+    setLessonForm((prev) => ({ ...prev, uploadProgress: null }));
   }
 };
+
 
   // 🧾 Створення або редагування уроку
   const handleLessonSubmit = async (e, moduleId) => {
@@ -486,8 +512,21 @@ const saveLessonOrder = async (moduleId) => {
                     className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                   />
                   {uploading && (
-                    <p className="text-xs text-pink-500">{t("Завантаження...", "Загрузка...")}</p>
-                  )}
+  <div className="mt-2">
+    <div className="flex justify-between text-xs text-pink-500 mb-1">
+      <span>{t("Завантаження...", "Загрузка...")}</span>
+      {lessonForm.uploadProgress != null && (
+        <span>{lessonForm.uploadProgress}%</span>
+      )}
+    </div>
+    <div className="w-full h-2 bg-pink-100 dark:bg-fuchsia-950 rounded-full overflow-hidden">
+      <div
+        className="h-2 bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-200"
+        style={{ width: `${lessonForm.uploadProgress || 0}%` }}
+      ></div>
+    </div>
+  </div>
+)}
 
                   {/* 🩷 Теорія / 💜 Практика */}
                   <div className="flex gap-2">
