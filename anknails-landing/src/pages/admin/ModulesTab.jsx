@@ -99,21 +99,48 @@ export default function ModulesTab({ darkMode, i18n }) {
   };
 
   // ☁️ Завантаження відео у Cloudinary
-  const handleVideoUpload = async (file) => {
-    if (!file) return null;
-    setUploading(true);
+const handleVideoUpload = async (file) => {
+  if (!file) return null;
+  setUploading(true);
+
+  try {
+    // 1️⃣ Отримуємо підпис із бекенду
+    const sigRes = await fetch(`${BACKEND}/api/cloudinary_signature`);
+    const sigData = await sigRes.json();
+
+    // 2️⃣ Формуємо форму для прямого аплоаду
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("api_key", sigData.api_key);
+    formData.append("timestamp", sigData.timestamp);
+    formData.append("signature", sigData.signature);
+    formData.append("folder", sigData.folder);
+    formData.append("resource_type", "video");
 
-    const res = await fetch(`${BACKEND}/api/upload_video`, {
-      method: "POST",
-      body: formData,
-    });
+    // 3️⃣ Завантажуємо напряму в Cloudinary
+    const uploadRes = await fetch(
+      `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/video/upload`,
+      { method: "POST", body: formData }
+    );
 
-    const data = await res.json();
+    const data = await uploadRes.json();
+
+    if (data.secure_url) {
+      console.log("✅ Uploaded:", data.secure_url);
+      return data.secure_url;
+    } else {
+      console.error("Cloudinary error:", data);
+      alert("Помилка при завантаженні відео");
+      return null;
+    }
+  } catch (err) {
+    console.error("Upload failed:", err);
+    alert("Не вдалося завантажити відео");
+    return null;
+  } finally {
     setUploading(false);
-    return data.url;
-  };
+  }
+};
 
   // 🧾 Створення або редагування уроку
   const handleLessonSubmit = async (e, moduleId) => {
