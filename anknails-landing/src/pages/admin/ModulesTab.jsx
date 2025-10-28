@@ -103,28 +103,28 @@ const handleVideoUpload = async (file) => {
   if (!file) return null;
 
   setUploading(true);
-  setLessonForm((prev) => ({ ...prev, uploadProgress: 0 }));
+  setLessonForm((prev) => ({
+    ...prev,
+    uploadProgress: 0,
+    uploadSuccess: false,
+  }));
 
   try {
-    // 1️⃣ Отримуємо підпис від бекенду
-    const sigRes = await fetch(`${BACKEND}/api/cloudinary_signature`);
-    const sigData = await sigRes.json();
+    const unsignedPreset = "ankstudio_unsigned"; // 👈 твій preset
+    const cloudName = "drmakmbcc";
 
-    // 2️⃣ Готуємо форму для прямого завантаження
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("api_key", sigData.api_key);
-    formData.append("timestamp", sigData.timestamp);
-    formData.append("signature", sigData.signature);
-    formData.append("folder", sigData.folder);
+    formData.append("upload_preset", unsignedPreset);
     formData.append("resource_type", "video");
+    formData.append("folder", "ankstudio_lessons");
 
-    // 3️⃣ Використовуємо XMLHttpRequest для прогресу
+    const xhr = new XMLHttpRequest();
+
     const uploadPromise = new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
       xhr.open(
         "POST",
-        `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/video/upload`,
+        `https://api.cloudinary.com/v1_1/${cloudName}/video/upload`,
         true
       );
 
@@ -137,23 +137,22 @@ const handleVideoUpload = async (file) => {
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          const res = JSON.parse(xhr.responseText);
-          resolve(res);
+          resolve(JSON.parse(xhr.responseText));
         } else {
           reject(xhr.responseText);
         }
       };
 
-      xhr.onerror = () => reject("Network error during upload");
+      xhr.onerror = () => reject("Network error");
       xhr.send(formData);
     });
 
     const data = await uploadPromise;
     if (data.secure_url) {
+      setLessonForm((prev) => ({ ...prev, uploadSuccess: true }));
       console.log("✅ Uploaded:", data.secure_url);
       return data.secure_url;
     } else {
-      console.error("❌ Cloudinary error:", data);
       alert("Помилка при завантаженні відео");
       return null;
     }
@@ -163,7 +162,6 @@ const handleVideoUpload = async (file) => {
     return null;
   } finally {
     setUploading(false);
-    setLessonForm((prev) => ({ ...prev, uploadProgress: null }));
   }
 };
 
@@ -511,21 +509,45 @@ const saveLessonOrder = async (moduleId) => {
                     }
                     className="w-full px-3 py-2 border border-pink-300 rounded-lg"
                   />
-                  {uploading && (
-  <div className="mt-2">
-    <div className="flex justify-between text-xs text-pink-500 mb-1">
-      <span>{t("Завантаження...", "Загрузка...")}</span>
-      {lessonForm.uploadProgress != null && (
-        <span>{lessonForm.uploadProgress}%</span>
-      )}
+{uploading && (
+  <div style={{ marginTop: "10px" }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        fontSize: "12px",
+        color: "#d63384",
+        marginBottom: "4px",
+      }}
+    >
+      <span>Завантаження...</span>
+      <span>{lessonForm.uploadProgress}%</span>
     </div>
-    <div className="w-full h-2 bg-pink-100 dark:bg-fuchsia-950 rounded-full overflow-hidden">
+    <div
+      style={{
+        width: "100%",
+        height: "6px",
+        backgroundColor: "#f8d7e5",
+        borderRadius: "3px",
+        overflow: "hidden",
+      }}
+    >
       <div
-        className="h-2 bg-gradient-to-r from-pink-500 to-rose-500 transition-all duration-200"
-        style={{ width: `${lessonForm.uploadProgress || 0}%` }}
+        style={{
+          height: "6px",
+          width: `${lessonForm.uploadProgress || 0}%`,
+          background: "#d63384",
+          transition: "width 0.3s",
+        }}
       ></div>
     </div>
   </div>
+)}
+
+{lessonForm.uploadSuccess && (
+  <p style={{ color: "green", fontSize: "12px", marginTop: "6px" }}>
+    ✅ Відео завантажено успішно
+  </p>
 )}
 
                   {/* 🩷 Теорія / 💜 Практика */}
