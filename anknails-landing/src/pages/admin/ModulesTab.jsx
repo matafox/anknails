@@ -45,10 +45,10 @@ export default function ModulesTab({ darkMode, i18n }) {
 
   // 📘 Завантаження модулів
   const fetchModules = async (courseId) => {
-    const res = await fetch(`${BACKEND}/api/modules/${courseId}`);
-    const data = await res.json();
-    setModules(data.modules || []);
-  };
+  const res = await fetch(`${BACKEND}/api/modules/${courseId}?admin=true`);
+  const data = await res.json();
+  setModules(data.modules || []);
+};
 
   useEffect(() => {
     fetchCourses();
@@ -290,6 +290,34 @@ const saveLessonOrder = async (moduleId) => {
                 <Trash2 className="w-4 h-4" /> {t("Видалити", "Удалить")}
               </button>
             </div>
+
+            <div className="flex items-center justify-between mt-3">
+  <span className="text-sm opacity-70">
+    {t("Видимий для учнів", "Видим для учеников")}:
+  </span>
+  <button
+    onClick={async () => {
+      await fetch(`${BACKEND}/api/modules/update/${mod.id}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          token: "anka12341",
+          visible: !mod.visible,
+        }),
+      });
+      fetchModules(selectedCourse);
+    }}
+    className={`px-3 py-1 rounded-lg text-sm font-semibold ${
+      mod.visible
+        ? "bg-green-500 text-white"
+        : "bg-gray-300 text-gray-700"
+    }`}
+  >
+    {mod.visible
+      ? t("Відкрито", "Открыто")
+      : t("Приховано", "Скрыто")}
+  </button>
+</div>
 
             {/* 📚 Уроки */}
             <button
