@@ -276,6 +276,7 @@ useEffect(() => {
           course_id: found.course_id || null,
           xp: found.xp || 0,
           level: found.level || 1,
+          package: found.package || "solo",
         });
       })
       .catch(() => (window.location.href = "/login"));
@@ -438,6 +439,19 @@ useEffect(() => {
   <h2 className="font-bold text-lg group-hover:text-pink-600 transition-colors">
     {user.name || user.email.split("@")[0]}
   </h2>
+
+<div className="mt-1">
+    {user.package === "pro" ? (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
+        PRO
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
+        {t("Самостійний", "Самостоятельный")}
+      </span>
+    )}
+  </div>
+            
   <p className="text-sm opacity-70">
     {t("Доступ до", "Доступ до")}: {user.expires_at}
   </p>
