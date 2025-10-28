@@ -642,20 +642,29 @@ useEffect(() => {
 
       {/* Контент */}
 <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
-  {banner && banner.active && (
-    <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-      {banner.image_url && (
-        <img
-          src={banner.image_url}
-          alt="Banner"
-          className="w-full h-48 md:h-64 object-cover"
-        />
-      )}
-      <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
-        {banner.title}
-      </div>
+{banner && banner.active && (
+  <div className="rounded-2xl overflow-hidden mb-8 shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+    {banner.image_url && (
+      <img
+        src={banner.image_url}
+        alt="Banner"
+        className="w-full h-48 md:h-64 object-cover"
+      />
+    )}
+
+    {/* 🎀 Нижня смуга з банерним текстом і назвою ANK Studio */}
+    <div className="flex items-center justify-center gap-4 flex-wrap p-4 bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg text-center">
+      {/* 🩶 Текст банера */}
+      <span className="max-w-[80%] leading-snug">{banner.title}</span>
+
+      {/* 🩷 Текстовий логотип ANK Studio */}
+      <span className="text-sm md:text-base font-extrabold tracking-wide bg-white/20 px-3 py-1 rounded-full shadow-inner">
+        ANK Studio
+      </span>
     </div>
-  )}
+  </div>
+)}
+
 
 {!selectedLesson ? (
   <>
