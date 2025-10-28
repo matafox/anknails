@@ -103,51 +103,50 @@ const handleVideoUpload = async (file) => {
   if (!file) return null;
 
   setUploading(true);
-  setLessonForm((prev) => ({
-    ...prev,
-    uploadProgress: 0,
-    uploadSuccess: false,
-  }));
+  setLessonForm((prev) => ({ ...prev, uploadProgress: 0, uploadSuccess: false }));
 
   try {
-    const BACKEND_UPLOAD = `${BACKEND}/api/upload_video`;
+    // 1️⃣ Отримуємо підпис із бекенду
+    const sigRes = await fetch(`${BACKEND}/api/cloudinary_signature`);
+    const sigData = await sigRes.json();
 
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("api_key", sigData.api_key);
+    formData.append("timestamp", sigData.timestamp);
+    formData.append("signature", sigData.signature);
+    formData.append("folder", sigData.folder);
 
     const xhr = new XMLHttpRequest();
-    xhr.open("POST", BACKEND_UPLOAD, true);
-
-    xhr.upload.addEventListener("progress", (e) => {
-      if (e.lengthComputable) {
-        const percent = Math.round((e.loaded / e.total) * 100);
-        setLessonForm((prev) => ({ ...prev, uploadProgress: percent }));
-      }
-    });
-
     const uploadPromise = new Promise((resolve, reject) => {
+      xhr.open(
+        "POST",
+        `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/video/upload`,
+        true
+      );
+
+      xhr.upload.addEventListener("progress", (e) => {
+        if (e.lengthComputable) {
+          const percent = Math.round((e.loaded / e.total) * 100);
+          setLessonForm((prev) => ({ ...prev, uploadProgress: percent }));
+        }
+      });
+
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
-          try {
-            const res = JSON.parse(xhr.responseText);
-            resolve(res);
-          } catch (e) {
-            reject("Invalid JSON response");
-          }
-        } else {
-          reject(xhr.responseText);
-        }
+          resolve(JSON.parse(xhr.responseText));
+        } else reject(xhr.responseText);
       };
+
       xhr.onerror = () => reject("Network error");
       xhr.send(formData);
     });
 
     const result = await uploadPromise;
-
-    if (result.url) {
-      console.log("✅ Uploaded:", result.url);
+    if (result.secure_url) {
+      console.log("✅ Uploaded:", result.secure_url);
       setLessonForm((prev) => ({ ...prev, uploadSuccess: true }));
-      return result.url;
+      return result.secure_url;
     } else {
       alert("Помилка при завантаженні відео");
       return null;
@@ -160,7 +159,6 @@ const handleVideoUpload = async (file) => {
     setUploading(false);
   }
 };
-
 
   // 🧾 Створення або редагування уроку
   const handleLessonSubmit = async (e, moduleId) => {
