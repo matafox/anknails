@@ -99,25 +99,32 @@ export default function ModulesTab({ darkMode, i18n }) {
   };
 
   // ☁️ Завантаження відео у Cloudinary
-const handleVideoUpload = async (file) => {
+const handleVideoUpload = async (file, setLessonForm, setUploading) => {
   if (!file) return null;
 
   setUploading(true);
-  setLessonForm((prev) => ({ ...prev, uploadProgress: 0, uploadSuccess: false }));
+  setLessonForm((prev) => ({
+    ...prev,
+    uploadProgress: 0,
+    uploadSuccess: false,
+  }));
 
   try {
-    // 1️⃣ Отримуємо підпис із бекенду
+    // 1️⃣ Отримуємо короткочасний підпис від бекенду
     const sigRes = await fetch(`${BACKEND}/api/cloudinary_signature`);
+    if (!sigRes.ok) throw new Error("Не вдалося отримати підпис Cloudinary");
     const sigData = await sigRes.json();
 
+    // 2️⃣ Готуємо форму для Cloudinary
     const formData = new FormData();
     formData.append("file", file);
     formData.append("api_key", sigData.api_key);
     formData.append("timestamp", sigData.timestamp);
     formData.append("signature", sigData.signature);
     formData.append("folder", sigData.folder);
-    formData.append("upload_preset", sigData.upload_preset);
+    formData.append("upload_preset", sigData.upload_preset); // ✅ "ankstudio_signed"
 
+    // 3️⃣ Завантаження через XHR (з прогресом)
     const xhr = new XMLHttpRequest();
     const uploadPromise = new Promise((resolve, reject) => {
       xhr.open(
@@ -126,6 +133,7 @@ const handleVideoUpload = async (file) => {
         true
       );
 
+      // Відстежуємо прогрес
       xhr.upload.addEventListener("progress", (e) => {
         if (e.lengthComputable) {
           const percent = Math.round((e.loaded / e.total) * 100);
@@ -143,23 +151,29 @@ const handleVideoUpload = async (file) => {
       xhr.send(formData);
     });
 
+    // 4️⃣ Очікуємо завершення
     const result = await uploadPromise;
+
     if (result.secure_url) {
-      console.log("✅ Uploaded:", result.secure_url);
+      console.log("✅ Відео завантажено:", result.secure_url);
       setLessonForm((prev) => ({ ...prev, uploadSuccess: true }));
+
+      // 🩷 М’який тост-повідомлення
+      alert("✅ Відео успішно завантажено!");
       return result.secure_url;
     } else {
-      alert("Помилка при завантаженні відео");
+      alert("❌ Помилка при завантаженні відео");
       return null;
     }
   } catch (err) {
     console.error("❌ Upload failed:", err);
-    alert("Не вдалося завантажити відео");
+    alert("❌ Не вдалося завантажити відео. Перевірте Cloudinary preset.");
     return null;
   } finally {
     setUploading(false);
   }
 };
+
 
   const openUploadWidget = async () => {
   const sigRes = await fetch(`${BACKEND}/api/cloudinary_signature`);
