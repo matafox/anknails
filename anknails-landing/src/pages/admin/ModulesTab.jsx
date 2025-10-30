@@ -412,15 +412,15 @@ const saveLessonOrder = async (moduleId) => {
                         {l.description && <p>{l.description}</p>}
 
                         {l.embed_url && (
-                          <div className="relative mt-2">
-                            <video
-                              src={l.embed_url}
-                              controls
-                              className="w-full aspect-video rounded-lg border border-pink-200"
-                            />
-                            <div className="absolute inset-0 pointer-events-none"></div>
-                          </div>
-                        )}
+  <div className="relative mt-2">
+    <iframe
+      src={l.embed_url}
+      className="w-full aspect-video rounded-lg border border-pink-200"
+      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
+      allowFullScreen
+    ></iframe>
+  </div>
+)}
 
                         {l.homework && (
                           <p className="mt-2 text-xs opacity-80">
