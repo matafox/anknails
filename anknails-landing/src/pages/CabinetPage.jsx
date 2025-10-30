@@ -128,6 +128,13 @@ else if (lesson.embed_url) {
           controlsList="nodownload noremoteplayback nofullscreen"
           disablePictureInPicture
           onContextMenu={(e) => e.preventDefault()}
+
+          onLoadedData={() => setLoading(false)}
+onError={() => {
+  setLoading(false);
+  alert("Помилка завантаження відео");
+}}
+          
           onTimeUpdate={(e) => {
             const current = e.target.currentTime;
             const total = e.target.duration;
