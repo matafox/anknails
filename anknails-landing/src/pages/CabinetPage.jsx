@@ -37,14 +37,18 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   useEffect(() => {
     if (!lesson) return;
 
-    if (lesson.youtube_id?.includes("cloudinary.com")) {
-      setVideoUrl(`${BACKEND}/api/video/${lesson.id}`);
-    } else if (lesson.embed_url) {
-      setVideoUrl(lesson.embed_url);
-    } else {
-      setVideoUrl(null);
-    }
-    setLoading(false);
+    else if (lesson.youtube_id && lesson.youtube_id.includes("-")) {
+  fetch(`${BACKEND}/api/video/token/${lesson.id}`, {
+    headers: { "X-User-Email": localStorage.getItem("user_email") }
+  })
+    .then(r => r.json())
+    .then(d => {
+      setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
+    });
+}
+else if (lesson.embed_url) {
+  setVideoUrl(lesson.embed_url);
+}
 
     const email = localStorage.getItem("user_email");
     if (email) {
@@ -107,22 +111,6 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
       </div>
     );
 
-  const isBunny = videoUrl.includes("mediadelivery.net");
-if (isBunny)
-  return (
-    <div className="flex flex-col items-center gap-4">
-      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-        <iframe
-          src={videoUrl}
-          className="w-full h-full rounded-xl"
-          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture;"
-          allowFullScreen
-          sandbox="allow-same-origin allow-scripts allow-pointer-lock allow-top-navigation-by-user-activation"
-        ></iframe>
-      </div>
-    </div>
-  );
-
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -130,6 +118,10 @@ if (isBunny)
         <video
           src={videoUrl}
           controls
+          style={{
+  pointerEvents: "auto",
+  userSelect: "none"
+}}
           playsInline
           preload="metadata"
           className="w-full h-full object-cover select-none pointer-events-auto"
@@ -180,6 +172,9 @@ if (isBunny)
             "Ваш браузер не поддерживает воспроизведение видео"
           )}
         </video>
+        <div className="absolute bottom-3 right-3 text-white/70 text-xs pointer-events-none select-none">
+  {localStorage.getItem("user_email")}
+</div>
       </div>
 
       {/* Кнопка переходу до наступного уроку */}
