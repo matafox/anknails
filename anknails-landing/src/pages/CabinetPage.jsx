@@ -1,7 +1,8 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import DashboardSection from "./DashboardSection";
 import ModulesPage from "./ModulesPage";
 import { useTranslation } from "react-i18next";
+import Hls from "hls.js";
 import {
   LogOut,
   SquareUserRound,
@@ -32,6 +33,8 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   const [showNextButton, setShowNextButton] = useState(false);
   const [maxWatched, setMaxWatched] = useState(0); // 🔒 запам’ятовуємо максимум проглянутого
 
+  const videoRef = useRef(null);
+  
   const nextLesson = getNextLesson?.(lesson.id);
 
   useEffect(() => {
@@ -43,7 +46,7 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   })
     .then(r => r.json())
     .then(d => {
-      setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
+      setVideoUrl(`https://vz-ankstudio.b-cdn.net/${lesson.youtube_id}/playlist.m3u8`);
       setLoading(false); 
     });
 }
@@ -61,6 +64,24 @@ else if (lesson.embed_url) {
         });
     }
   }, [lesson]);
+
+  useEffect(() => {
+  if (!videoUrl) return;
+
+  // Якщо HLS і браузер підтримує через Hls.js
+  if (videoUrl.includes(".m3u8") && Hls.isSupported()) {
+    const hls = new Hls();
+    hls.loadSource(videoUrl);
+    hls.attachMedia(videoRef.current);
+  } 
+  // Safari сам розуміє HLS
+  else {
+    if (videoRef.current) {
+      videoRef.current.src = videoUrl;
+    }
+  }
+}, [videoUrl]);
+
 
   // 🔁 відправка прогресу
   const sendProgress = async (watched, total, done = false) => {
@@ -117,28 +138,23 @@ else if (lesson.embed_url) {
     <div className="flex flex-col items-center gap-4">
       <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
         <video
-          src={videoUrl}
-          controls
-          style={{
-  pointerEvents: "auto",
-  userSelect: "none"
-}}
-          playsInline
-          preload="metadata"
-          className="w-full h-full object-cover select-none pointer-events-auto"
-          controlsList="nodownload noremoteplayback nofullscreen"
-          disablePictureInPicture
-          onContextMenu={(e) => e.preventDefault()}
-
-          onLoadedData={() => setLoading(false)}
-onError={() => {
-  setLoading(false);
-  alert("Помилка завантаження відео");
-}}
-          
-          onTimeUpdate={(e) => {
-            const current = e.target.currentTime;
-            const total = e.target.duration;
+  ref={videoRef}
+  controls
+  style={{ pointerEvents: "auto", userSelect: "none" }}
+  playsInline
+  preload="metadata"
+  className="w-full h-full object-cover select-none pointer-events-auto"
+  controlsList="nodownload noremoteplayback nofullscreen"
+  disablePictureInPicture
+  onContextMenu={(e) => e.preventDefault()}
+  onLoadedData={() => setLoading(false)}
+  onError={() => {
+    setLoading(false);
+    alert("Помилка завантаження відео");
+  }}
+  onTimeUpdate={(e) => {
+    const current = e.target.currentTime;
+    const total = e.target.duration;
 
             // ⛔ Не оновлюємо, якщо користувач перемотав назад
             if (current < maxWatched - 2) return;
