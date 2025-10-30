@@ -107,6 +107,23 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
       </div>
     );
 
+  const isBunny = videoUrl.includes("mediadelivery.net");
+if (isBunny)
+  return (
+    <div className="flex flex-col items-center gap-4">
+      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
+        <iframe
+          src={videoUrl}
+          className="w-full h-full rounded-xl"
+          allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture;"
+          allowFullScreen
+          sandbox="allow-same-origin allow-scripts allow-pointer-lock allow-top-navigation-by-user-activation"
+        ></iframe>
+      </div>
+    </div>
+  );
+
+
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
