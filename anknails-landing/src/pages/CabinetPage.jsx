@@ -105,7 +105,7 @@ else if (lesson.embed_url) {
   };
 
 // 🔎 Bunny iframe
-if (videoUrl && videoUrl.includes("iframe.mediadelivery")) {
+if (typeof videoUrl === "string" && videoUrl.includes("iframe.mediadelivery")) {
   return (
     <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
       <iframe
@@ -120,7 +120,7 @@ if (videoUrl && videoUrl.includes("iframe.mediadelivery")) {
 }
 
 
-  const isYouTube = videoUrl.includes("youtube");
+  const isYouTube = typeof videoUrl === "string" && videoUrl.includes("youtube");
   if (isYouTube)
     return (
       <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
