@@ -44,6 +44,7 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
     .then(r => r.json())
     .then(d => {
       setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
+      setLoading(false); 
     });
 }
 else if (lesson.embed_url) {
@@ -82,12 +83,12 @@ else if (lesson.embed_url) {
     }
   };
 
-  if (loading)
-    return (
-      <div className="w-full aspect-video flex items-center justify-center bg-black/60 rounded-xl text-pink-300 text-sm">
-        Завантаження відео...
-      </div>
-    );
+ {loading && (
+  <div className="absolute inset-0 flex items-center justify-center
+                  bg-black/60 text-pink-300 text-sm rounded-xl z-10">
+    Завантаження відео...
+  </div>
+)}
 
   if (!videoUrl)
     return (
