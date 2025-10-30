@@ -46,7 +46,7 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   })
     .then(r => r.json())
     .then(d => {
-      setVideoUrl(`https://vz-ankstudio.b-cdn.net/${lesson.youtube_id}/playlist.m3u8`);
+      setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
       setLoading(false); 
     });
 }
@@ -104,13 +104,6 @@ else if (lesson.embed_url) {
     }
   };
 
- {loading && (
-  <div className="absolute inset-0 flex items-center justify-center
-                  bg-black/60 text-pink-300 text-sm rounded-xl z-10">
-    Завантаження відео...
-  </div>
-)}
-
   if (!videoUrl)
     return (
       <p className="text-sm text-gray-500 text-center py-4">
@@ -136,7 +129,15 @@ else if (lesson.embed_url) {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
+      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black relative">
+
+ {loading && (
+  <div className="absolute inset-0 flex items-center justify-center
+                  bg-black/60 text-pink-300 text-sm rounded-xl z-10">
+    Завантаження відео...
+  </div>
+)}
+        
         <video
   ref={videoRef}
   controls
