@@ -98,8 +98,8 @@ export default function ModulesTab({ darkMode, i18n }) {
     setLessons((prev) => ({ ...prev, [moduleId]: data.lessons || [] }));
   };
 
-  // ☁️ Завантаження відео у Cloudinary
-const handleVideoUpload = async (file, setLessonForm, setUploading) => {
+// 🐰 Завантаження відео у BunnyCDN
+const uploadToBunny = async (file) => {
   if (!file) return null;
 
   setUploading(true);
@@ -110,37 +110,20 @@ const handleVideoUpload = async (file, setLessonForm, setUploading) => {
   }));
 
   try {
-    // 1️⃣ Отримуємо короткочасний підпис від бекенду
-    const sigRes = await fetch(`${BACKEND}/api/cloudinary_signature`);
-    if (!sigRes.ok) throw new Error("Не вдалося отримати підпис Cloudinary");
-    const sigData = await sigRes.json();
-
-    // 2️⃣ Готуємо форму для Cloudinary
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("source", "api");
-    formData.append("api_key", sigData.api_key);
-    formData.append("timestamp", sigData.timestamp);
-    formData.append("signature", sigData.signature);
-    formData.append("folder", sigData.folder);
-    formData.append("upload_preset", sigData.upload_preset); // ✅ "ankstudio_signed"
 
-    // 3️⃣ Завантаження через XHR (з прогресом)
     const xhr = new XMLHttpRequest();
     const uploadPromise = new Promise((resolve, reject) => {
-      xhr.open(
-        "POST",
-        `https://api.cloudinary.com/v1_1/${sigData.cloud_name}/video/upload`,
-        true
-      );
+      xhr.open("POST", `${BACKEND}/api/bunny_upload`, true);
 
-      // Відстежуємо прогрес
-      xhr.upload.addEventListener("progress", (e) => {
+      // Відстеження прогресу завантаження
+      xhr.upload.onprogress = (e) => {
         if (e.lengthComputable) {
           const percent = Math.round((e.loaded / e.total) * 100);
           setLessonForm((prev) => ({ ...prev, uploadProgress: percent }));
         }
-      });
+      };
 
       xhr.onload = () => {
         if (xhr.status >= 200 && xhr.status < 300) {
@@ -152,77 +135,28 @@ const handleVideoUpload = async (file, setLessonForm, setUploading) => {
       xhr.send(formData);
     });
 
-    // 4️⃣ Очікуємо завершення
     const result = await uploadPromise;
 
-    if (result.secure_url) {
-      console.log("✅ Відео завантажено:", result.secure_url);
-      setLessonForm((prev) => ({ ...prev, uploadSuccess: true }));
-
-      // 🩷 М’який тост-повідомлення
+    if (result.success && result.video_id) {
+      console.log("✅ Відео завантажено:", result.video_id);
+      setLessonForm((prev) => ({
+        ...prev,
+        uploadSuccess: true,
+        video_url: result.video_id,
+      }));
       alert("✅ Відео успішно завантажено!");
-      return result.secure_url;
+      return result.video_id;
     } else {
       alert("❌ Помилка при завантаженні відео");
       return null;
     }
   } catch (err) {
     console.error("❌ Upload failed:", err);
-    alert("❌ Не вдалося завантажити відео. Перевірте Cloudinary preset.");
+    alert("❌ Не вдалося завантажити відео на BunnyCDN");
     return null;
   } finally {
     setUploading(false);
   }
-};
-
-
-  const openUploadWidget = async () => {
-  const sigRes = await fetch(`${BACKEND}/api/cloudinary_signature`);
-  const sigData = await sigRes.json();
-
-  window.cloudinary.openUploadWidget(
-    {
-      cloudName: sigData.cloud_name,
-      uploadSignatureTimestamp: sigData.timestamp,
-      uploadSignature: sigData.signature,
-      apiKey: sigData.api_key,
-      folder: sigData.folder,
-      resourceType: "video",
-      multiple: false,
-      maxFileSize: 2000000000, // 2 GB
-      sources: ["local"],
-      showPoweredBy: false,
-      styles: {
-        palette: {
-          window: "#ffffff",
-          windowBorder: "#f5c2e7",
-          tabIcon: "#d63384",
-          menuIcons: "#d63384",
-          textDark: "#333",
-          link: "#d63384",
-          action: "#d63384",
-          inactiveTabIcon: "#999",
-          error: "#f00",
-          inProgress: "#d63384",
-          complete: "#28a745",
-          sourceBg: "#f8f9fa",
-        },
-      },
-    },
-    (error, result) => {
-      if (!error && result && result.event === "success") {
-        console.log("✅ Uploaded:", result.info.secure_url);
-        setLessonForm((prev) => ({
-          ...prev,
-          video_url: result.info.secure_url,
-          uploadSuccess: true,
-        }));
-      } else if (error) {
-        console.error("❌ Upload error:", error);
-        alert("Помилка при завантаженні відео");
-      }
-    }
-  );
 };
 
 
@@ -232,9 +166,9 @@ const handleVideoUpload = async (file, setLessonForm, setUploading) => {
 
     let videoUrl = lessonForm.video_url;
     if (lessonForm.videoFile) {
-      const uploaded = await handleVideoUpload(lessonForm.videoFile);
-      if (uploaded) videoUrl = uploaded;
-    }
+  const videoId = await uploadToBunny(lessonForm.videoFile);
+  if (videoId) videoUrl = videoId;
+}
 
     const url = editingLessonId
       ? `${BACKEND}/api/lessons/update/${editingLessonId}`
@@ -285,7 +219,7 @@ const handleVideoUpload = async (file, setLessonForm, setUploading) => {
     setLessonForm({
       title: lesson.title,
       description: lesson.description || "",
-      video_url: lesson.embed_url || "",
+      video_url: lesson.youtube_id || "",
       homework: lesson.homework || "",
       materials: lesson.materials || "",
       type: lesson.type || "theory",
@@ -556,24 +490,17 @@ const saveLessonOrder = async (moduleId) => {
                   />
 
                   <label className="block text-sm font-medium">
-                    🎥 {t("Відео Cloudinary", "Видео Cloudinary")}
-                  </label>
-                  <div>
+  🎥 {t("Відео BunnyCDN", "Видео BunnyCDN")}
+</label>
 
-  <button
-    type="button"
-    onClick={openUploadWidget}
-    className="w-full py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg font-semibold"
-  >
-    ☁️ {t("Завантажити відео (до 2 ГБ)", "Загрузить видео (до 2 ГБ)")}
-  </button>
-
-  {lessonForm.uploadSuccess && (
-    <p className="text-green-600 text-sm mt-2">
-      ✅ {t("Відео завантажено успішно", "Видео загружено успешно")}
-    </p>
-  )}
-</div>
+<input
+  type="file"
+  accept="video/*"
+  onChange={(e) =>
+    setLessonForm({ ...lessonForm, videoFile: e.target.files[0] })
+  }
+  className="w-full border border-pink-300 rounded-lg p-2"
+/>
 
 {uploading && (
   <div style={{ marginTop: "10px" }}>
@@ -586,7 +513,7 @@ const saveLessonOrder = async (moduleId) => {
         marginBottom: "4px",
       }}
     >
-      <span>Завантаження...</span>
+      <span>{t("Завантаження", "Загрузка")}...</span>
       <span>{lessonForm.uploadProgress}%</span>
     </div>
     <div
@@ -612,9 +539,10 @@ const saveLessonOrder = async (moduleId) => {
 
 {lessonForm.uploadSuccess && (
   <p style={{ color: "green", fontSize: "12px", marginTop: "6px" }}>
-    ✅ Відео завантажено успішно
+    ✅ {t("Відео завантажено успішно", "Видео загружено успешно")}
   </p>
 )}
+
 
                   {/* 🩷 Теорія / 💜 Практика */}
                   <div className="flex gap-2">
