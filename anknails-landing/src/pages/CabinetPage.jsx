@@ -104,16 +104,21 @@ else if (lesson.embed_url) {
     }
   };
 
-  if (!videoUrl)
-    return (
-      <p className="text-sm text-gray-500 text-center py-4">
-        ❌{" "}
-        {t(
-          "Невірне посилання або відео не знайдено",
-          "Неверная ссылка или видео не найдено"
-        )}
-      </p>
-    );
+// 🔎 Bunny iframe
+if (videoUrl && videoUrl.includes("iframe.mediadelivery")) {
+  return (
+    <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
+      <iframe
+        src={videoUrl}
+        className="w-full h-full"
+        allow="autoplay; fullscreen; picture-in-picture"
+        allowFullScreen={false}
+        sandbox="allow-scripts allow-same-origin"
+      />
+    </div>
+  );
+}
+
 
   const isYouTube = videoUrl.includes("youtube");
   if (isYouTube)
