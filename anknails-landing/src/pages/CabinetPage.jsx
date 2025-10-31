@@ -104,20 +104,24 @@ else if (lesson.embed_url) {
     }
   };
 
-// 🔎 Bunny iframe
-if (typeof videoUrl === "string" && videoUrl.includes("iframe.mediadelivery")) {
-  return (
-    <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-      <iframe
-        src={videoUrl}
-        className="w-full h-full"
-        allow="autoplay; fullscreen; picture-in-picture"
-        allowFullScreen={false}
-        sandbox="allow-scripts allow-same-origin"
-      />
-    </div>
-  );
-}
+  useEffect(() => {
+  if (!videoUrl) return;
+
+  // HLS case
+  if (videoUrl.includes(".m3u8") && Hls.isSupported()) {
+    const hls = new Hls({ enableWorker: true });
+    hls.loadSource(videoUrl);
+    hls.attachMedia(videoRef.current);
+
+    hls.on(Hls.Events.ERROR, (event, data) => {
+      console.error("HLS error", data);
+      setLoading(false);
+    });
+  } else {
+    if (videoRef.current) videoRef.current.src = videoUrl;
+  }
+}, [videoUrl]);
+
 
 
   const isYouTube = typeof videoUrl === "string" && videoUrl.includes("youtube");
@@ -131,6 +135,22 @@ if (typeof videoUrl === "string" && videoUrl.includes("iframe.mediadelivery")) {
       </div>
     );
 
+  useEffect(() => {
+  const blockPrintScreen = (e) => {
+    if (e.key === "PrintScreen") {
+      alert("Захист контенту. Скріншот заборонено.");
+      e.preventDefault();
+    }
+  };
+
+  document.addEventListener("keydown", blockPrintScreen);
+
+  return () => {
+    document.removeEventListener("keydown", blockPrintScreen);
+  };
+}, []);
+
+
 
   return (
     <div className="flex flex-col items-center gap-4">
@@ -142,6 +162,7 @@ if (typeof videoUrl === "string" && videoUrl.includes("iframe.mediadelivery")) {
     Завантаження відео...
   </div>
 )}
+        
         
         <video
   ref={videoRef}
