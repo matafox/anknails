@@ -24,88 +24,167 @@ const BACKEND = "https://anknails-backend-production.up.railway.app";
 
 // ================= SAFEVIDEO =================
 const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
-  const [iframeUrl, setIframeUrl] = useState(null);
+  const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
   const [lastSent, setLastSent] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [showNextButton, setShowNextButton] = useState(false);
-  const [maxWatched, setMaxWatched] = useState(0);
+  const [maxWatched, setMaxWatched] = useState(0); // 🔒 запам’ятовуємо максимум проглянутого
 
   const nextLesson = getNextLesson?.(lesson.id);
 
   useEffect(() => {
     if (!lesson) return;
 
+    else if (lesson.youtube_id && lesson.youtube_id.includes("-")) {
+  fetch(`${BACKEND}/api/video/token/${lesson.id}`, {
+    headers: { "X-User-Email": localStorage.getItem("user_email") }
+  })
+    .then(r => r.json())
+    .then(d => {
+      setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
+    });
+}
+else if (lesson.embed_url) {
+  setVideoUrl(lesson.embed_url);
+}
+
     const email = localStorage.getItem("user_email");
-
-    // ✅ YouTube fallback (старі уроки)
-    if (lesson.youtube_id && !lesson.youtube_id.includes("-")) {
-      setIframeUrl(`https://www.youtube-nocookie.com/embed/${lesson.youtube_id}`);
-      setLoading(false);
-      return;
+    if (email) {
+      fetch(`${BACKEND}/api/users`)
+        .then((r) => r.json())
+        .then((d) => {
+          const u = d.users?.find((x) => x.email === email);
+          if (u) setUserId(u.id);
+        });
     }
-
-    // ✅ Bunny secure iframe token
-    fetch(`${BACKEND}/api/video/${lesson.id}`, {
-      headers: { "X-User-Email": email }
-    })
-      .then(r => r.json())
-      .then(data => {
-        const url =
-          `https://iframe.mediadelivery.net/embed/${data.library}/${data.videoId}` +
-          `?token=${data.token}&expires=${data.expires}&autoplay=true&preload=true&disableLocalStorage=true`;
-
-        setIframeUrl(url);
-        setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-        alert(t("Помилка завантаження відео", "Ошибка загрузки видео"));
-      });
-
-    // ✅ get user ID
-    fetch(`${BACKEND}/api/users`)
-      .then(r => r.json())
-      .then(d => {
-        const u = d.users?.find(x => x.email === email);
-        if (u) setUserId(u.id);
-      });
   }, [lesson]);
+
+  // 🔁 відправка прогресу
+  const sendProgress = async (watched, total, done = false) => {
+    if (!userId || !lesson?.id || total <= 0) return;
+    try {
+      await fetch(`${BACKEND}/api/progress/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userId,
+          lesson_id: lesson.id,
+          watched_seconds: watched,
+          total_seconds: total,
+          completed: done,
+        }),
+      });
+      if (onProgressUpdate) onProgressUpdate(lesson.id, watched, total, done);
+    } catch (e) {
+      console.warn("⚠️ Проблема з оновленням прогресу", e);
+    }
+  };
 
   if (loading)
     return (
-      <div className="w-full aspect-video flex items-center justify-center bg-black/60 text-pink-300 text-sm rounded-xl">
-        {t("Завантаження відео...", "Загрузка видео...")}
+      <div className="w-full aspect-video flex items-center justify-center bg-black/60 rounded-xl text-pink-300 text-sm">
+        Завантаження відео...
       </div>
     );
 
-  if (!iframeUrl)
+  if (!videoUrl)
     return (
       <p className="text-sm text-gray-500 text-center py-4">
-        ❌ {t("Відео не знайдено", "Видео не найдено")}
+        ❌{" "}
+        {t(
+          "Невірне посилання або відео не знайдено",
+          "Неверная ссылка или видео не найдено"
+        )}
       </p>
     );
 
+  const isYouTube = videoUrl.includes("youtube");
+  if (isYouTube)
+    return (
+      <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
+        {t(
+          "YouTube не підтримує відстеження прогресу",
+          "YouTube не поддерживает прогресс"
+        )}
+      </div>
+    );
+
+
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-        <iframe
-          src={iframeUrl}
-          allow="autoplay; encrypted-media; picture-in-picture"
-          allowFullScreen
-          sandbox="allow-same-origin allow-scripts allow-pointer-lock allow-presentation"
-          className="w-full h-full rounded-xl select-none pointer-events-auto"
-          onContextMenu={e => e.preventDefault()}
-        />
+      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
+        <video
+          src={videoUrl}
+          controls
+          style={{
+  pointerEvents: "auto",
+  userSelect: "none"
+}}
+          playsInline
+          preload="metadata"
+          className="w-full h-full object-cover select-none pointer-events-auto"
+          controlsList="nodownload noremoteplayback nofullscreen"
+          disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
 
-        {/* 📍 Email watermark */}
+          onLoadedData={() => setLoading(false)}
+onError={() => {
+  setLoading(false);
+  alert("Помилка завантаження відео");
+}}
+          
+          onTimeUpdate={(e) => {
+            const current = e.target.currentTime;
+            const total = e.target.duration;
+
+            // ⛔ Не оновлюємо, якщо користувач перемотав назад
+            if (current < maxWatched - 2) return;
+
+            // 🧠 Запам’ятовуємо найбільшу точку перегляду
+            if (current > maxWatched) setMaxWatched(current);
+
+            // ⏱ Відправляємо прогрес кожні 10 секунд
+            if (current - lastSent >= 10) {
+              setLastSent(current);
+              sendProgress(current, total);
+            }
+
+            // 🎯 Завершення уроку
+            if (!completed && current >= total * 0.95) {
+              setCompleted(true);
+              sendProgress(total, total, true);
+
+              // 🧩 Оновлення XP користувача
+              fetch(`${BACKEND}/api/progress/user/${userId}`)
+                .then((r) => r.json())
+                .then((data) => {
+                  if (setUser && data.xp !== undefined) {
+                    setUser((prev) => ({
+                      ...prev,
+                      xp: data.xp,
+                      level: data.level,
+                    }));
+                  }
+                })
+                .catch((err) => console.warn("⚠️ XP refresh failed", err));
+
+              if (nextLesson) setShowNextButton(true);
+            }
+          }}
+        >
+          {t(
+            "Ваш браузер не підтримує відтворення відео",
+            "Ваш браузер не поддерживает воспроизведение видео"
+          )}
+        </video>
         <div className="absolute bottom-3 right-3 text-white/70 text-xs pointer-events-none select-none">
-          {localStorage.getItem("user_email")}
-        </div>
+  {localStorage.getItem("user_email")}
+</div>
       </div>
 
-      {/* ✅ Next lesson button */}
+      {/* Кнопка переходу до наступного уроку */}
       {nextLesson && showNextButton && (
         <button
           onClick={() => {
@@ -121,7 +200,6 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
     </div>
   );
 };
-
 
 // ================= CABINET PAGE =================
 export default function CabinetPage() {
