@@ -57,7 +57,10 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
       })
         .then(r => r.json())
         .then(d => {
-          setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
+          fetch(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`)
+  .then(r => r.json())
+  .then(d => setVideoUrl(d.url))
+  .finally(() => setLoading(false));
         })
         .finally(() => setLoading(false));
     }
