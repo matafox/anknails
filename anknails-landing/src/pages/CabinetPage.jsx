@@ -44,7 +44,6 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
     .then(r => r.json())
     .then(d => {
       setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
-      setLoading(false); 
     });
 }
 else if (lesson.embed_url) {
@@ -83,12 +82,12 @@ else if (lesson.embed_url) {
     }
   };
 
- {loading && (
-  <div className="absolute inset-0 flex items-center justify-center
-                  bg-black/60 text-pink-300 text-sm rounded-xl z-10">
-    Завантаження відео...
-  </div>
-)}
+  if (loading)
+    return (
+      <div className="w-full aspect-video flex items-center justify-center bg-black/60 rounded-xl text-pink-300 text-sm">
+        Завантаження відео...
+      </div>
+    );
 
   if (!videoUrl)
     return (
@@ -129,13 +128,6 @@ else if (lesson.embed_url) {
           controlsList="nodownload noremoteplayback nofullscreen"
           disablePictureInPicture
           onContextMenu={(e) => e.preventDefault()}
-
-          onLoadedData={() => setLoading(false)}
-onError={() => {
-  setLoading(false);
-  alert("Помилка завантаження відео");
-}}
-          
           onTimeUpdate={(e) => {
             const current = e.target.currentTime;
             const total = e.target.duration;
