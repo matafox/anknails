@@ -30,39 +30,46 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   const [lastSent, setLastSent] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [showNextButton, setShowNextButton] = useState(false);
-  const [maxWatched, setMaxWatched] = useState(0); // 🔒 запам’ятовуємо максимум проглянутого
+  const [maxWatched, setMaxWatched] = useState(0);
 
   const nextLesson = getNextLesson?.(lesson.id);
 
   useEffect(() => {
     if (!lesson) return;
 
-    else if (lesson.youtube_id && lesson.youtube_id.includes("-")) {
-  fetch(`${BACKEND}/api/video/token/${lesson.id}`, {
-    headers: { "X-User-Email": localStorage.getItem("user_email") }
-  })
-    .then(r => r.json())
-    .then(d => {
-      setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
-      setLoading(false); 
-    });
-}
-else if (lesson.embed_url) {
-  setVideoUrl(lesson.embed_url);
-}
+    // ✅ YouTube fallback
+    if (lesson.youtube_id && !lesson.youtube_id.includes("-")) {
+      setVideoUrl(`https://www.youtube-nocookie.com/embed/${lesson.youtube_id}`);
+      setLoading(false);
+      return;
+    }
+
+    // ✅ Bunny secure iframe token
+    fetch(`${BACKEND}/api/video/${lesson.id}`, {
+      headers: { "X-User-Email": localStorage.getItem("user_email") }
+    })
+      .then(r => r.json())
+      .then(data => {
+        const url =
+          `https://iframe.mediadelivery.net/embed/${data.library}/${data.videoId}` +
+          `?token=${data.token}&expires=${data.expires}&autoplay=true&preload=true`;
+
+        setVideoUrl(url);
+        setLoading(false);
+      });
 
     const email = localStorage.getItem("user_email");
     if (email) {
       fetch(`${BACKEND}/api/users`)
-        .then((r) => r.json())
-        .then((d) => {
-          const u = d.users?.find((x) => x.email === email);
+        .then(r => r.json())
+        .then(d => {
+          const u = d.users?.find(x => x.email === email);
           if (u) setUserId(u.id);
         });
     }
   }, [lesson]);
 
-  // 🔁 відправка прогресу
+  // ✅ Progress sending logic (unchanged)
   const sendProgress = async (watched, total, done = false) => {
     if (!userId || !lesson?.id || total <= 0) return;
     try {
@@ -83,109 +90,41 @@ else if (lesson.embed_url) {
     }
   };
 
- {loading && (
-  <div className="absolute inset-0 flex items-center justify-center
-                  bg-black/60 text-pink-300 text-sm rounded-xl z-10">
-    Завантаження відео...
-  </div>
-)}
+  if (loading)
+    return (
+      <div className="w-full aspect-video flex items-center justify-center
+                    bg-black/60 text-pink-300 text-sm rounded-xl">
+        {t("Завантаження відео...", "Загрузка видео...")}
+      </div>
+    );
 
   if (!videoUrl)
     return (
       <p className="text-sm text-gray-500 text-center py-4">
-        ❌{" "}
-        {t(
-          "Невірне посилання або відео не знайдено",
-          "Неверная ссылка или видео не найдено"
-        )}
+        ❌ {t("Відео не знайдено", "Видео не найдено")}
       </p>
     );
 
-  const isYouTube = videoUrl.includes("youtube");
-  if (isYouTube)
-    return (
-      <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
-        {t(
-          "YouTube не підтримує відстеження прогресу",
-          "YouTube не поддерживает прогресс"
-        )}
-      </div>
-    );
-
-
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-        <video
+      {/* ✅ Bunny iframe */}
+      <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
+        <iframe
           src={videoUrl}
-          controls
-          style={{
-  pointerEvents: "auto",
-  userSelect: "none"
-}}
-          playsInline
-          preload="metadata"
-          className="w-full h-full object-cover select-none pointer-events-auto"
-          controlsList="nodownload noremoteplayback nofullscreen"
-          disablePictureInPicture
-          onContextMenu={(e) => e.preventDefault()}
+          allow="autoplay; encrypted-media"
+          allowFullScreen={false}
+          sandbox="allow-same-origin allow-scripts allow-pointer-lock allow-presentation"
+          className="w-full h-full rounded-xl select-none pointer-events-auto"
+          onContextMenu={e => e.preventDefault()}
+        />
 
-          onLoadedData={() => setLoading(false)}
-onError={() => {
-  setLoading(false);
-  alert("Помилка завантаження відео");
-}}
-          
-          onTimeUpdate={(e) => {
-            const current = e.target.currentTime;
-            const total = e.target.duration;
-
-            // ⛔ Не оновлюємо, якщо користувач перемотав назад
-            if (current < maxWatched - 2) return;
-
-            // 🧠 Запам’ятовуємо найбільшу точку перегляду
-            if (current > maxWatched) setMaxWatched(current);
-
-            // ⏱ Відправляємо прогрес кожні 10 секунд
-            if (current - lastSent >= 10) {
-              setLastSent(current);
-              sendProgress(current, total);
-            }
-
-            // 🎯 Завершення уроку
-            if (!completed && current >= total * 0.95) {
-              setCompleted(true);
-              sendProgress(total, total, true);
-
-              // 🧩 Оновлення XP користувача
-              fetch(`${BACKEND}/api/progress/user/${userId}`)
-                .then((r) => r.json())
-                .then((data) => {
-                  if (setUser && data.xp !== undefined) {
-                    setUser((prev) => ({
-                      ...prev,
-                      xp: data.xp,
-                      level: data.level,
-                    }));
-                  }
-                })
-                .catch((err) => console.warn("⚠️ XP refresh failed", err));
-
-              if (nextLesson) setShowNextButton(true);
-            }
-          }}
-        >
-          {t(
-            "Ваш браузер не підтримує відтворення відео",
-            "Ваш браузер не поддерживает воспроизведение видео"
-          )}
-        </video>
+        {/* Email watermark */}
         <div className="absolute bottom-3 right-3 text-white/70 text-xs pointer-events-none select-none">
-  {localStorage.getItem("user_email")}
-</div>
+          {localStorage.getItem("user_email")}
+        </div>
       </div>
 
-      {/* Кнопка переходу до наступного уроку */}
+      {/* ✅ Next lesson button */}
       {nextLesson && showNextButton && (
         <button
           onClick={() => {
