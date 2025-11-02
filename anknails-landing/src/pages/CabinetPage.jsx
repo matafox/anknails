@@ -53,16 +53,14 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
     // 🟣 Bunny secure playback
     if (lesson.youtube_id && lesson.youtube_id.includes("-")) {
       fetch(`${BACKEND}/api/video/token/${lesson.id}`, {
-        headers: { "X-User-Email": email }
-      })
-        .then(r => r.json())
-        .then(d => {
-          fetch(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`)
+  headers: { "X-User-Email": email }
+})
   .then(r => r.json())
-  .then(d => setVideoUrl(d.url))
+  .then(d => {
+    setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
+  })
   .finally(() => setLoading(false));
-        })
-        .finally(() => setLoading(false));
+
     }
 
     // 🟡 Fallback embed (YouTube etc)
