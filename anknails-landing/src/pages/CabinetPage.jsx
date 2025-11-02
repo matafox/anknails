@@ -31,28 +31,13 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   const [lastSent, setLastSent] = useState(0);
   const [completed, setCompleted] = useState(false);
   const [showNextButton, setShowNextButton] = useState(false);
-  const [maxWatched, setMaxWatched] = useState(0); // 🔒 запам’ятовуємо максимум проглянутого
+  const [maxWatched, setMaxWatched] = useState(0);
 
   const videoRef = useRef(null);
-  
-  const nextLesson = getNextLesson?.(lesson.id);
+  const nextLesson = getNextLesson?.(lesson?.id);
 
   useEffect(() => {
     if (!lesson) return;
-
-    else if (lesson.youtube_id && lesson.youtube_id.includes("-")) {
-  fetch(`${BACKEND}/api/video/token/${lesson.id}`, {
-    headers: { "X-User-Email": localStorage.getItem("user_email") }
-  })
-    .then(r => r.json())
-    .then(d => {
-      setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
-      setLoading(false); 
-    });
-}
-else if (lesson.embed_url) {
-  setVideoUrl(lesson.embed_url);
-}
 
     const email = localStorage.getItem("user_email");
     if (email) {
@@ -63,27 +48,55 @@ else if (lesson.embed_url) {
           if (u) setUserId(u.id);
         });
     }
+
+    // Bunny stream
+    if (lesson.youtube_id && lesson.youtube_id.includes("-")) {
+      fetch(`${BACKEND}/api/video/token/${lesson.id}`, {
+        headers: { "X-User-Email": email }
+      })
+        .then((r) => r.json())
+        .then((d) => {
+          setVideoUrl(`${BACKEND}/api/video/stream/${lesson.id}?token=${d.token}`);
+        })
+        .finally(() => setLoading(false));
+    }
+
+    // Embed backup (YouTube etc)
+    else if (lesson.embed_url) {
+      setVideoUrl(lesson.embed_url);
+      setLoading(false);
+    }
   }, [lesson]);
 
   useEffect(() => {
-  if (!videoUrl) return;
+    if (!videoUrl || !videoRef.current) return;
 
-  // Якщо HLS і браузер підтримує через Hls.js
-  if (videoUrl.includes(".m3u8") && Hls.isSupported()) {
-    const hls = new Hls();
-    hls.loadSource(videoUrl);
-    hls.attachMedia(videoRef.current);
-  } 
-  // Safari сам розуміє HLS
-  else {
-    if (videoRef.current) {
+    if (videoUrl.includes(".m3u8") && Hls.isSupported()) {
+      const hls = new Hls({ enableWorker: true });
+      hls.loadSource(videoUrl);
+      hls.attachMedia(videoRef.current);
+
+      hls.on(Hls.Events.ERROR, () => {
+        console.warn("⚠️ HLS error — switching to MP4 fallback...");
+        setVideoUrl(videoUrl.replace("playlist.m3u8", "video.mp4"));
+      });
+    } else {
       videoRef.current.src = videoUrl;
     }
-  }
-}, [videoUrl]);
+  }, [videoUrl]);
 
+  // block PrintScreen
+  useEffect(() => {
+    const block = (e) => {
+      if (e.key === "PrintScreen") {
+        alert("Захист контенту. Скріншот заборонено.");
+        e.preventDefault();
+      }
+    };
+    document.addEventListener("keydown", block);
+    return () => document.removeEventListener("keydown", block);
+  }, []);
 
-  // 🔁 відправка прогресу
   const sendProgress = async (watched, total, done = false) => {
     if (!userId || !lesson?.id || total <= 0) return;
     try {
@@ -98,144 +111,82 @@ else if (lesson.embed_url) {
           completed: done,
         }),
       });
-      if (onProgressUpdate) onProgressUpdate(lesson.id, watched, total, done);
-    } catch (e) {
-      console.warn("⚠️ Проблема з оновленням прогресу", e);
-    }
+
+      onProgressUpdate?.(lesson.id, watched, total, done);
+    } catch {}
   };
 
-  useEffect(() => {
-  if (!videoUrl) return;
-
-  // HLS case
-  if (videoUrl.includes(".m3u8") && Hls.isSupported()) {
-    const hls = new Hls({ enableWorker: true });
-    hls.loadSource(videoUrl);
-    hls.attachMedia(videoRef.current);
-
-    hls.on(Hls.Events.ERROR, (event, data) => {
-      console.error("HLS error", data);
-      setLoading(false);
-    });
-  } else {
-    if (videoRef.current) videoRef.current.src = videoUrl;
-  }
-}, [videoUrl]);
-
-
-
-  const isYouTube = typeof videoUrl === "string" && videoUrl.includes("youtube");
-  if (isYouTube)
+  if (!videoUrl) {
     return (
       <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
-        {t(
-          "YouTube не підтримує відстеження прогресу",
-          "YouTube не поддерживает прогресс"
-        )}
+        ⏳ {t("Загрузка відео...", "Загрузка видео...")}
       </div>
     );
+  }
 
-  useEffect(() => {
-  const blockPrintScreen = (e) => {
-    if (e.key === "PrintScreen") {
-      alert("Захист контенту. Скріншот заборонено.");
-      e.preventDefault();
-    }
-  };
+  const isYouTube = videoUrl.includes("youtube");
 
-  document.addEventListener("keydown", blockPrintScreen);
-
-  return () => {
-    document.removeEventListener("keydown", blockPrintScreen);
-  };
-}, []);
-
-
+  if (isYouTube) {
+    return (
+      <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
+        {t("YouTube не підтримує відстеження прогресу", "YouTube не поддерживает прогресс")}
+      </div>
+    );
+  }
 
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black relative">
+        {loading && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/60 text-pink-300 text-sm z-10">
+            {t("Завантаження відео...", "Загрузка видео...")}
+          </div>
+        )}
 
- {loading && (
-  <div className="absolute inset-0 flex items-center justify-center
-                  bg-black/60 text-pink-300 text-sm rounded-xl z-10">
-    Завантаження відео...
-  </div>
-)}
-        
-        
         <video
-  ref={videoRef}
-  controls
-  style={{ pointerEvents: "auto", userSelect: "none" }}
-  playsInline
-  preload="metadata"
-  className="w-full h-full object-cover select-none pointer-events-auto"
-  controlsList="nodownload noremoteplayback nofullscreen"
-  disablePictureInPicture
-  onContextMenu={(e) => e.preventDefault()}
-  onLoadedData={() => setLoading(false)}
-  onError={() => {
-    setLoading(false);
-    alert("Помилка завантаження відео");
-  }}
-  onTimeUpdate={(e) => {
-    const current = e.target.currentTime;
-    const total = e.target.duration;
+          ref={videoRef}
+          controls
+          style={{ pointerEvents: "auto", userSelect: "none" }}
+          playsInline
+          preload="metadata"
+          className="w-full h-full object-cover select-none pointer-events-auto"
+          controlsList="nodownload noremoteplayback nofullscreen"
+          disablePictureInPicture
+          onContextMenu={(e) => e.preventDefault()}
+          onError={() => alert("Помилка завантаження відео")}
+          onTimeUpdate={(e) => {
+            const current = e.target.currentTime;
+            const total = e.target.duration;
 
-            // ⛔ Не оновлюємо, якщо користувач перемотав назад
             if (current < maxWatched - 2) return;
-
-            // 🧠 Запам’ятовуємо найбільшу точку перегляду
             if (current > maxWatched) setMaxWatched(current);
 
-            // ⏱ Відправляємо прогрес кожні 10 секунд
             if (current - lastSent >= 10) {
               setLastSent(current);
               sendProgress(current, total);
             }
 
-            // 🎯 Завершення уроку
             if (!completed && current >= total * 0.95) {
               setCompleted(true);
               sendProgress(total, total, true);
 
-              // 🧩 Оновлення XP користувача
               fetch(`${BACKEND}/api/progress/user/${userId}`)
                 .then((r) => r.json())
-                .then((data) => {
-                  if (setUser && data.xp !== undefined) {
-                    setUser((prev) => ({
-                      ...prev,
-                      xp: data.xp,
-                      level: data.level,
-                    }));
-                  }
-                })
-                .catch((err) => console.warn("⚠️ XP refresh failed", err));
+                .then((data) => setUser((p) => ({ ...p, xp: data.xp, level: data.level })));
 
               if (nextLesson) setShowNextButton(true);
             }
           }}
-        >
-          {t(
-            "Ваш браузер не підтримує відтворення відео",
-            "Ваш браузер не поддерживает воспроизведение видео"
-          )}
-        </video>
-        <div className="absolute bottom-3 right-3 text-white/70 text-xs pointer-events-none select-none">
-  {localStorage.getItem("user_email")}
-</div>
+        />
       </div>
 
-      {/* Кнопка переходу до наступного уроку */}
       {nextLesson && showNextButton && (
         <button
           onClick={() => {
             localStorage.setItem("last_lesson", JSON.stringify(nextLesson));
             window.location.reload();
           }}
-          className="animate-fadeIn flex items-center gap-2 px-5 py-3 text-sm md:text-base font-semibold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-md"
+          className="animate-fadeIn flex items-center gap-2 px-5 py-3 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white"
         >
           <ArrowRightCircle className="w-5 h-5" />
           {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
