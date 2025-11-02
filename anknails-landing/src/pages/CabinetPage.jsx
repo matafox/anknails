@@ -24,7 +24,7 @@ const BACKEND = "https://anknails-backend-production.up.railway.app";
 
 // ================= SAFEVIDEO =================
 const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
-  const [videoUrl, setVideoUrl] = useState(null);
+  const [iframeUrl, setIframeUrl] = useState(null);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState(null);
   const [lastSent, setLastSent] = useState(0);
@@ -37,68 +37,50 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   useEffect(() => {
     if (!lesson) return;
 
-    // ✅ YouTube fallback
+    const email = localStorage.getItem("user_email");
+
+    // ✅ YouTube fallback (старі уроки)
     if (lesson.youtube_id && !lesson.youtube_id.includes("-")) {
-      setVideoUrl(`https://www.youtube-nocookie.com/embed/${lesson.youtube_id}`);
+      setIframeUrl(`https://www.youtube-nocookie.com/embed/${lesson.youtube_id}`);
       setLoading(false);
       return;
     }
 
     // ✅ Bunny secure iframe token
     fetch(`${BACKEND}/api/video/${lesson.id}`, {
-      headers: { "X-User-Email": localStorage.getItem("user_email") }
+      headers: { "X-User-Email": email }
     })
       .then(r => r.json())
       .then(data => {
         const url =
           `https://iframe.mediadelivery.net/embed/${data.library}/${data.videoId}` +
-          `?token=${data.token}&expires=${data.expires}&autoplay=true&preload=true`;
+          `?token=${data.token}&expires=${data.expires}&autoplay=true&preload=true&disableLocalStorage=true`;
 
-        setVideoUrl(url);
+        setIframeUrl(url);
         setLoading(false);
+      })
+      .catch(() => {
+        setLoading(false);
+        alert(t("Помилка завантаження відео", "Ошибка загрузки видео"));
       });
 
-    const email = localStorage.getItem("user_email");
-    if (email) {
-      fetch(`${BACKEND}/api/users`)
-        .then(r => r.json())
-        .then(d => {
-          const u = d.users?.find(x => x.email === email);
-          if (u) setUserId(u.id);
-        });
-    }
+    // ✅ get user ID
+    fetch(`${BACKEND}/api/users`)
+      .then(r => r.json())
+      .then(d => {
+        const u = d.users?.find(x => x.email === email);
+        if (u) setUserId(u.id);
+      });
   }, [lesson]);
-
-  // ✅ Progress sending logic (unchanged)
-  const sendProgress = async (watched, total, done = false) => {
-    if (!userId || !lesson?.id || total <= 0) return;
-    try {
-      await fetch(`${BACKEND}/api/progress/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          lesson_id: lesson.id,
-          watched_seconds: watched,
-          total_seconds: total,
-          completed: done,
-        }),
-      });
-      if (onProgressUpdate) onProgressUpdate(lesson.id, watched, total, done);
-    } catch (e) {
-      console.warn("⚠️ Проблема з оновленням прогресу", e);
-    }
-  };
 
   if (loading)
     return (
-      <div className="w-full aspect-video flex items-center justify-center
-                    bg-black/60 text-pink-300 text-sm rounded-xl">
+      <div className="w-full aspect-video flex items-center justify-center bg-black/60 text-pink-300 text-sm rounded-xl">
         {t("Завантаження відео...", "Загрузка видео...")}
       </div>
     );
 
-  if (!videoUrl)
+  if (!iframeUrl)
     return (
       <p className="text-sm text-gray-500 text-center py-4">
         ❌ {t("Відео не знайдено", "Видео не найдено")}
@@ -107,18 +89,17 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
 
   return (
     <div className="flex flex-col items-center gap-4">
-      {/* ✅ Bunny iframe */}
       <div className="relative w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
         <iframe
-          src={videoUrl}
-          allow="autoplay; encrypted-media"
-          allowFullScreen={false}
+          src={iframeUrl}
+          allow="autoplay; encrypted-media; picture-in-picture"
+          allowFullScreen
           sandbox="allow-same-origin allow-scripts allow-pointer-lock allow-presentation"
           className="w-full h-full rounded-xl select-none pointer-events-auto"
           onContextMenu={e => e.preventDefault()}
         />
 
-        {/* Email watermark */}
+        {/* 📍 Email watermark */}
         <div className="absolute bottom-3 right-3 text-white/70 text-xs pointer-events-none select-none">
           {localStorage.getItem("user_email")}
         </div>
@@ -140,6 +121,7 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
     </div>
   );
 };
+
 
 // ================= CABINET PAGE =================
 export default function CabinetPage() {
