@@ -19,8 +19,8 @@ import {
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
-/* ================= SAFEVIDEO (BUNNY-ONLY, no user progress at all; just next button in last 10s) ================= */
-const SafeVideo = ({ lesson, t, getNextLesson, userId }) => {
+/* ================= SAFEVIDEO (BUNNY + прогрес у бекенд, "далі" за 10с до кінця) ================= */
+const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,18 +31,38 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId }) => {
   const [duration, setDuration] = useState(0);
   const [current, setCurrent] = useState(0);
   const [showNext, setShowNext] = useState(false);
-
   const iframeRef = useRef(null);
   const pollTimerRef = useRef(null);
+  const saveTimerRef = useRef(null);
 
-  // 🔁 при зміні уроку — ресетимо
+  // для “кожні 10с”
+  const lastBucketRef = useRef(-1);
+
+  const postProgress = useMemo(
+    () => async (payload) => {
+      try {
+        const r = await fetch(`${BACKEND}/api/progress/update`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+        return r.ok;
+      } catch (e) {
+        console.warn("progress update error", e);
+        return false;
+      }
+    },
+    []
+  );
+
   useEffect(() => {
     setDuration(0);
     setCurrent(0);
     setShowNext(false);
+    lastBucketRef.current = -1;
   }, [lesson?.id]);
 
-  // свіжий підписаний iframe URL
+  // підписаний iframe URL
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -66,33 +86,24 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId }) => {
     };
   }, [lesson]);
 
-  // слухаємо події Bunny (тільки для часу та завершення)
+  // слухач подій Bunny
   useEffect(() => {
     if (!videoUrl) return;
 
     const handler = (e) => {
       if (!String(e.origin).includes("mediadelivery.net")) return;
-
       const data = e.data ?? {};
       const ev = data.event || data.type || data.action;
 
-      // currentTime
-      if (typeof data.currentTime === "number") {
-        setCurrent(data.currentTime);
-      } else if (typeof data.time === "number") {
-        setCurrent(data.time);
-      } else if (typeof data.value === "number" && (ev === "timeupdate" || ev === "currentTime")) {
+      if (typeof data.currentTime === "number") setCurrent(data.currentTime);
+      else if (typeof data.time === "number") setCurrent(data.time);
+      else if (typeof data.value === "number" && (ev === "timeupdate" || ev === "currentTime"))
         setCurrent(data.value);
-      }
 
-      // duration
-      if (typeof data.duration === "number" && data.duration > 0) {
-        setDuration(data.duration);
-      } else if (typeof data.value === "number" && (ev === "durationchange" || ev === "duration")) {
-        if (data.value > 0) setDuration(data.value);
-      }
+      if (typeof data.duration === "number" && data.duration > 0) setDuration(data.duration);
+      else if (typeof data.value === "number" && (ev === "durationchange" || ev === "duration") && data.value > 0)
+        setDuration(data.value);
 
-      // ended → просто показуємо кнопку «далі»
       if (ev === "ended" || data.ended === true) {
         setShowNext(true);
         setCurrent((c) => (duration ? duration : c));
@@ -104,14 +115,12 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId }) => {
     const ask = () => {
       try {
         const w = iframeRef.current?.contentWindow;
-        if (!w) return;
-        w.postMessage({ command: "getCurrentTime" }, "*");
-        w.postMessage({ command: "getDuration" }, "*");
-        w.postMessage("getCurrentTime", "*");
-        w.postMessage("getDuration", "*");
+        w?.postMessage({ command: "getCurrentTime" }, "*");
+        w?.postMessage({ command: "getDuration" }, "*");
+        w?.postMessage("getCurrentTime", "*");
+        w?.postMessage("getDuration", "*");
       } catch {}
     };
-
     ask();
     pollTimerRef.current = window.setInterval(ask, 700);
 
@@ -121,11 +130,51 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId }) => {
     };
   }, [videoUrl, duration]);
 
-  // показуємо кнопку «далі» в останні 10 секунд
+  // локальні тики кожні 10с для миттєвого руху смужок
   useEffect(() => {
-    const remaining = duration > 0 ? Math.max(0, duration - current) : null;
+    const total = duration || 0;
+    const watched = total ? Math.min(current, total) : current;
+
+    if (total > 0) {
+      const bucket = Math.floor((watched || 0) / 10);
+      if (bucket !== lastBucketRef.current) {
+        lastBucketRef.current = bucket;
+        onProgressTick?.({
+          lessonId: lesson?.id,
+          watched_seconds: Math.floor(watched || 0),
+          total_seconds: Math.floor(total),
+          completed: total > 0 && watched >= total - 2,
+        });
+      }
+    }
+
+    // кнопка “далі”
+    const remaining = total > 0 ? Math.max(0, total - watched) : null;
     if (remaining !== null && remaining <= 10) setShowNext(true);
-  }, [current, duration]);
+  }, [current, duration, lesson?.id, onProgressTick]);
+
+  // періодичний пуш у бекенд
+  useEffect(() => {
+    if (!userId || !lesson?.id) return;
+
+    const save = async () => {
+      if (!duration) return;
+      await postProgress({
+        user_id: userId,
+        lesson_id: lesson.id,
+        watched_seconds: Math.floor(Math.min(current, duration)),
+        total_seconds: Math.floor(duration),
+        completed: duration > 0 && duration - current <= 2,
+      });
+    };
+
+    saveTimerRef.current = window.setInterval(save, 5000);
+    return () => {
+      if (saveTimerRef.current) window.clearInterval(saveTimerRef.current);
+      // фінальний пуш
+      save();
+    };
+  }, [userId, lesson?.id, current, duration, postProgress]);
 
   if (loading) {
     return (
@@ -171,7 +220,15 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId }) => {
             const n = getNextLesson(lesson?.id);
             if (!n) return;
 
-            // без будь-якого збереження прогресу
+            // позначаємо як завершений
+            await postProgress({
+              user_id: userId,
+              lesson_id: lesson.id,
+              watched_seconds: Math.floor(Math.min(current, duration || current)),
+              total_seconds: Math.floor(duration || 0),
+              completed: true,
+            });
+
             localStorage.setItem("last_lesson", JSON.stringify(n));
             localStorage.setItem("last_view", "lesson");
             window.location.reload();
@@ -199,13 +256,15 @@ export default function CabinetPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  // прогрес для користувача — видалено; залишаємо порожній об’єкт для сумісності з іншими компонентами
-  const [progress] = useState({}); 
-  const [view, setView] = useState("dashboard");
+  // нове: прогрес мапою { [lessonId]: {watched_seconds,total_seconds,completed,homework_done} }
+  const [progress, setProgress] = useState({});
+  // нове: загальний відсоток курсу
+  const [overallProgress, setOverallProgress] = useState(0);
 
+  const [view, setView] = useState("dashboard");
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
-  // 🔒 анти-копі
+  // анти-копі
   useEffect(() => {
     const handleContextMenu = (e) => e.preventDefault();
     const handleSelectStart = (e) => e.preventDefault();
@@ -225,14 +284,8 @@ export default function CabinetPage() {
     const lastView = localStorage.getItem("last_view");
     const savedLesson = localStorage.getItem("last_lesson");
     if (lastView === "lesson" && savedLesson) {
-      try {
-        setSelectedLesson(JSON.parse(savedLesson));
-      } catch {
-        setSelectedLesson(null);
-      }
-    } else {
-      setSelectedLesson(null);
-    }
+      try { setSelectedLesson(JSON.parse(savedLesson)); } catch { setSelectedLesson(null); }
+    } else setSelectedLesson(null);
   }, []);
 
   // theme
@@ -300,11 +353,7 @@ export default function CabinetPage() {
       .then((r) => r.json())
       .then((res) => {
         if (!res.valid) {
-          alert(
-            i18n.language === "ru"
-              ? "Ваш аккаунт открыт в другом браузере."
-              : "Ваш акаунт відкрито в іншому браузері."
-          );
+          alert(i18n.language === "ru" ? "Ваш аккаунт открыт в другом браузере." : "Ваш акаунт відкрито в іншому браузері.");
           localStorage.clear();
           window.location.href = "/login";
         }
@@ -341,9 +390,39 @@ export default function CabinetPage() {
       .catch(() => console.error("Помилка завантаження модулів"));
   }, [user]);
 
-  // 🧮 Хелпер урокового відсотка (залишено, але завжди дає 0, бо прогрес вимкнено)
-  const lessonPercent = (p) => {
-    return 0;
+  // початкове зчитування прогресу користувача + загальний прогрес
+  useEffect(() => {
+    if (!user?.id) return;
+
+    // мапа прогресу
+    fetch(`${BACKEND}/api/progress/user/${user.id}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const map = {};
+        (data.progress || []).forEach((p) => (map[p.lesson_id] = p));
+        setProgress(map);
+      })
+      .catch(() => {});
+
+    // відсоток курсу
+    fetch(`${BACKEND}/api/progress/course/${user.id}`)
+      .then((r) => r.json())
+      .then((data) => setOverallProgress(data.percent ?? 0))
+      .catch(() => setOverallProgress(0));
+  }, [user]);
+
+  // локальне оновлення від SafeVideo (щоб смужка рухалась без перезавантаження)
+  const handleProgressTick = ({ lessonId, watched_seconds, total_seconds, completed }) => {
+    if (!lessonId) return;
+    setProgress((prev) => ({
+      ...prev,
+      [lessonId]: {
+        ...(prev[lessonId] || {}),
+        watched_seconds,
+        total_seconds,
+        completed: completed || prev[lessonId]?.completed || false,
+      },
+    }));
   };
 
   const fetchLessons = async (moduleId) => {
@@ -370,10 +449,6 @@ export default function CabinetPage() {
     window.location.href = "/login";
   };
 
-  // overall progress — тепер завжди 0 (прогрес приховано)
-  const allLoadedLessons = Object.values(lessons).flat();
-  const overallProgress = 0;
-
   if (!user) return null;
 
   return (
@@ -387,9 +462,7 @@ export default function CabinetPage() {
       {/* HEADER */}
       <header
         className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 ${
-          darkMode
-            ? "border-fuchsia-900/30 bg-[#1a0a1f]/80"
-            : "border-pink-200 bg-white/70"
+          darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/70"
         }`}
       >
         <h1 className="font-bold bg-gradient-to-r from-fuchsia-500 to-rose-400 bg-clip-text text-transparent">
@@ -404,11 +477,7 @@ export default function CabinetPage() {
       <aside
         className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } ${
-          darkMode
-            ? "border-fuchsia-900/30 bg-[#1a0a1f]/80"
-            : "border-pink-200 bg-white/80"
-        } md:pt-0 pt-16`}
+        } ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"} md:pt-0 pt-16`}
       >
         <div className="p-6 flex-1 overflow-y-auto">
           <div className="flex flex-col items-center text-center mb-4 group select-none">
@@ -432,20 +501,18 @@ export default function CabinetPage() {
             </p>
           </div>
 
-          {/* Загальний прогрес курсу — приховано (overallProgress завжди 0) */}
-          {false && overallProgress > 0 && (
-            <div className="mb-4 px-3">
-              <p className="text-xs text-center font-medium text-pink-600">
-                {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
-              </p>
-              <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
-                  style={{ width: `${overallProgress}%` }}
-                />
-              </div>
+          {/* Загальний прогрес курсу */}
+          <div className="mb-4 px-3">
+            <p className="text-xs text-center font-medium text-pink-600">
+              {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
+            </p>
+            <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
+                style={{ width: `${overallProgress}%` }}
+              />
             </div>
-          )}
+          </div>
 
           {/* MODULES */}
           {modules.length === 0 ? (
@@ -463,21 +530,14 @@ export default function CabinetPage() {
                     <span className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4" /> {mod.title}
                     </span>
-                    {/* кількість уроків */}
                     <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
-                      {typeof mod.lessons === "number"
-                        ? mod.lessons
-                        : (lessons[mod.id]?.length ?? 0)}
+                      {typeof mod.lessons === "number" ? mod.lessons : (lessons[mod.id]?.length ?? 0)}
                     </span>
                     {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
 
                   {mod.description && (
-                    <p
-                      className={`text-xs mt-1 ml-8 pr-4 leading-snug ${
-                        darkMode ? "text-fuchsia-200/70" : "text-gray-600"
-                      }`}
-                    >
+                    <p className={`text-xs mt-1 ml-8 pr-4 leading-snug ${darkMode ? "text-fuchsia-200/70" : "text-gray-600"}`}>
                       {mod.description}
                     </p>
                   )}
@@ -485,10 +545,13 @@ export default function CabinetPage() {
                   {expanded === mod.id && (
                     <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
                       {lessons[mod.id]?.map((l) => {
-                        const percent = 0; // прогрес приховано
-                        const done = false; // індикатор «виконано» прибрано
-                        const isNew =
-                          new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+                        const prog = progress[l.id];
+                        const percent =
+                          prog && prog.total_seconds > 0
+                            ? Math.min(100, Math.round((prog.watched_seconds / prog.total_seconds) * 100))
+                            : 0;
+                        const done = !!prog?.completed;
+                        const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
                         return (
                           <div
@@ -506,32 +569,30 @@ export default function CabinetPage() {
                             }`}
                           >
                             <div className="flex items-center gap-2">
-                              {/* порожній статус без «completed» */}
-                              <svg
-                                xmlns="http://www.w3.org/2000/svg"
-                                className="w-4 h-4 text-pink-400"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                              >
-                                <circle cx="12" cy="12" r="10" />
-                              </svg>
-
+                              {done ? (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                  <path d="M9 12l2 2 4-4" />
+                                </svg>
+                              ) : (
+                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                  <circle cx="12" cy="12" r="10" />
+                                </svg>
+                              )}
                               <span className="flex-1 truncate">{l.title}</span>
                               {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
-                              {/* відсотки приховані */}
+                              {percent > 0 && (
+                                <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
+                                  {percent}%
+                                </span>
+                              )}
                             </div>
-
-                            {/* смужка прогресу прихована */}
-                            {false && (
-                              <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
-                                <div
-                                  className="h-full bg-gradient-to-r from-pink-400 to-rose-500"
-                                  style={{ width: `${percent}%` }}
-                                />
-                              </div>
-                            )}
+                            <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
+                              <div
+                                className={`h-full ${done ? "bg-green-400" : percent > 0 ? "bg-gradient-to-r from-pink-400 to-rose-500" : "bg-transparent"}`}
+                                style={{ width: `${percent}%`, transition: "width 0.7s ease-out", willChange: "width" }}
+                              />
+                            </div>
                           </div>
                         );
                       })}
@@ -559,16 +620,10 @@ export default function CabinetPage() {
                 localStorage.setItem("theme", newMode ? "dark" : "light");
               }}
               className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
-                darkMode
-                  ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]"
-                  : "bg-pink-200"
+                darkMode ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" : "bg-pink-200"
               }`}
             >
-              <span
-                className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${
-                  darkMode ? "translate-x-6" : "translate-x-0"
-                }`}
-              ></span>
+              <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${darkMode ? "translate-x-6" : "translate-x-0"}`}></span>
             </button>
           </div>
 
@@ -587,9 +642,7 @@ export default function CabinetPage() {
                     localStorage.setItem("lang", lang);
                   }}
                   className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
-                    i18n.language === lang
-                      ? "bg-pink-500 text-white border-pink-500"
-                      : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
+                    i18n.language === lang ? "bg-pink-500 text-white border-pink-500" : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
                   }`}
                 >
                   {lang.toUpperCase()}
@@ -614,15 +667,13 @@ export default function CabinetPage() {
           <div className="flex flex-col md:flex-row gap-4 mb-8">
             {/* 🖼 Основний банер */}
             <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-              {banner.image_url && (
-                <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />
-              )}
+              {banner.image_url && <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />}
               <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
                 {banner.title}
               </div>
             </div>
 
-            {/* 💅 Окрема менша рамка справа */}
+            {/* 💅 Перехід на дашборд */}
             <div
               onClick={() => {
                 setSelectedLesson(null);
@@ -644,8 +695,8 @@ export default function CabinetPage() {
                 key={user?.xp}
                 modules={modules}
                 lessons={lessons}
-                progress={{}}                // прогрес вимкнено
-                overallProgress={0}          // прогрес вимкнено
+                progress={progress}
+                overallProgress={overallProgress}
                 darkMode={darkMode}
                 t={t}
                 user={user}
@@ -663,18 +714,16 @@ export default function CabinetPage() {
               darkMode ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40" : "bg-white/80 border border-pink-200"
             }`}
           >
-            {/* 🔖 Заголовок, бейдж і опис уроку */}
+            {/* Заголовок + тип */}
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-wrap">
                   <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
-
                   {selectedLesson.type === "theory" && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
                       {t("Теорія", "Теория")}
                     </span>
                   )}
-
                   {selectedLesson.type === "practice" && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
                       {t("Практика", "Практика")}
@@ -682,8 +731,6 @@ export default function CabinetPage() {
                   )}
                 </div>
               </div>
-
-              {/* 📄 Опис уроку */}
               {selectedLesson.description && (
                 <p className={`mt-2 text-sm leading-relaxed ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
                   {selectedLesson.description}
@@ -691,11 +738,12 @@ export default function CabinetPage() {
               )}
             </div>
 
-            {/* 🎬 Відео з автопереходом (прогрес вимкнено) */}
+            {/* Відео + прогрес */}
             <SafeVideo
               lesson={selectedLesson}
               t={t}
               userId={user?.id}
+              onProgressTick={handleProgressTick}
               getNextLesson={(id) => {
                 const allLessons = Object.values(lessons).flat();
                 const idx = allLessons.findIndex((l) => l.id === id);
@@ -703,7 +751,7 @@ export default function CabinetPage() {
               }}
             />
 
-            {/* 🧾 Домашнє завдання */}
+            {/* Домашка */}
             {selectedLesson.homework && (
               <div
                 className={`p-4 rounded-xl border mt-6 ${
@@ -713,14 +761,17 @@ export default function CabinetPage() {
                 <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
                   {t("Домашнє завдання", "Домашнее задание")}
                 </h3>
-
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedLesson.homework}</p>
-
-                {/* Бейдж «виконано» прибраний разом із прогресом */}
+                {progress[selectedLesson.id]?.homework_done && (
+                  <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
+                    <CheckSquare className="w-4 h-4 text-green-600" />
+                    {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+                  </div>
+                )}
               </div>
             )}
 
-            {/* 📎 Матеріали */}
+            {/* Матеріали */}
             {selectedLesson.materials && (
               <div
                 className={`p-4 rounded-xl border mt-6 ${
@@ -730,12 +781,7 @@ export default function CabinetPage() {
                 <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
                   {t("Матеріали", "Материалы")}
                 </h3>
-                <a
-                  href={selectedLesson.materials}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block text-sm font-medium text-blue-600 hover:underline"
-                >
+                <a href={selectedLesson.materials} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-blue-600 hover:underline">
                   {t("Відкрити матеріали", "Открыть материалы")}
                 </a>
               </div>
@@ -743,15 +789,10 @@ export default function CabinetPage() {
           </div>
         )}
 
-        {/* ⚙️ Footer */}
-        <footer
-          className={`mt-10 text-center py-6 text-sm border-t ${
-            darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"
-          }`}
-        >
+        {/* Footer */}
+        <footer className={`mt-10 text-center py-6 text-sm border-t ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}>
           <p className="font-medium">
-            © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
-            {t("Усі права захищені.", "Все права защищены.")}
+            © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> • {t("Усі права захищені.", "Все права защищены.")}
           </p>
         </footer>
       </main>
