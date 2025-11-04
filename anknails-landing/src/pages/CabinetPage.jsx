@@ -19,17 +19,15 @@ import {
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
-/* ================= SAFEVIDEO (BUNNY-ONLY with progress & next-10s) ================= */
+/* ================= SAFEVIDEO (BUNNY-ONLY, no visible progress bar) ================= */
 const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // 🆔 тільки справжній Bunny GUID (UUID v4)
   const isBunnyGuid = (s) =>
     typeof s === "string" &&
     /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s);
 
-  // playback state
   const [duration, setDuration] = useState(0);
   const [current, setCurrent] = useState(0);
   const [showNext, setShowNext] = useState(false);
@@ -40,7 +38,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
   const pollTimerRef = useRef(null);
   const saveTimerRef = useRef(null);
 
-  // helper: safe emit to different possible progress endpoints
   const postProgress = useMemo(() => {
     const endpoints = [
       `${BACKEND}/api/progress/tick`,
@@ -62,40 +59,29 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, []);
 
-  // load Bunny iframe URL (тільки через бекенд)
+  // завжди беремо свіжий підписаний iframe URL
   useEffect(() => {
     let cancelled = false;
     (async () => {
-      if (!lesson) {
+      if (!lesson || !isBunnyGuid(lesson.youtube_id)) {
         setVideoUrl(null);
         setLoading(false);
         return;
       }
-
-      // 2) якщо у нас саме Bunny GUID — просимо бекенд згенерувати iframe URL
-      if (isBunnyGuid(lesson.youtube_id)) {
-        try {
-          const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
-          const j = await r.json();
-          if (!cancelled) setVideoUrl(j.url || null);
-        } catch {
-          if (!cancelled) setVideoUrl(null);
-        } finally {
-          setLoading(false);
-        }
-        return;
-      }
-
-      // 3) інакше відео відсутнє (ніяких Cloudinary/YouTube)
-      if (!cancelled) {
-        setVideoUrl(null);
-        setLoading(false);
+      try {
+        const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
+        const j = await r.json();
+        if (!cancelled) setVideoUrl(j.url || null);
+      } catch {
+        if (!cancelled) setVideoUrl(null);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
     })();
     return () => { cancelled = true; };
   }, [lesson]);
 
-  // listen Bunny postMessage events (timeupdate/duration/ended)
+  // слухаємо події Bunny (timeupdate/duration/ended)
   useEffect(() => {
     if (!videoUrl) return;
 
@@ -117,7 +103,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
 
     window.addEventListener("message", handler);
 
-    // активне опитування (на випадок, якщо івенти не приходять)
     const ask = () => {
       try {
         iframeRef.current?.contentWindow?.postMessage({ command: "getCurrentTime" }, "*");
@@ -132,23 +117,22 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, [videoUrl, duration]);
 
-  // show "next" 10s before end + тик у зовнішній прогрес
+  // тихо тікаємо прогрес (без візуального бару)
   useEffect(() => {
     if (!duration) return;
     const remaining = Math.max(0, duration - current);
     if (remaining <= 10 && duration > 0) setShowNext(true);
 
     const watched = Math.min(current, duration || current);
-    const percent = duration ? Math.round((watched / duration) * 100) : 0;
     onProgress?.({
       lessonId: lesson?.id,
       watched_seconds: Math.floor(watched),
       total_seconds: Math.floor(duration || 0),
-      percent,
+      percent: duration ? Math.round((watched / duration) * 100) : 0,
     });
   }, [current, duration, lesson?.id, onProgress]);
 
-  // backend progress save (throttled 5s)
+  // періодично зберігаємо прогрес на бекенд
   useEffect(() => {
     if (!userId || !lesson?.id) return;
     const save = async () => {
@@ -165,7 +149,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     saveTimerRef.current = window.setInterval(save, 5000);
     return () => {
       if (saveTimerRef.current) window.clearInterval(saveTimerRef.current);
-      save(); // фінальний сейв
+      save();
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, lesson?.id, current, duration, completed, postProgress]);
@@ -186,9 +170,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     );
   }
 
-  const percent =
-    duration > 0 ? Math.min(100, Math.round((Math.min(current, duration) / duration) * 100)) : 0;
-
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black relative">
@@ -202,22 +183,13 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         />
       </div>
 
-      {/* progress bar */}
-      <div className="w-full">
-        <div className="h-2 bg-pink-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-500 ease-out"
-            style={{ width: `${percent}%` }}
-          />
-        </div>
-        <div className="mt-1 text-xs text-center text-pink-600">{percent}%</div>
-      </div>
-
-      {/* next button shows 10s before end (also stays after end) */}
-      {nextLesson && showNext && (
+      {/* кнопка "далі" за 10с до кінця / після завершення */}
+      {getNextLesson && showNext && (
         <button
           onClick={() => {
-            localStorage.setItem("last_lesson", JSON.stringify(nextLesson));
+            const n = getNextLesson(lesson?.id);
+            if (!n) return;
+            localStorage.setItem("last_lesson", JSON.stringify(n));
             window.location.reload();
           }}
           className="animate-fadeIn flex items-center gap-2 px-5 py-3 text-sm md:text-base font-semibold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-md"
@@ -229,6 +201,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     </div>
   );
 };
+
 
 /* ================= CABINET PAGE ================= */
 export default function CabinetPage() {
