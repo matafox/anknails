@@ -97,21 +97,24 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
 
     const handler = (e) => {
       if (!String(e.origin).includes("mediadelivery.net")) return;
-      const data = e.data || {};
-      const ev = data.event || data.type;
 
-      // currentTime
+      const data = e.data ?? {};
+      const ev = data.event || data.type || data.action;
+
+      // currentTime може приїхати як currentTime/time/value
       if (typeof data.currentTime === "number") {
         setCurrent(data.currentTime);
-      } else if (ev === "timeupdate" && typeof data.time === "number") {
+      } else if (typeof data.time === "number") {
         setCurrent(data.time);
+      } else if (typeof data.value === "number" && (ev === "timeupdate" || ev === "currentTime")) {
+        setCurrent(data.value);
       }
 
-      // duration
+      // duration може приїхати як duration/value
       if (typeof data.duration === "number" && data.duration > 0) {
         setDuration(data.duration);
-      } else if (ev === "durationchange" && typeof data.value === "number" && data.value > 0) {
-        setDuration(data.value);
+      } else if (typeof data.value === "number" && (ev === "durationchange" || ev === "duration")) {
+        if (data.value > 0) setDuration(data.value);
       }
 
       // ended
@@ -119,9 +122,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         setCompleted(true);
         setShowNext(true);
         setCurrent((c) => (duration ? duration : c));
-        try {
-          iframeRef.current?.contentWindow?.postMessage({ command: "getDuration" }, "*");
-        } catch {}
       }
     };
 
@@ -130,10 +130,17 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     const ask = () => {
       try {
         const w = iframeRef.current?.contentWindow;
-        w?.postMessage({ command: "getCurrentTime" }, "*");
-        w?.postMessage({ command: "getDuration" }, "*");
+        if (!w) return;
+        // шлемо у двох форматах для сумісності
+        w.postMessage({ command: "getCurrentTime" }, "*");
+        w.postMessage({ command: "getDuration" }, "*");
+        w.postMessage("getCurrentTime", "*");
+        w.postMessage("getDuration", "*");
       } catch {}
     };
+
+    // швидкий старт, потім інтервал
+    ask();
     pollTimerRef.current = window.setInterval(ask, 700);
 
     return () => {
@@ -151,8 +158,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     const watched = duration ? Math.min(current, duration) : current;
     const total = duration || 0;
 
-    // ✅ якщо duration з 0 -> >0, одразу шлемо стартовий тик,
-    // щоб у сайдбарі з’явилась довжина смужки й пішла анімація
+    // стартовий тик при появі duration
     if (prevDurationRef.current === 0 && total > 0) {
       prevDurationRef.current = total;
       onProgress?.({
@@ -162,11 +168,10 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         percent: total > 0 ? Math.round((watched / total) * 100) : 0,
       });
     } else {
-      // якщо total змінився (інколи Bunny може оновити), синхронізуємо
       if (total !== prevDurationRef.current) prevDurationRef.current = total;
     }
 
-    // 🔟 шлемо апдейт тільки коли перейшли наступну "десятку" секунд
+    // тик кожні 10 секунд
     const bucket = Math.floor((watched || 0) / 10);
     if (bucket !== lastBucketRef.current) {
       lastBucketRef.current = bucket;
@@ -224,14 +229,17 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
           ref={iframeRef}
           src={videoUrl}
           className="w-full h-full rounded-xl"
-          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+          allow="autoplay; encrypted-media; fullscreen; picture-in-picture; clipboard-write"
           allowFullScreen
           referrerPolicy="origin"
           onLoad={() => {
             try {
               const w = iframeRef.current?.contentWindow;
+              // дублюємо, щоб гарантовано стартануло
               w?.postMessage({ command: "getDuration" }, "*");
               w?.postMessage({ command: "getCurrentTime" }, "*");
+              w?.postMessage("getDuration", "*");
+              w?.postMessage("getCurrentTime", "*");
             } catch {}
           }}
         />
@@ -265,6 +273,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     </div>
   );
 };
+
 
 /* ================= CABINET PAGE ================= */
 export default function CabinetPage() {
