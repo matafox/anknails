@@ -72,15 +72,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         return;
       }
 
-      // 1) готовий URL від бекенду (пріоритет)
-      if (lesson.embed_url) {
-        if (!cancelled) {
-          setVideoUrl(lesson.embed_url);
-          setLoading(false);
-        }
-        return;
-      }
-
       // 2) якщо у нас саме Bunny GUID — просимо бекенд згенерувати iframe URL
       if (isBunnyGuid(lesson.youtube_id)) {
         try {
