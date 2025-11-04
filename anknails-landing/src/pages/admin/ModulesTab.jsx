@@ -536,7 +536,7 @@ export default function ModulesTab({ darkMode, i18n }) {
 
                                 {/* ТІЛЬКИ BUNNY */}
                                 {l.youtube_id && l.youtube_id.includes("-") && (
-                                  {isBunnyGuid(l.youtube_id) && <PreviewBunny guid={l.youtube_id} />} />
+                                  {isBunnyGuid(l.youtube_id) && <PreviewBunny guid={l.youtube_id} />}
                                 )}
 
                                 {l.homework && (
