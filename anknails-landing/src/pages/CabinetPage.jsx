@@ -22,137 +22,43 @@ import {
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
 
-// ================= SAFEVIDEO =================
-const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
+// ================= SAFEVIDEO (BUNNY-ONLY) =================
+const SafeVideo = ({ lesson, t, getNextLesson }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [userId, setUserId] = useState(null);
-  const [lastSent, setLastSent] = useState(0);
-  const [completed, setCompleted] = useState(false);
-  const [showNextButton, setShowNextButton] = useState(false);
-  const [maxWatched, setMaxWatched] = useState(0); // 🔒 максимум перегляду
-  const [bunnyCfg, setBunnyCfg] = useState(null);  // { library_id, signed, has_signing_key }
-
   const nextLesson = getNextLesson?.(lesson?.id);
 
-  // 🧭 дістаємо Bunny-конфіг (знання про signed режим)
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const r = await fetch(`${BACKEND}/api/bunny/config`);
-        if (!r.ok) throw 0;
-        const j = await r.json();
-        if (alive) setBunnyCfg(j);
-      } catch {
-        if (alive) setBunnyCfg(null);
-      }
-    })();
-    return () => { alive = false; };
-  }, []);
-
-  // 🎯 визначаємо правильний URL відтворення
   useEffect(() => {
     let cancelled = false;
+    const run = async () => {
+      if (!lesson) { setVideoUrl(null); setLoading(false); return; }
 
-    const resolveUrl = async () => {
-      if (!lesson) {
-        setVideoUrl(null);
-        setLoading(false);
-        return;
-      }
-
-      // 1) Cloudinary (через бек-проксі)
-      if (lesson.youtube_id?.includes?.("cloudinary.com")) {
-        if (!cancelled) setVideoUrl(`${BACKEND}/api/video/${lesson.id}`);
-        setLoading(false);
-        return;
-      }
-
-      // 2) Якщо бек уже дав готовий embed_url — беремо його
+      // 1) якщо бек уже дав підписаний/готовий URL — беремо його
       if (lesson.embed_url) {
-        if (!cancelled) setVideoUrl(lesson.embed_url);
-        setLoading(false);
+        if (!cancelled) { setVideoUrl(lesson.embed_url); setLoading(false); }
         return;
       }
 
-      // 3) Bunny: зберігаєш GUID у youtube_id
-      const isBunnyGuid = !!(lesson.youtube_id && lesson.youtube_id.includes("-") && lesson.youtube_id.length > 25);
-
-      if (isBunnyGuid) {
+      // 2) якщо збережено Bunny GUID — попросимо бек згенерити iframe url
+      if (lesson.youtube_id && lesson.youtube_id.includes("-") && lesson.youtube_id.length > 25) {
         try {
-          // якщо на бекенді ввімкнений підпис — генеруємо підписаний URL
-          if (bunnyCfg?.signed) {
-            const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
-            const j = await r.json();
-            if (!cancelled) setVideoUrl(j.url || null);
-          } else if (bunnyCfg?.library_id) {
-            // звичайний відкритий iframe
-            if (!cancelled) {
-              setVideoUrl(`https://iframe.mediadelivery.net/embed/${bunnyCfg.library_id}/${lesson.youtube_id}`);
-            }
-          } else {
-            if (!cancelled) setVideoUrl(null);
-          }
+          const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
+          const j = await r.json();
+          if (!cancelled) setVideoUrl(j.url || null);
         } catch {
           if (!cancelled) setVideoUrl(null);
+        } finally {
+          setLoading(false);
         }
-        setLoading(false);
         return;
       }
 
-      // 4) YouTube (тільки показ попередження без трекінгу)
-      if (lesson.youtube_id?.length === 11) {
-        if (!cancelled) setVideoUrl(`https://www.youtube-nocookie.com/embed/${lesson.youtube_id}`);
-        setLoading(false);
-        return;
-      }
-
-      // 5) Фолбек — нічого не знайшли
-      if (!cancelled) setVideoUrl(null);
-      setLoading(false);
+      // 3) fallback — нічого не знайшли
+      if (!cancelled) { setVideoUrl(null); setLoading(false); }
     };
-
-    resolveUrl();
+    run();
     return () => { cancelled = true; };
-  }, [lesson, bunnyCfg]);
-
-  // 🔐 дістаємо userId за email (для прогресу)
-  useEffect(() => {
-    let alive = true;
-    const email = localStorage.getItem("user_email");
-    if (!email) return;
-    (async () => {
-      try {
-        const r = await fetch(`${BACKEND}/api/users`);
-        const d = await r.json();
-        const u = d.users?.find?.((x) => x.email === email);
-        if (u && alive) setUserId(u.id);
-      } catch {}
-    })();
-    return () => { alive = false; };
-  }, []);
-
-  // 🔁 відправка прогресу
-  const sendProgress = async (watched, total, done = false) => {
-    if (!userId || !lesson?.id || total <= 0) return;
-    try {
-      await fetch(`${BACKEND}/api/progress/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userId,
-          lesson_id: lesson.id,
-          watched_seconds: watched,
-          total_seconds: total,
-          completed: done,
-        }),
-      });
-      onProgressUpdate?.(lesson.id, watched, total, done);
-    } catch (e) {
-      console.warn("⚠️ Проблема з оновленням прогресу", e);
-    }
-  };
+  }, [lesson]);
 
   if (loading) {
     return (
@@ -165,106 +71,25 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   if (!videoUrl) {
     return (
       <p className="text-sm text-gray-500 text-center py-4">
-        ❌{" "}
-        {t(
-          "Невірне посилання або відео не знайдено",
-          "Неверная ссылка или видео не найдено"
-        )}
+        ❌ {t("Відео не знайдено або посилання некоректне", "Видео не найдено или ссылка некорректна")}
       </p>
     );
   }
 
-  const isYouTube = videoUrl.includes("youtube");
-  const isBunnyIframe = videoUrl.includes("iframe.mediadelivery.net");
-
-  // YouTube — показуємо попередження (нема API для прогресу в iframe)
-  if (isYouTube) {
-    return (
-      <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
-        {t(
-          "YouTube не підтримує відстеження прогресу",
-          "YouTube не поддерживает прогресс"
-        )}
-      </div>
-    );
-  }
-
+  // Bunny iframe (без трекінгу таймкоду)
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-        {isBunnyIframe ? (
-          <iframe
-            src={videoUrl}
-            className="w-full h-full rounded-xl"
-            allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
-            allowFullScreen
-            // важливо для Hotlink Protection із вимогою реферера
-            referrerPolicy="strict-origin-when-cross-origin"
-            onLoad={() => setLoading(false)}
-          />
-        ) : (
-          <video
-            src={videoUrl}
-            controls
-            playsInline
-            preload="metadata"
-            className="w-full h-full object-cover select-none pointer-events-auto"
-            controlsList="nodownload noremoteplayback nofullscreen"
-            disablePictureInPicture
-            onContextMenu={(e) => e.preventDefault()}
-            onLoadedMetadata={() => setLastSent(0)}
-            onTimeUpdate={(e) => {
-              const current = e.target.currentTime || 0;
-              const total = e.target.duration || 0;
-
-              // ⛔ Блокуємо відкат прогресу
-              if (current < maxWatched - 2) return;
-
-              // 🧠 Запам’ятовуємо максимум
-              if (current > maxWatched) setMaxWatched(current);
-
-              // ⏱ Шлемо кожні 10 секунд
-              if (current - lastSent >= 10) {
-                setLastSent(current);
-                sendProgress(current, total);
-              }
-
-              // 🎯 Завершення
-              if (!completed && total > 0 && current >= total * 0.95) {
-                setCompleted(true);
-                sendProgress(total, total, true);
-
-                // 🧩 Оновлення XP
-                fetch(`${BACKEND}/api/progress/user/${userId}`)
-                  .then((r) => r.json())
-                  .then((data) => {
-                    if (setUser && data.xp !== undefined) {
-                      setUser((prev) => ({
-                        ...prev,
-                        xp: data.xp,
-                        level: data.level,
-                      }));
-                    }
-                  })
-                  .catch((err) => console.warn("⚠️ XP refresh failed", err));
-
-                if (nextLesson) setShowNextButton(true);
-              }
-            }}
-            onError={() => {
-              console.warn("⚠️ Video element failed, check CORS/URL");
-            }}
-          >
-            {t(
-              "Ваш браузер не підтримує відтворення відео",
-              "Ваш браузер не поддерживает воспроизведение видео"
-            )}
-          </video>
-        )}
+        <iframe
+          src={videoUrl}
+          className="w-full h-full rounded-xl"
+          allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+          allowFullScreen
+          referrerPolicy="strict-origin-when-cross-origin"
+        />
       </div>
 
-      {/* Кнопка переходу до наступного уроку */}
-      {nextLesson && showNextButton && (
+      {nextLesson && (
         <button
           onClick={() => {
             localStorage.setItem("last_lesson", JSON.stringify(nextLesson));
@@ -279,6 +104,7 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
     </div>
   );
 };
+
 
 
 // ================= CABINET PAGE =================
@@ -451,9 +277,8 @@ useEffect(() => {
       const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
       const data = await res.json();
       const normalized = (data.lessons || []).map((l) => ({
-        ...l,
-        videoUrl: l.youtube_id || l.embed_url || null,
-      }));
+  ...l,
+}));
       setLessons((prev) => ({ ...prev, [moduleId]: normalized }));
     } catch (e) {
       console.error(e);
@@ -616,6 +441,7 @@ useEffect(() => {
                             onClick={() => {
                               setSelectedLesson(l);
                               localStorage.setItem("last_lesson", JSON.stringify(l));
+                              localStorage.setItem("last_view", "lesson");
                               setMenuOpen(false);
                             }}
                             className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
@@ -757,6 +583,7 @@ useEffect(() => {
   onClick={() => {
     setSelectedLesson(null);
     setMenuOpen(false);
+    localStorage.setItem("last_view", "dashboard");
   }}
   className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
   title={t("Перейти до дашборду", "Перейти на главную")}
@@ -844,18 +671,7 @@ useEffect(() => {
           const idx = allLessons.findIndex((l) => l.id === id);
           return allLessons[idx + 1] || null;
         }}
-        onProgressUpdate={(lessonId, watched, total, done) => {
-          setProgress((prev) => ({
-            ...prev,
-            [lessonId]: {
-              ...(prev[lessonId] || {}),
-              watched_seconds: watched,
-              total_seconds: total,
-              completed: done || prev[lessonId]?.completed,
-            },
-          }));
-        }}
-        setUser={setUser} 
+      
       />
 
       {/* 🧾 Домашнє завдання */}
