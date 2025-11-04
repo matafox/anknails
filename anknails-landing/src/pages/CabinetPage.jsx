@@ -31,71 +31,106 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   const [completed, setCompleted] = useState(false);
   const [showNextButton, setShowNextButton] = useState(false);
   const [maxWatched, setMaxWatched] = useState(0); // 🔒 максимум перегляду
-  const [bunnyCfg, setBunnyCfg] = useState(null);  // { library_id: '...' }
+  const [bunnyCfg, setBunnyCfg] = useState(null);  // { library_id, signed, has_signing_key }
 
   const nextLesson = getNextLesson?.(lesson?.id);
 
-  // 🔧 тягнемо Bunny конфіг один раз
+  // 🧭 дістаємо Bunny-конфіг (знання про signed режим)
   useEffect(() => {
-    fetch(`${BACKEND}/api/bunny/config`)
-      .then((r) => r.ok ? r.json() : Promise.reject())
-      .then(setBunnyCfg)
-      .catch(() => setBunnyCfg(null));
+    let alive = true;
+    (async () => {
+      try {
+        const r = await fetch(`${BACKEND}/api/bunny/config`);
+        if (!r.ok) throw 0;
+        const j = await r.json();
+        if (alive) setBunnyCfg(j);
+      } catch {
+        if (alive) setBunnyCfg(null);
+      }
+    })();
+    return () => { alive = false; };
   }, []);
 
+  // 🎯 визначаємо правильний URL відтворення
   useEffect(() => {
-    if (!lesson) return;
+    let cancelled = false;
 
-    // 1) Cloudinary (твій старий варіант через бек-проксі)
-    if (lesson.youtube_id?.includes("cloudinary.com")) {
-      setVideoUrl(`${BACKEND}/api/video/${lesson.id}`);
+    const resolveUrl = async () => {
+      if (!lesson) {
+        setVideoUrl(null);
+        setLoading(false);
+        return;
+      }
+
+      // 1) Cloudinary (через бек-проксі)
+      if (lesson.youtube_id?.includes?.("cloudinary.com")) {
+        if (!cancelled) setVideoUrl(`${BACKEND}/api/video/${lesson.id}`);
+        setLoading(false);
+        return;
+      }
+
+      // 2) Якщо бек уже дав готовий embed_url — беремо його
+      if (lesson.embed_url) {
+        if (!cancelled) setVideoUrl(lesson.embed_url);
+        setLoading(false);
+        return;
+      }
+
+      // 3) Bunny: зберігаєш GUID у youtube_id
+      const isBunnyGuid = !!(lesson.youtube_id && lesson.youtube_id.includes("-") && lesson.youtube_id.length > 25);
+
+      if (isBunnyGuid) {
+        try {
+          // якщо на бекенді ввімкнений підпис — генеруємо підписаний URL
+          if (bunnyCfg?.signed) {
+            const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
+            const j = await r.json();
+            if (!cancelled) setVideoUrl(j.url || null);
+          } else if (bunnyCfg?.library_id) {
+            // звичайний відкритий iframe
+            if (!cancelled) {
+              setVideoUrl(`https://iframe.mediadelivery.net/embed/${bunnyCfg.library_id}/${lesson.youtube_id}`);
+            }
+          } else {
+            if (!cancelled) setVideoUrl(null);
+          }
+        } catch {
+          if (!cancelled) setVideoUrl(null);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // 4) YouTube (тільки показ попередження без трекінгу)
+      if (lesson.youtube_id?.length === 11) {
+        if (!cancelled) setVideoUrl(`https://www.youtube-nocookie.com/embed/${lesson.youtube_id}`);
+        setLoading(false);
+        return;
+      }
+
+      // 5) Фолбек — нічого не знайшли
+      if (!cancelled) setVideoUrl(null);
       setLoading(false);
-      return;
-    }
+    };
 
-    // 2) Готовий iframe-URL з бека (пріоритетно, якщо є)
-    if (lesson.embed_url) {
-      setVideoUrl(lesson.embed_url);
-      setLoading(false);
-      return;
-    }
-
-    // 3) Bunny: якщо зберігаєш GUID у youtube_id — зберемо iframe самі
-    if (
-      lesson.youtube_id &&
-      lesson.youtube_id.includes("-") && // GUID має дефіси
-      bunnyCfg?.library_id
-    ) {
-      setVideoUrl(
-        `https://iframe.mediadelivery.net/embed/${bunnyCfg.library_id}/${lesson.youtube_id}`
-      );
-      setLoading(false);
-      return;
-    }
-
-    // 4) YouTube (або що-небудь інше, що не підтримує трекінг)
-    if (lesson.youtube_id?.length === 11) {
-      setVideoUrl(`https://www.youtube-nocookie.com/embed/${lesson.youtube_id}`);
-      setLoading(false);
-      return;
-    }
-
-    // Фолбек — нічого не знайшли
-    setVideoUrl(null);
-    setLoading(false);
+    resolveUrl();
+    return () => { cancelled = true; };
   }, [lesson, bunnyCfg]);
 
-  // 🔐 дістаємо userId за email
+  // 🔐 дістаємо userId за email (для прогресу)
   useEffect(() => {
+    let alive = true;
     const email = localStorage.getItem("user_email");
     if (!email) return;
-    fetch(`${BACKEND}/api/users`)
-      .then((r) => r.json())
-      .then((d) => {
-        const u = d.users?.find((x) => x.email === email);
-        if (u) setUserId(u.id);
-      })
-      .catch(() => {});
+    (async () => {
+      try {
+        const r = await fetch(`${BACKEND}/api/users`);
+        const d = await r.json();
+        const u = d.users?.find?.((x) => x.email === email);
+        if (u && alive) setUserId(u.id);
+      } catch {}
+    })();
+    return () => { alive = false; };
   }, []);
 
   // 🔁 відправка прогресу
@@ -140,8 +175,9 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   }
 
   const isYouTube = videoUrl.includes("youtube");
+  const isBunnyIframe = videoUrl.includes("iframe.mediadelivery.net");
 
-  // YouTube — показуємо попередження (без трекінгу)
+  // YouTube — показуємо попередження (нема API для прогресу в iframe)
   if (isYouTube) {
     return (
       <div className="w-full aspect-video flex items-center justify-center bg-black/70 text-pink-400 rounded-xl">
@@ -153,9 +189,6 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
     );
   }
 
-  // Bunny iframe або прямий <video>
-  const isBunnyIframe = videoUrl.includes("iframe.mediadelivery.net");
-
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
@@ -165,11 +198,9 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
             className="w-full h-full rounded-xl"
             allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
             allowFullScreen
-            onLoad={() => {
-              // починаємо з нуля для iframe (без onTimeUpdate)
-              setLoading(false);
-            }}
-            referrerPolicy="origin"
+            // важливо для Hotlink Protection із вимогою реферера
+            referrerPolicy="strict-origin-when-cross-origin"
+            onLoad={() => setLoading(false)}
           />
         ) : (
           <video
@@ -181,10 +212,7 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
             controlsList="nodownload noremoteplayback nofullscreen"
             disablePictureInPicture
             onContextMenu={(e) => e.preventDefault()}
-            onLoadedMetadata={(e) => {
-              // одразу скинемо lastSent, щоб не втратити перший відлік
-              setLastSent(0);
-            }}
+            onLoadedMetadata={() => setLastSent(0)}
             onTimeUpdate={(e) => {
               const current = e.target.currentTime || 0;
               const total = e.target.duration || 0;
