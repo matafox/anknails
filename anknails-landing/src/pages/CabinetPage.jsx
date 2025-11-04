@@ -19,8 +19,8 @@ import {
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
-/* ================= SAFEVIDEO (BUNNY-ONLY, progress saves + next button in last 10s) ================= */
-const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
+/* ================= SAFEVIDEO (BUNNY-ONLY, no user progress at all; just next button in last 10s) ================= */
+const SafeVideo = ({ lesson, t, getNextLesson, userId }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -31,40 +31,15 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
   const [duration, setDuration] = useState(0);
   const [current, setCurrent] = useState(0);
   const [showNext, setShowNext] = useState(false);
-  const [completed, setCompleted] = useState(false);
 
   const iframeRef = useRef(null);
   const pollTimerRef = useRef(null);
-  const saveTimerRef = useRef(null);
 
-  // для "кожні 10 секунд" і стартового тика при появі duration
-  const lastBucketRef = useRef(-1);
-  const prevDurationRef = useRef(0);
-
-  const postProgress = useMemo(() => {
-    return async (payload) => {
-      try {
-        const r = await fetch(`${BACKEND}/api/progress/update`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        });
-        return r.ok;
-      } catch (e) {
-        console.error("progress update error", e);
-        return false;
-      }
-    };
-  }, []);
-
-  // 🔁 при зміні уроку — ресетимо лічильники/рефи
+  // 🔁 при зміні уроку — ресетимо
   useEffect(() => {
-    lastBucketRef.current = -1;
-    prevDurationRef.current = 0;
     setDuration(0);
     setCurrent(0);
     setShowNext(false);
-    setCompleted(false);
   }, [lesson?.id]);
 
   // свіжий підписаний iframe URL
@@ -91,7 +66,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, [lesson]);
 
-  // слухаємо події Bunny
+  // слухаємо події Bunny (тільки для часу та завершення)
   useEffect(() => {
     if (!videoUrl) return;
 
@@ -101,7 +76,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
       const data = e.data ?? {};
       const ev = data.event || data.type || data.action;
 
-      // currentTime може приїхати як currentTime/time/value
+      // currentTime
       if (typeof data.currentTime === "number") {
         setCurrent(data.currentTime);
       } else if (typeof data.time === "number") {
@@ -110,16 +85,15 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         setCurrent(data.value);
       }
 
-      // duration може приїхати як duration/value
+      // duration
       if (typeof data.duration === "number" && data.duration > 0) {
         setDuration(data.duration);
       } else if (typeof data.value === "number" && (ev === "durationchange" || ev === "duration")) {
         if (data.value > 0) setDuration(data.value);
       }
 
-      // ended
+      // ended → просто показуємо кнопку «далі»
       if (ev === "ended" || data.ended === true) {
-        setCompleted(true);
         setShowNext(true);
         setCurrent((c) => (duration ? duration : c));
       }
@@ -131,7 +105,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
       try {
         const w = iframeRef.current?.contentWindow;
         if (!w) return;
-        // шлемо у двох форматах для сумісності
         w.postMessage({ command: "getCurrentTime" }, "*");
         w.postMessage({ command: "getDuration" }, "*");
         w.postMessage("getCurrentTime", "*");
@@ -139,7 +112,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
       } catch {}
     };
 
-    // швидкий старт, потім інтервал
     ask();
     pollTimerRef.current = window.setInterval(ask, 700);
 
@@ -149,62 +121,11 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, [videoUrl, duration]);
 
-  // 🔟 миттєвий стартовий тик при появі duration + тик кожні 10 секунд
+  // показуємо кнопку «далі» в останні 10 секунд
   useEffect(() => {
-    // кнопка "далі"
     const remaining = duration > 0 ? Math.max(0, duration - current) : null;
     if (remaining !== null && remaining <= 10) setShowNext(true);
-
-    const watched = duration ? Math.min(current, duration) : current;
-    const total = duration || 0;
-
-    // стартовий тик при появі duration
-    if (prevDurationRef.current === 0 && total > 0) {
-      prevDurationRef.current = total;
-      onProgress?.({
-        lessonId: lesson?.id,
-        watched_seconds: Math.floor(watched || 0),
-        total_seconds: Math.floor(total),
-        percent: total > 0 ? Math.round((watched / total) * 100) : 0,
-      });
-    } else {
-      if (total !== prevDurationRef.current) prevDurationRef.current = total;
-    }
-
-    // тик кожні 10 секунд
-    const bucket = Math.floor((watched || 0) / 10);
-    if (bucket !== lastBucketRef.current) {
-      lastBucketRef.current = bucket;
-      onProgress?.({
-        lessonId: lesson?.id,
-        watched_seconds: Math.floor(watched || 0),
-        total_seconds: Math.floor(total),
-        percent: total > 0 ? Math.round((watched / total) * 100) : 0,
-      });
-    }
-  }, [current, duration, lesson?.id, onProgress]);
-
-  // періодично зберігаємо прогрес на бекенд
-  useEffect(() => {
-    if (!userId || !lesson?.id) return;
-    const save = async () => {
-      if (!duration) return;
-      const payload = {
-        user_id: userId,
-        lesson_id: lesson.id,
-        watched_seconds: Math.floor(Math.min(current, duration)),
-        total_seconds: Math.floor(duration),
-        completed: completed || (duration > 0 && duration - current <= 2),
-      };
-      await postProgress(payload);
-    };
-    saveTimerRef.current = window.setInterval(save, 5000);
-    return () => {
-      if (saveTimerRef.current) window.clearInterval(saveTimerRef.current);
-      save();
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [userId, lesson?.id, current, duration, completed, postProgress]);
+  }, [current, duration]);
 
   if (loading) {
     return (
@@ -235,7 +156,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
           onLoad={() => {
             try {
               const w = iframeRef.current?.contentWindow;
-              // дублюємо, щоб гарантовано стартануло
               w?.postMessage({ command: "getDuration" }, "*");
               w?.postMessage({ command: "getCurrentTime" }, "*");
               w?.postMessage("getDuration", "*");
@@ -251,15 +171,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
             const n = getNextLesson(lesson?.id);
             if (!n) return;
 
-            // фінальний пуш прогресу як completed
-            await postProgress({
-              user_id: userId,
-              lesson_id: lesson.id,
-              watched_seconds: Math.floor(Math.min(current, duration || current)),
-              total_seconds: Math.floor(duration || 0),
-              completed: true,
-            });
-
+            // без будь-якого збереження прогресу
             localStorage.setItem("last_lesson", JSON.stringify(n));
             localStorage.setItem("last_view", "lesson");
             window.location.reload();
@@ -286,7 +198,9 @@ export default function CabinetPage() {
   const [banner, setBanner] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
-  const [progress, setProgress] = useState({});
+
+  // прогрес для користувача — видалено; залишаємо порожній об’єкт для сумісності з іншими компонентами
+  const [progress] = useState({}); 
   const [view, setView] = useState("dashboard");
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
@@ -406,7 +320,7 @@ export default function CabinetPage() {
       .catch(() => {});
   }, []);
 
-  // modules
+  // modules + префетч уроків
   useEffect(() => {
     if (!user?.course_id) return;
     fetch(`${BACKEND}/api/modules/${user.course_id}`)
@@ -414,8 +328,6 @@ export default function CabinetPage() {
       .then(async (data) => {
         const mods = data.modules || [];
         setModules(mods);
-        // префетч уроків, щоб одразу рахувався прогрес уроків (зелені повзунки)
-        // і все було як раніше без модульних % (які ми прибрали)
         await Promise.all(
           mods.map(async (m) => {
             try {
@@ -429,26 +341,8 @@ export default function CabinetPage() {
       .catch(() => console.error("Помилка завантаження модулів"));
   }, [user]);
 
-  // initial progress fetch
-  useEffect(() => {
-    if (!user?.id) return;
-    fetch(`${BACKEND}/api/progress/user/${user.id}`)
-      .then((r) => r.json())
-      .then((data) => {
-        const map = {};
-        (data.progress || []).forEach((p) => (map[p.lesson_id] = p));
-        setProgress(map);
-      })
-      .catch(() => console.error("Помилка прогресу"));
-  }, [user]);
-
-  // 🧮 Хелпер урокового відсотка
+  // 🧮 Хелпер урокового відсотка (залишено, але завжди дає 0, бо прогрес вимкнено)
   const lessonPercent = (p) => {
-    if (!p) return 0;
-    if (p.completed) return 100;
-    if (p.total_seconds > 0) {
-      return Math.min(100, Math.round((p.watched_seconds / p.total_seconds) * 100));
-    }
     return 0;
   };
 
@@ -476,31 +370,9 @@ export default function CabinetPage() {
     window.location.href = "/login";
   };
 
-  // overall progress — середній відсоток по ВСІХ завантажених уроках
+  // overall progress — тепер завжди 0 (прогрес приховано)
   const allLoadedLessons = Object.values(lessons).flat();
-  const overallProgress = allLoadedLessons.length
-    ? Math.round(
-        allLoadedLessons.reduce((acc, l) => acc + lessonPercent(progress[l.id]), 0) /
-          allLoadedLessons.length
-      )
-    : 0;
-
-  // отримуємо тики прогресу від SafeVideo, щоб одразу “зелений” рухався
-  const handleProgressTick = ({ lessonId, watched_seconds, total_seconds }) => {
-    if (!lessonId) return;
-    setProgress((prev) => ({
-      ...prev,
-      [lessonId]: {
-        ...(prev[lessonId] || {}),
-        watched_seconds,
-        total_seconds,
-        completed:
-          total_seconds > 0 && watched_seconds >= total_seconds - 2
-            ? true
-            : prev[lessonId]?.completed || false,
-      },
-    }));
-  };
+  const overallProgress = 0;
 
   if (!user) return null;
 
@@ -560,8 +432,8 @@ export default function CabinetPage() {
             </p>
           </div>
 
-          {/* Загальний прогрес курсу (усереднений по уроках) */}
-          {overallProgress > 0 && (
+          {/* Загальний прогрес курсу — приховано (overallProgress завжди 0) */}
+          {false && overallProgress > 0 && (
             <div className="mb-4 px-3">
               <p className="text-xs text-center font-medium text-pink-600">
                 {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
@@ -613,15 +485,8 @@ export default function CabinetPage() {
                   {expanded === mod.id && (
                     <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
                       {lessons[mod.id]?.map((l) => {
-                        const prog = progress[l.id];
-                        const percent =
-                          prog && prog.total_seconds > 0
-                            ? Math.min(
-                                100,
-                                Math.round((prog.watched_seconds / prog.total_seconds) * 100)
-                              )
-                            : 0;
-                        const done = prog?.completed || prog?.homework_done;
+                        const percent = 0; // прогрес приховано
+                        const done = false; // індикатор «виконано» прибрано
                         const isNew =
                           new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
@@ -641,60 +506,33 @@ export default function CabinetPage() {
                             }`}
                           >
                             <div className="flex items-center gap-2">
-                              {done ? (
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="w-4 h-4 text-green-500"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <circle cx="12" cy="12" r="10" />
-                                  <path d="M9 12l2 2 4-4" />
-                                </svg>
-                              ) : (
-                                <svg
-                                  xmlns="http://www.w3.org/2000/svg"
-                                  className="w-4 h-4 text-pink-400"
-                                  viewBox="0 0 24 24"
-                                  fill="none"
-                                  stroke="currentColor"
-                                  strokeWidth="2"
-                                >
-                                  <circle cx="12" cy="12" r="10" />
-                                </svg>
-                              )}
+                              {/* порожній статус без «completed» */}
+                              <svg
+                                xmlns="http://www.w3.org/2000/svg"
+                                className="w-4 h-4 text-pink-400"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                              >
+                                <circle cx="12" cy="12" r="10" />
+                              </svg>
 
                               <span className="flex-1 truncate">{l.title}</span>
                               {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
-                              {percent > 0 && (
-                                <span
-                                  className={`text-[11px] ml-1 font-semibold ${
-                                    done ? "text-green-500" : "text-pink-500"
-                                  }`}
-                                >
-                                  {percent}%
-                                </span>
-                              )}
+                              {/* відсотки приховані */}
                             </div>
-                            <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
-  <div
-    className={`h-full ${
-      done
-        ? "bg-green-400"
-        : percent > 0
-        ? "bg-gradient-to-r from-pink-400 to-rose-500"
-        : "bg-transparent"
-    }`}
-    style={{
-      width: `${percent}%`,
-      transition: "width 0.7s ease-out",
-      willChange: "width",
-    }}
-  />
-</div>
-                            </div>
+
+                            {/* смужка прогресу прихована */}
+                            {false && (
+                              <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
+                                <div
+                                  className="h-full bg-gradient-to-r from-pink-400 to-rose-500"
+                                  style={{ width: `${percent}%` }}
+                                />
+                              </div>
+                            )}
+                          </div>
                         );
                       })}
                     </div>
@@ -806,8 +644,8 @@ export default function CabinetPage() {
                 key={user?.xp}
                 modules={modules}
                 lessons={lessons}
-                progress={progress}
-                overallProgress={overallProgress}
+                progress={{}}                // прогрес вимкнено
+                overallProgress={0}          // прогрес вимкнено
                 darkMode={darkMode}
                 t={t}
                 user={user}
@@ -853,12 +691,11 @@ export default function CabinetPage() {
               )}
             </div>
 
-            {/* 🎬 Відео з автопереходом і прогресом */}
+            {/* 🎬 Відео з автопереходом (прогрес вимкнено) */}
             <SafeVideo
               lesson={selectedLesson}
               t={t}
               userId={user?.id}
-              onProgress={handleProgressTick}
               getNextLesson={(id) => {
                 const allLessons = Object.values(lessons).flat();
                 const idx = allLessons.findIndex((l) => l.id === id);
@@ -879,13 +716,7 @@ export default function CabinetPage() {
 
                 <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedLesson.homework}</p>
 
-                {/* ✅ Якщо домашнє завдання перевірене */}
-                {progress[selectedLesson.id]?.homework_done && (
-                  <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
-                    <CheckSquare className="w-4 h-4 text-green-600" />
-                    {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
-                  </div>
-                )}
+                {/* Бейдж «виконано» прибраний разом із прогресом */}
               </div>
             )}
 
