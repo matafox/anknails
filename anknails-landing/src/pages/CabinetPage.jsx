@@ -24,6 +24,11 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // 🆔 тільки справжній Bunny GUID (UUID v4)
+  const isBunnyGuid = (s) =>
+    typeof s === "string" &&
+    /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s);
+
   // playback state
   const [duration, setDuration] = useState(0);
   const [current, setCurrent] = useState(0);
@@ -57,7 +62,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, []);
 
-  // load Bunny iframe URL
+  // load Bunny iframe URL (тільки через бекенд)
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -66,7 +71,8 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         setLoading(false);
         return;
       }
-      // готовий URL від бекенду (пріоритет)
+
+      // 1) готовий URL від бекенду (пріоритет)
       if (lesson.embed_url) {
         if (!cancelled) {
           setVideoUrl(lesson.embed_url);
@@ -74,8 +80,9 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         }
         return;
       }
-      // якщо є Bunny GUID у полі youtube_id
-      if (lesson.youtube_id && lesson.youtube_id.includes("-") && lesson.youtube_id.length > 25) {
+
+      // 2) якщо у нас саме Bunny GUID — просимо бекенд згенерувати iframe URL
+      if (isBunnyGuid(lesson.youtube_id)) {
         try {
           const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
           const j = await r.json();
@@ -87,14 +94,14 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         }
         return;
       }
+
+      // 3) інакше відео відсутнє (ніяких Cloudinary/YouTube)
       if (!cancelled) {
         setVideoUrl(null);
         setLoading(false);
       }
     })();
-    return () => {
-      cancelled = true;
-    };
+    return () => { cancelled = true; };
   }, [lesson]);
 
   // listen Bunny postMessage events (timeupdate/duration/ended)
@@ -102,13 +109,8 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     if (!videoUrl) return;
 
     const handler = (e) => {
-      // приймаємо лише від Bunny
       if (!String(e.origin).includes("mediadelivery.net")) return;
       const data = e.data || {};
-      // Очікувані форми даних:
-      // { event: 'timeupdate', currentTime: number }
-      // { event: 'durationchange', duration: number }
-      // { event: 'ended' }
       if (data.event === "timeupdate" && typeof data.currentTime === "number") {
         setCurrent(data.currentTime);
       }
@@ -124,7 +126,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
 
     window.addEventListener("message", handler);
 
-    // активне опитування (якщо гравець не шле події — просимо)
+    // активне опитування (на випадок, якщо івенти не приходять)
     const ask = () => {
       try {
         iframeRef.current?.contentWindow?.postMessage({ command: "getCurrentTime" }, "*");
@@ -139,12 +141,12 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, [videoUrl, duration]);
 
-  // show "next" 10s before end
+  // show "next" 10s before end + тик у зовнішній прогрес
   useEffect(() => {
     if (!duration) return;
     const remaining = Math.max(0, duration - current);
     if (remaining <= 10 && duration > 0) setShowNext(true);
-    // fire external progress (UI list)
+
     const watched = Math.min(current, duration || current);
     const percent = duration ? Math.round((watched / duration) * 100) : 0;
     onProgress?.({
@@ -172,8 +174,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     saveTimerRef.current = window.setInterval(save, 5000);
     return () => {
       if (saveTimerRef.current) window.clearInterval(saveTimerRef.current);
-      // фінальний сейв при виході
-      save();
+      save(); // фінальний сейв
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [userId, lesson?.id, current, duration, completed, postProgress]);
