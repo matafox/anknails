@@ -207,7 +207,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
           className="w-full h-full rounded-xl"
           allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
           allowFullScreen
-          referrerPolicy="strict-origin-when-cross-origin"
+          referrerPolicy="origin"
         />
       </div>
 
