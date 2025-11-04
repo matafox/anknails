@@ -23,6 +23,7 @@ const BACKEND = "https://anknails-backend-production.up.railway.app";
 const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
+  const lastBucketRef = useRef(-1);
 
   const isBunnyGuid = (s) =>
     typeof s === "string" &&
@@ -37,26 +38,22 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
   const pollTimerRef = useRef(null);
   const saveTimerRef = useRef(null);
 
-  const postProgress = useMemo(() => {
-    const endpoints = [
-      `${BACKEND}/api/progress/tick`,
-      `${BACKEND}/api/progress/set`,
-      `${BACKEND}/api/progress/update`,
-    ];
-    return async (payload) => {
-      for (const url of endpoints) {
-        try {
-          const r = await fetch(url, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(payload),
-          });
-          if (r.ok) return true;
-        } catch {}
-      }
+const postProgress = useMemo(() => {
+  return async (payload) => {
+    try {
+      const r = await fetch(`${BACKEND}/api/progress/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      return r.ok;
+    } catch (e) {
+      console.error("progress update error", e);
       return false;
-    };
-  }, []);
+    }
+  };
+}, []);
+
 
   // свіжий підписаний iframe URL
   useEffect(() => {
@@ -133,20 +130,31 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, [videoUrl, duration]);
 
-  // локально відображаємо прогрес + показуємо кнопку за 10с до кінця
-  useEffect(() => {
-    if (!duration) return;
-    const remaining = Math.max(0, duration - current);
-    if (remaining <= 10 && duration > 0) setShowNext(true);
+// 🔟 надсилаємо onProgress тільки коли минула ще одна "десятка" секунд
+useEffect(() => {
+  // рахуй залишок до кінця для кнопки "далі"
+  const remaining = duration > 0 ? Math.max(0, duration - current) : null;
+  if (remaining !== null && remaining <= 10) setShowNext(true);
 
-    const watched = Math.min(current, duration || current);
+  const watched = duration ? Math.min(current, duration) : current;
+  const total = duration || 0;
+
+  // число пройдених "десяток" секунд
+  const bucket = Math.floor((watched || 0) / 10);
+
+  // перший виклик (lastBucketRef.current === -1) або нова "десятка"
+  if (bucket !== lastBucketRef.current) {
+    lastBucketRef.current = bucket;
+
     onProgress?.({
       lessonId: lesson?.id,
-      watched_seconds: Math.floor(watched),
-      total_seconds: Math.floor(duration || 0),
-      percent: duration ? Math.round((watched / duration) * 100) : 0,
+      watched_seconds: Math.floor(watched || 0),
+      total_seconds: Math.floor(total),
+      percent: total > 0 ? Math.round((watched / total) * 100) : 0,
     });
-  }, [current, duration, lesson?.id, onProgress]);
+  }
+}, [current, duration, lesson?.id, onProgress]);
+
 
   // періодично зберігаємо прогрес на бекенд
   useEffect(() => {
@@ -208,17 +216,29 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
 
       {getNextLesson && showNext && (
         <button
-          onClick={() => {
-            const n = getNextLesson(lesson?.id);
-            if (!n) return;
-            localStorage.setItem("last_lesson", JSON.stringify(n));
-            window.location.reload();
-          }}
-          className="animate-fadeIn flex items-center gap-2 px-5 py-3 text-sm md:text-base font-semibold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-md"
-        >
-          <ArrowRightCircle className="w-5 h-5" />
-          {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
-        </button>
+  onClick={async () => {
+    const n = getNextLesson(lesson?.id);
+    if (!n) return;
+
+    // фінальний пуш прогресу як completed
+    await postProgress({
+      user_id: userId,
+      lesson_id: lesson.id,
+      watched_seconds: Math.floor(Math.min(current, duration || current)),
+      total_seconds: Math.floor(duration || 0),
+      completed: true,
+    });
+
+    localStorage.setItem("last_lesson", JSON.stringify(n));
+    localStorage.setItem("last_view", "lesson");
+    window.location.reload();
+  }}
+  className="animate-fadeIn flex items-center gap-2 px-5 py-3 text-sm md:text-base font-semibold rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.03] transition-all shadow-md"
+>
+  <ArrowRightCircle className="w-5 h-5" />
+  {t("Перейти до наступного уроку", "Перейти к следующему уроку")}
+</button>
+
       )}
     </div>
   );
