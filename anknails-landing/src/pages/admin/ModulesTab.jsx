@@ -29,9 +29,7 @@ function PreviewBunny({ guid }) {
         if (alive) setSrc(null);
       }
     })();
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [guid]);
 
   if (!src) return null;
@@ -42,6 +40,8 @@ function PreviewBunny({ guid }) {
         src={src}
         className="w-full aspect-video rounded-lg border border-pink-200"
         allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+        allowFullScreen
+        loading="lazy"
         referrerPolicy="origin"
       />
     </div>
@@ -535,9 +535,7 @@ export default function ModulesTab({ darkMode, i18n }) {
                                 {l.description && <p className="mt-1">{l.description}</p>}
 
                                 {/* ТІЛЬКИ BUNNY */}
-                                {l.youtube_id && l.youtube_id.includes("-") && (
-                                  {isBunnyGuid(l.youtube_id) && <PreviewBunny guid={l.youtube_id} />}
-                                )}
+                                {isBunnyGuid(l.youtube_id) && <PreviewBunny guid={l.youtube_id} />}
 
                                 {l.homework && (
                                   <p className="mt-2 text-xs opacity-80">
