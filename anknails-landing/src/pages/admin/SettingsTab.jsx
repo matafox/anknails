@@ -2,10 +2,14 @@ import { useEffect, useState } from "react";
 
 export default function SettingsTab({ i18n, darkMode }) {
   const BACKEND = "https://anknails-backend-production.up.railway.app";
+
   const [users, setUsers] = useState([]);
   const [courses, setCourses] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
+
   const [progress, setProgress] = useState([]);
+  const [courseProgress, setCourseProgress] = useState({ total: 0, completed: 0, percent: 0 });
+
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(false);
@@ -45,10 +49,14 @@ export default function SettingsTab({ i18n, darkMode }) {
     e.preventDefault();
     const email = e.target.email.value.trim();
     const name = e.target.name.value.trim();
-    const days = parseInt(e.target.days.value);
-    const course_id = parseInt(e.target.course.value) || null;
-    const packageValue = e.target.package.value; // 👈 solo | pro
-    if (!email) return alert("Введіть email");
+    const rawDays = e.target.days.value;
+    const days = Number.isFinite(parseInt(rawDays, 10)) ? parseInt(rawDays, 10) : 7;
+
+    const rawCourse = e.target.course.value;
+    const course_id = rawCourse === "" ? null : Number(rawCourse);
+
+    const packageValue = e.target.package.value; // solo | pro
+    if (!email) return alert(i18n.language === "ru" ? "Введите email" : "Введіть email");
 
     try {
       setSaving(true);
@@ -61,18 +69,20 @@ export default function SettingsTab({ i18n, darkMode }) {
           name,
           days,
           course_id,
-          package: packageValue, // 👈 надсилаємо пакет
+          package: packageValue,
         }),
       });
       const data = await res.json();
       if (data.success) {
         e.target.reset();
         await loadUsers();
-        alert("✅ Користувач створений!");
-      } else alert("❌ Помилка створення користувача");
+        alert(i18n.language === "ru" ? "✅ Пользователь создан!" : "✅ Користувач створений!");
+      } else {
+        alert(i18n.language === "ru" ? "❌ Ошибка создания пользователя" : "❌ Помилка створення користувача");
+      }
     } catch (err) {
       console.error(err);
-      alert("❌ Помилка запиту");
+      alert(i18n.language === "ru" ? "❌ Ошибка запроса" : "❌ Помилка запиту");
     } finally {
       setSaving(false);
     }
@@ -80,12 +90,13 @@ export default function SettingsTab({ i18n, darkMode }) {
 
   // ✏️ Оновлення імені
   const handleNameChange = async (id, name) => {
-    if (!name.trim()) return;
+    const v = name.trim();
+    if (!v) return;
     try {
       await fetch(`${BACKEND}/api/users/update/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: "anka12341", name }),
+        body: JSON.stringify({ token: "anka12341", name: v }),
       });
       await loadUsers();
     } catch (err) {
@@ -121,18 +132,30 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-  // 📊 Завантаження прогресу користувача (тепер без зайвого мапу)
+  // 📊 Завантаження прогресу користувача + прогресу курсу
   const loadProgress = async (userId) => {
     try {
       setLoadingProgress(true);
-      const res = await fetch(`${BACKEND}/api/progress/user/${userId}`);
-      const data = await res.json();
 
-      // бекенд уже повертає lesson_title
-      setProgress(data.progress || []);
+      const [resUser, resCourse] = await Promise.all([
+        fetch(`${BACKEND}/api/progress/user/${userId}`),
+        fetch(`${BACKEND}/api/progress/course/${userId}`),
+      ]);
+
+      const dataUser = await resUser.json();
+      const dataCourse = await resCourse.json();
+
+      setProgress(dataUser.progress || []);
+      setCourseProgress({
+        total: dataCourse.total ?? 0,
+        completed: dataCourse.completed ?? 0,
+        percent: dataCourse.percent ?? 0,
+      });
       setSelectedUser(userId);
     } catch (err) {
       console.error("Помилка завантаження прогресу:", err);
+      setProgress([]);
+      setCourseProgress({ total: 0, completed: 0, percent: 0 });
     } finally {
       setLoadingProgress(false);
     }
@@ -153,7 +176,7 @@ export default function SettingsTab({ i18n, darkMode }) {
       if (data.success) {
         await loadProgress(selectedUser);
       } else {
-        alert("❌ Помилка оновлення домашки");
+        alert(i18n.language === "ru" ? "❌ Ошибка обновления домашки" : "❌ Помилка оновлення домашки");
       }
     } catch (err) {
       console.error("Помилка:", err);
@@ -292,7 +315,6 @@ export default function SettingsTab({ i18n, darkMode }) {
                 <th className="py-2 px-3 text-left">
                   {i18n.language === "ru" ? "Курс" : "Курс"}
                 </th>
-                {/* 🧩 нова колонка Пакет */}
                 <th className="py-2 px-3 text-left">
                   {i18n.language === "ru" ? "Пакет" : "Пакет"}
                 </th>
@@ -353,7 +375,6 @@ export default function SettingsTab({ i18n, darkMode }) {
                     </select>
                   </td>
 
-                  {/* 🧩 клітинка Пакет */}
                   <td className="py-2 px-3">
                     <select
                       value={u.package || "solo"}
@@ -415,6 +436,25 @@ export default function SettingsTab({ i18n, darkMode }) {
             #{selectedUser}
           </h4>
 
+          {/* Курсовий прогрес */}
+          <div
+            className={`mb-6 p-4 rounded-xl border ${
+              darkMode ? "bg-fuchsia-950/40 border-fuchsia-900/30" : "bg-pink-50 border-pink-200"
+            }`}
+          >
+            <p className="text-sm">
+              {i18n.language === "ru" ? "Прогресс курса:" : "Прогрес курсу:"}{" "}
+              <b>{courseProgress.percent}%</b> • {courseProgress.completed}/
+              {courseProgress.total}
+            </p>
+            <div className="h-2 mt-2 bg-pink-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700"
+                style={{ width: `${courseProgress.percent}%` }}
+              />
+            </div>
+          </div>
+
           {loadingProgress ? (
             <p className="opacity-70">Завантаження...</p>
           ) : progress.length > 0 ? (
@@ -467,7 +507,7 @@ export default function SettingsTab({ i18n, darkMode }) {
                             onClick={() => markHomeworkDone(p.lesson_id)}
                             className="text-xs px-3 py-1 rounded-md bg-pink-100 text-pink-700 hover:bg-pink-200"
                           >
-                            Позначити
+                            {i18n.language === "ru" ? "Отметить" : "Позначити"}
                           </button>
                         )}
                       </td>
