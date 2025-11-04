@@ -117,6 +117,7 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
     allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
     sandbox="allow-same-origin allow-scripts allow-presentation"
     onLoad={() => setLoading(false)}
+    referrerPolicy="origin" 
   ></iframe>
 ) : (
   <video
