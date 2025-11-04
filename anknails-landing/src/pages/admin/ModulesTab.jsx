@@ -33,6 +33,15 @@ export default function ModulesTab({ darkMode, i18n }) {
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
+  // 🔧 Bunny config для безпечної побудови iframe-URL
+  const [bunnyCfg, setBunnyCfg] = useState(null);
+  useEffect(() => {
+    fetch(`${BACKEND}/api/bunny/config`)
+      .then(r => r.json())
+      .then(setBunnyCfg)
+      .catch(() => {});
+  }, []);
+
   // 🧩 Завантаження курсів
   const fetchCourses = async () => {
     const res = await fetch(`${BACKEND}/api/courses`);
@@ -411,16 +420,24 @@ const saveLessonOrder = async (moduleId) => {
 
                         {l.description && <p>{l.description}</p>}
 
-                        {l.embed_url && (
-  <div className="relative mt-2">
-    <iframe
-      src={l.embed_url}
-      className="w-full aspect-video rounded-lg border border-pink-200"
-      allow="accelerometer; autoplay; encrypted-media; gyroscope; picture-in-picture"
-      allowFullScreen
-    ></iframe>
-  </div>
-)}
+{/* 🎬 Прев’ю відео (Bunny/YouTube) */}
+                        {(() => {
+                          const src = l.embed_url
+                            ? l.embed_url
+                            : (l.youtube_id && l.youtube_id.includes("-") && bunnyCfg?.library_id)
+                              ? `https://iframe.mediadelivery.net/embed/${bunnyCfg.library_id}/${l.youtube_id}`
+                              : null;
+                          return src ? (
+                            <div className="relative mt-2">
+                              <iframe
+                                src={src}
+                                className="w-full aspect-video rounded-lg border border-pink-200"
+                                allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+                                referrerPolicy="origin"
+                              />
+                            </div>
+                          ) : null;
+                        })()}
 
                         {l.homework && (
                           <p className="mt-2 text-xs opacity-80">
