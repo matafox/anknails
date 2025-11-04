@@ -259,7 +259,7 @@ export default function CabinetPage() {
   // last view / last lesson
   useEffect(() => {
     const lastView = localStorage.getItem("last_view");
-    aconst savedLesson = localStorage.getItem("last_lesson");
+    const savedLesson = localStorage.getItem("last_lesson");
     if (lastView === "lesson" && savedLesson) {
       try {
         setSelectedLesson(JSON.parse(savedLesson));
