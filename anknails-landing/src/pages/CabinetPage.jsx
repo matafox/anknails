@@ -110,59 +110,69 @@ const SafeVideo = ({ lesson, t, onProgressUpdate, getNextLesson, setUser }) => {
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
-        <video
-          src={videoUrl}
-          controls
-          playsInline
-          preload="metadata"
-          className="w-full h-full object-cover select-none pointer-events-auto"
-          controlsList="nodownload noremoteplayback nofullscreen"
-          disablePictureInPicture
-          onContextMenu={(e) => e.preventDefault()}
-          onTimeUpdate={(e) => {
-            const current = e.target.currentTime;
-            const total = e.target.duration;
+        {videoUrl.includes("iframe.mediadelivery.net") ? (
+  <iframe
+    src={videoUrl}
+    className="w-full h-full rounded-xl"
+    allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+    sandbox="allow-same-origin allow-scripts allow-presentation"
+    onLoad={() => setLoading(false)}
+  ></iframe>
+) : (
+  <video
+    src={videoUrl}
+    controls
+    playsInline
+    preload="metadata"
+    className="w-full h-full object-cover select-none pointer-events-auto"
+    controlsList="nodownload noremoteplayback nofullscreen"
+    disablePictureInPicture
+    onContextMenu={(e) => e.preventDefault()}
+    onTimeUpdate={(e) => {
+      const current = e.target.currentTime;
+      const total = e.target.duration;
 
-            // ⛔ Не оновлюємо, якщо користувач перемотав назад
-            if (current < maxWatched - 2) return;
+      // ⛔ Не оновлюємо, якщо користувач перемотав назад
+      if (current < maxWatched - 2) return;
 
-            // 🧠 Запам’ятовуємо найбільшу точку перегляду
-            if (current > maxWatched) setMaxWatched(current);
+      // 🧠 Запам’ятовуємо найбільшу точку перегляду
+      if (current > maxWatched) setMaxWatched(current);
 
-            // ⏱ Відправляємо прогрес кожні 10 секунд
-            if (current - lastSent >= 10) {
-              setLastSent(current);
-              sendProgress(current, total);
+      // ⏱ Відправляємо прогрес кожні 10 секунд
+      if (current - lastSent >= 10) {
+        setLastSent(current);
+        sendProgress(current, total);
+      }
+
+      // 🎯 Завершення уроку
+      if (!completed && current >= total * 0.95) {
+        setCompleted(true);
+        sendProgress(total, total, true);
+
+        // 🧩 Оновлення XP користувача
+        fetch(`${BACKEND}/api/progress/user/${userId}`)
+          .then((r) => r.json())
+          .then((data) => {
+            if (setUser && data.xp !== undefined) {
+              setUser((prev) => ({
+                ...prev,
+                xp: data.xp,
+                level: data.level,
+              }));
             }
+          })
+          .catch((err) => console.warn("⚠️ XP refresh failed", err));
 
-            // 🎯 Завершення уроку
-            if (!completed && current >= total * 0.95) {
-              setCompleted(true);
-              sendProgress(total, total, true);
-
-              // 🧩 Оновлення XP користувача
-              fetch(`${BACKEND}/api/progress/user/${userId}`)
-                .then((r) => r.json())
-                .then((data) => {
-                  if (setUser && data.xp !== undefined) {
-                    setUser((prev) => ({
-                      ...prev,
-                      xp: data.xp,
-                      level: data.level,
-                    }));
-                  }
-                })
-                .catch((err) => console.warn("⚠️ XP refresh failed", err));
-
-              if (nextLesson) setShowNextButton(true);
-            }
-          }}
-        >
-          {t(
-            "Ваш браузер не підтримує відтворення відео",
-            "Ваш браузер не поддерживает воспроизведение видео"
-          )}
-        </video>
+        if (nextLesson) setShowNextButton(true);
+      }
+    }}
+  >
+    {t(
+      "Ваш браузер не підтримує відтворення відео",
+      "Ваш браузер не поддерживает воспроизведение видео"
+    )}
+  </video>
+)}
       </div>
 
       {/* Кнопка переходу до наступного уроку */}
