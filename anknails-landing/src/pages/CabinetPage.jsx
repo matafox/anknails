@@ -19,7 +19,7 @@ import {
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
-/* ================= SAFEVIDEO (BUNNY-ONLY, no visible progress bar) ================= */
+/* ================= SAFEVIDEO (BUNNY-ONLY, progress saves + next button in last 10s) ================= */
 const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -82,7 +82,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, [lesson]);
 
-  // слухаємо події Bunny (універсально)
+  // слухаємо події Bunny
   useEffect(() => {
     if (!videoUrl) return;
 
@@ -110,7 +110,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         setCompleted(true);
         setShowNext(true);
         setCurrent((c) => (duration ? duration : c));
-        // добираємо тривалість, якщо її ще нема
         try {
           iframeRef.current?.contentWindow?.postMessage({ command: "getDuration" }, "*");
         } catch {}
@@ -134,7 +133,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, [videoUrl, duration]);
 
-  // тихо тікаємо прогрес (без візуального бару)
+  // локально відображаємо прогрес + показуємо кнопку за 10с до кінця
   useEffect(() => {
     if (!duration) return;
     const remaining = Math.max(0, duration - current);
@@ -198,7 +197,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
           allowFullScreen
           referrerPolicy="origin"
           onLoad={() => {
-            // одразу тягнемо duration/current після завантаження
             try {
               const w = iframeRef.current?.contentWindow;
               w?.postMessage({ command: "getDuration" }, "*");
@@ -261,7 +259,7 @@ export default function CabinetPage() {
   // last view / last lesson
   useEffect(() => {
     const lastView = localStorage.getItem("last_view");
-    const savedLesson = localStorage.getItem("last_lesson");
+    aconst savedLesson = localStorage.getItem("last_lesson");
     if (lastView === "lesson" && savedLesson) {
       try {
         setSelectedLesson(JSON.parse(savedLesson));
@@ -363,7 +361,21 @@ export default function CabinetPage() {
     if (!user?.course_id) return;
     fetch(`${BACKEND}/api/modules/${user.course_id}`)
       .then((res) => res.json())
-      .then((data) => setModules(data.modules || []))
+      .then(async (data) => {
+        const mods = data.modules || [];
+        setModules(mods);
+        // префетч уроків, щоб одразу рахувався прогрес уроків (зелені повзунки)
+        // і все було як раніше без модульних % (які ми прибрали)
+        await Promise.all(
+          mods.map(async (m) => {
+            try {
+              const r = await fetch(`${BACKEND}/api/lessons/${m.id}`);
+              const j = await r.json();
+              setLessons((prev) => ({ ...prev, [m.id]: (j.lessons || []).map((l) => ({ ...l })) }));
+            } catch {}
+          })
+        );
+      })
       .catch(() => console.error("Помилка завантаження модулів"));
   }, [user]);
 
@@ -380,7 +392,7 @@ export default function CabinetPage() {
       .catch(() => console.error("Помилка прогресу"));
   }, [user]);
 
-  // 🧮 Хелпери прогресу
+  // 🧮 Хелпер урокового відсотка
   const lessonPercent = (p) => {
     if (!p) return 0;
     if (p.completed) return 100;
@@ -388,13 +400,6 @@ export default function CabinetPage() {
       return Math.min(100, Math.round((p.watched_seconds / p.total_seconds) * 100));
     }
     return 0;
-  };
-
-  const moduleProgress = (modId) => {
-    const ls = lessons[modId] || [];
-    if (!ls.length) return 0;
-    const sum = ls.reduce((acc, l) => acc + lessonPercent(progress[l.id]), 0);
-    return Math.round(sum / ls.length);
   };
 
   const fetchLessons = async (moduleId) => {
@@ -430,7 +435,7 @@ export default function CabinetPage() {
       )
     : 0;
 
-  // receive progress ticks from SafeVideo to reflect in UI immediately
+  // отримуємо тики прогресу від SafeVideo, щоб одразу “зелений” рухався
   const handleProgressTick = ({ lessonId, watched_seconds, total_seconds }) => {
     if (!lessonId) return;
     setProgress((prev) => ({
@@ -505,7 +510,7 @@ export default function CabinetPage() {
             </p>
           </div>
 
-          {/* Загальний прогрес */}
+          {/* Загальний прогрес курсу (усереднений по уроках) */}
           {overallProgress > 0 && (
             <div className="mb-4 px-3">
               <p className="text-xs text-center font-medium text-pink-600">
@@ -531,49 +536,19 @@ export default function CabinetPage() {
                 <div key={mod.id} className="mb-2">
                   <button
                     onClick={() => toggleModule(mod.id)}
-                    className="w-full flex items-center justify-between gap-2 px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
+                    className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
                   >
                     <span className="flex items-center gap-2">
                       <BookOpen className="w-4 h-4" /> {mod.title}
                     </span>
-
                     {/* кількість уроків */}
-                    <span className="absolute right-24 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
+                    <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
                       {typeof mod.lessons === "number"
                         ? mod.lessons
                         : (lessons[mod.id]?.length ?? 0)}
                     </span>
-
-                    {/* бейдж прогресу модуля */}
-                    <span
-                      className={`text-[11px] font-semibold rounded-md px-2 py-[2px] ${
-                        moduleProgress(mod.id) >= 100
-                          ? "bg-green-100 text-green-700"
-                          : "bg-pink-100 text-pink-700"
-                      }`}
-                      title={t("Прогрес модуля", "Прогресс модуля")}
-                    >
-                      {moduleProgress(mod.id)}%
-                    </span>
-
-                    {expanded === mod.id ? (
-                      <ChevronUp className="w-4 h-4 ml-1" />
-                    ) : (
-                      <ChevronDown className="w-4 h-4 ml-1" />
-                    )}
+                    {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
                   </button>
-
-                  {/* тонка смужка прогресу під заголовком модуля */}
-                  <div className="mt-1 mx-3 h-1 rounded-full bg-pink-100 overflow-hidden">
-                    <div
-                      className={`h-full transition-all duration-700 ${
-                        moduleProgress(mod.id) >= 100
-                          ? "bg-green-400"
-                          : "bg-gradient-to-r from-pink-400 to-rose-500"
-                      }`}
-                      style={{ width: `${moduleProgress(mod.id)}%` }}
-                    />
-                  </div>
 
                   {mod.description && (
                     <p
