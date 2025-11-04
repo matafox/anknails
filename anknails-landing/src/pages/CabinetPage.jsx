@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import DashboardSection from "./DashboardSection";
 import ModulesPage from "./ModulesPage";
 import { useTranslation } from "react-i18next";
@@ -11,35 +11,70 @@ import {
   BookOpen,
   ChevronDown,
   ChevronUp,
-  ChevronRight,
   Moon,
   Globe,
   CheckSquare,
-  FolderOpen,
   Flame,
 } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
-
-// ================= SAFEVIDEO (BUNNY-ONLY) =================
-const SafeVideo = ({ lesson, t, getNextLesson }) => {
+/* ================= SAFEVIDEO (BUNNY-ONLY with progress & next-10s) ================= */
+const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
-  const nextLesson = getNextLesson?.(lesson?.id);
 
+  // playback state
+  const [duration, setDuration] = useState(0);
+  const [current, setCurrent] = useState(0);
+  const [showNext, setShowNext] = useState(false);
+  const [completed, setCompleted] = useState(false);
+
+  const nextLesson = getNextLesson?.(lesson?.id);
+  const iframeRef = useRef(null);
+  const pollTimerRef = useRef(null);
+  const saveTimerRef = useRef(null);
+
+  // helper: safe emit to different possible progress endpoints
+  const postProgress = useMemo(() => {
+    const endpoints = [
+      `${BACKEND}/api/progress/tick`,
+      `${BACKEND}/api/progress/set`,
+      `${BACKEND}/api/progress/update`,
+    ];
+    return async (payload) => {
+      for (const url of endpoints) {
+        try {
+          const r = await fetch(url, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload),
+          });
+          if (r.ok) return true;
+        } catch {}
+      }
+      return false;
+    };
+  }, []);
+
+  // load Bunny iframe URL
   useEffect(() => {
     let cancelled = false;
-    const run = async () => {
-      if (!lesson) { setVideoUrl(null); setLoading(false); return; }
-
-      // 1) якщо бек уже дав підписаний/готовий URL — беремо його
-      if (lesson.embed_url) {
-        if (!cancelled) { setVideoUrl(lesson.embed_url); setLoading(false); }
+    (async () => {
+      if (!lesson) {
+        setVideoUrl(null);
+        setLoading(false);
         return;
       }
-
-      // 2) якщо збережено Bunny GUID — попросимо бек згенерити iframe url
+      // готовий URL від бекенду (пріоритет)
+      if (lesson.embed_url) {
+        if (!cancelled) {
+          setVideoUrl(lesson.embed_url);
+          setLoading(false);
+        }
+        return;
+      }
+      // якщо є Bunny GUID у полі youtube_id
       if (lesson.youtube_id && lesson.youtube_id.includes("-") && lesson.youtube_id.length > 25) {
         try {
           const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
@@ -52,18 +87,101 @@ const SafeVideo = ({ lesson, t, getNextLesson }) => {
         }
         return;
       }
-
-      // 3) fallback — нічого не знайшли
-      if (!cancelled) { setVideoUrl(null); setLoading(false); }
+      if (!cancelled) {
+        setVideoUrl(null);
+        setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
     };
-    run();
-    return () => { cancelled = true; };
   }, [lesson]);
+
+  // listen Bunny postMessage events (timeupdate/duration/ended)
+  useEffect(() => {
+    if (!videoUrl) return;
+
+    const handler = (e) => {
+      // приймаємо лише від Bunny
+      if (!String(e.origin).includes("mediadelivery.net")) return;
+      const data = e.data || {};
+      // Очікувані форми даних:
+      // { event: 'timeupdate', currentTime: number }
+      // { event: 'durationchange', duration: number }
+      // { event: 'ended' }
+      if (data.event === "timeupdate" && typeof data.currentTime === "number") {
+        setCurrent(data.currentTime);
+      }
+      if (data.event === "durationchange" && typeof data.duration === "number") {
+        setDuration(data.duration);
+      }
+      if (data.event === "ended") {
+        setCompleted(true);
+        setShowNext(true);
+        setCurrent((c) => (duration ? duration : c));
+      }
+    };
+
+    window.addEventListener("message", handler);
+
+    // активне опитування (якщо гравець не шле події — просимо)
+    const ask = () => {
+      try {
+        iframeRef.current?.contentWindow?.postMessage({ command: "getCurrentTime" }, "*");
+        iframeRef.current?.contentWindow?.postMessage({ command: "getDuration" }, "*");
+      } catch {}
+    };
+    pollTimerRef.current = window.setInterval(ask, 500);
+
+    return () => {
+      window.removeEventListener("message", handler);
+      if (pollTimerRef.current) window.clearInterval(pollTimerRef.current);
+    };
+  }, [videoUrl, duration]);
+
+  // show "next" 10s before end
+  useEffect(() => {
+    if (!duration) return;
+    const remaining = Math.max(0, duration - current);
+    if (remaining <= 10 && duration > 0) setShowNext(true);
+    // fire external progress (UI list)
+    const watched = Math.min(current, duration || current);
+    const percent = duration ? Math.round((watched / duration) * 100) : 0;
+    onProgress?.({
+      lessonId: lesson?.id,
+      watched_seconds: Math.floor(watched),
+      total_seconds: Math.floor(duration || 0),
+      percent,
+    });
+  }, [current, duration, lesson?.id, onProgress]);
+
+  // backend progress save (throttled 5s)
+  useEffect(() => {
+    if (!userId || !lesson?.id) return;
+    const save = async () => {
+      if (!duration) return;
+      const payload = {
+        user_id: userId,
+        lesson_id: lesson.id,
+        watched_seconds: Math.floor(Math.min(current, duration)),
+        total_seconds: Math.floor(duration),
+        completed: completed || (duration > 0 && duration - current <= 2),
+      };
+      await postProgress(payload);
+    };
+    saveTimerRef.current = window.setInterval(save, 5000);
+    return () => {
+      if (saveTimerRef.current) window.clearInterval(saveTimerRef.current);
+      // фінальний сейв при виході
+      save();
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [userId, lesson?.id, current, duration, completed, postProgress]);
 
   if (loading) {
     return (
       <div className="w-full aspect-video flex items-center justify-center bg-black/60 rounded-xl text-pink-300 text-sm">
-        Завантаження відео...
+        {t("Завантаження відео...", "Загрузка видео...")}
       </div>
     );
   }
@@ -76,11 +194,14 @@ const SafeVideo = ({ lesson, t, getNextLesson }) => {
     );
   }
 
-  // Bunny iframe (без трекінгу таймкоду)
+  const percent =
+    duration > 0 ? Math.min(100, Math.round((Math.min(current, duration) / duration) * 100)) : 0;
+
   return (
     <div className="flex flex-col items-center gap-4">
-      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black">
+      <div className="w-full aspect-video rounded-xl overflow-hidden border border-pink-300 shadow-md bg-black relative">
         <iframe
+          ref={iframeRef}
           src={videoUrl}
           className="w-full h-full rounded-xl"
           allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
@@ -89,7 +210,19 @@ const SafeVideo = ({ lesson, t, getNextLesson }) => {
         />
       </div>
 
-      {nextLesson && (
+      {/* progress bar */}
+      <div className="w-full">
+        <div className="h-2 bg-pink-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-500 ease-out"
+            style={{ width: `${percent}%` }}
+          />
+        </div>
+        <div className="mt-1 text-xs text-center text-pink-600">{percent}%</div>
+      </div>
+
+      {/* next button shows 10s before end (also stays after end) */}
+      {nextLesson && showNext && (
         <button
           onClick={() => {
             localStorage.setItem("last_lesson", JSON.stringify(nextLesson));
@@ -105,9 +238,7 @@ const SafeVideo = ({ lesson, t, getNextLesson }) => {
   );
 };
 
-
-
-// ================= CABINET PAGE =================
+/* ================= CABINET PAGE ================= */
 export default function CabinetPage() {
   const { i18n } = useTranslation();
   const [user, setUser] = useState(null);
@@ -123,41 +254,37 @@ export default function CabinetPage() {
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
-  // 🚫 Заборона копіювання, виділення, контекстного меню
-useEffect(() => {
-  const handleContextMenu = (e) => e.preventDefault();
-  const handleSelectStart = (e) => e.preventDefault();
-  const handleCopy = (e) => e.preventDefault();
+  // 🔒 анти-копі
+  useEffect(() => {
+    const handleContextMenu = (e) => e.preventDefault();
+    const handleSelectStart = (e) => e.preventDefault();
+    const handleCopy = (e) => e.preventDefault();
+    document.addEventListener("contextmenu", handleContextMenu);
+    document.addEventListener("selectstart", handleSelectStart);
+    document.addEventListener("copy", handleCopy);
+    return () => {
+      document.removeEventListener("contextmenu", handleContextMenu);
+      document.removeEventListener("selectstart", handleSelectStart);
+      document.removeEventListener("copy", handleCopy);
+    };
+  }, []);
 
-  document.addEventListener("contextmenu", handleContextMenu);
-  document.addEventListener("selectstart", handleSelectStart);
-  document.addEventListener("copy", handleCopy);
-
-  return () => {
-    document.removeEventListener("contextmenu", handleContextMenu);
-    document.removeEventListener("selectstart", handleSelectStart);
-    document.removeEventListener("copy", handleCopy);
-  };
-}, []);
-
-
-  // 🧠 автозавантаження останньої сторінки (дашборд / урок)
-useEffect(() => {
-  const lastView = localStorage.getItem("last_view");
-  const savedLesson = localStorage.getItem("last_lesson");
-
-  if (lastView === "lesson" && savedLesson) {
-    try {
-      setSelectedLesson(JSON.parse(savedLesson));
-    } catch {
+  // last view / last lesson
+  useEffect(() => {
+    const lastView = localStorage.getItem("last_view");
+    const savedLesson = localStorage.getItem("last_lesson");
+    if (lastView === "lesson" && savedLesson) {
+      try {
+        setSelectedLesson(JSON.parse(savedLesson));
+      } catch {
+        setSelectedLesson(null);
+      }
+    } else {
       setSelectedLesson(null);
     }
-  } else {
-    setSelectedLesson(null);
-  }
-}, []);
+  }, []);
 
-
+  // theme
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -166,11 +293,13 @@ useEffect(() => {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
+  // lang
   useEffect(() => {
     const savedLang = localStorage.getItem("lang");
     if (savedLang && savedLang !== i18n.language) i18n.changeLanguage(savedLang);
   }, []);
 
+  // auth + user
   useEffect(() => {
     const email = localStorage.getItem("user_email");
     const expires = localStorage.getItem("expires_at");
@@ -207,44 +336,32 @@ useEffect(() => {
       .catch(() => (window.location.href = "/login"));
   }, []);
 
-  // 🧠 Перевірка, що акаунт відкрито тільки на одному пристрої
-useEffect(() => {
-  const email = localStorage.getItem("user_email");
-  const token = localStorage.getItem("session_token");
-
-  if (!email || !token) return;
-
-  fetch(`${BACKEND}/api/check-session`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email, token }),
-  })
-    .then((r) => r.json())
-    .then((res) => {
-      if (!res.valid) {
-        alert(
-          i18n.language === "ru"
-            ? "Ваш аккаунт открыт в другом браузере."
-            : "Ваш акаунт відкрито в іншому браузері."
-        );
-        localStorage.clear();
-        window.location.href = "/login";
-      }
-    })
-    .catch(() => {});
-}, []);
-
-
-  // 🧠 автозавантаження останнього уроку
+  // single-device session
   useEffect(() => {
-    const savedLesson = localStorage.getItem("last_lesson");
-    if (savedLesson) {
-      try {
-        setSelectedLesson(JSON.parse(savedLesson));
-      } catch {}
-    }
-  }, []);
+    const email = localStorage.getItem("user_email");
+    const token = localStorage.getItem("session_token");
+    if (!email || !token) return;
+    fetch(`${BACKEND}/api/check-session`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, token }),
+    })
+      .then((r) => r.json())
+      .then((res) => {
+        if (!res.valid) {
+          alert(
+            i18n.language === "ru"
+              ? "Ваш аккаунт открыт в другом браузере."
+              : "Ваш акаунт відкрито в іншому браузері."
+          );
+          localStorage.clear();
+          window.location.href = "/login";
+        }
+      })
+      .catch(() => {});
+  }, [i18n.language]);
 
+  // banner
   useEffect(() => {
     fetch(`${BACKEND}/api/banner`)
       .then((res) => res.json())
@@ -252,6 +369,7 @@ useEffect(() => {
       .catch(() => {});
   }, []);
 
+  // modules
   useEffect(() => {
     if (!user?.course_id) return;
     fetch(`${BACKEND}/api/modules/${user.course_id}`)
@@ -260,6 +378,7 @@ useEffect(() => {
       .catch(() => console.error("Помилка завантаження модулів"));
   }, [user]);
 
+  // initial progress fetch
   useEffect(() => {
     if (!user?.id) return;
     fetch(`${BACKEND}/api/progress/user/${user.id}`)
@@ -276,9 +395,7 @@ useEffect(() => {
     try {
       const res = await fetch(`${BACKEND}/api/lessons/${moduleId}`);
       const data = await res.json();
-      const normalized = (data.lessons || []).map((l) => ({
-  ...l,
-}));
+      const normalized = (data.lessons || []).map((l) => ({ ...l }));
       setLessons((prev) => ({ ...prev, [moduleId]: normalized }));
     } catch (e) {
       console.error(e);
@@ -298,9 +415,7 @@ useEffect(() => {
     window.location.href = "/login";
   };
 
-  if (!user) return null;
-
-  // 📊 обчислення середнього прогресу курсу
+  // overall progress
   const overallProgress =
     Object.keys(progress).length > 0
       ? Math.round(
@@ -313,6 +428,25 @@ useEffect(() => {
             100
         )
       : 0;
+
+  // receive progress ticks from SafeVideo to reflect in UI immediately
+  const handleProgressTick = ({ lessonId, watched_seconds, total_seconds }) => {
+    if (!lessonId) return;
+    setProgress((prev) => ({
+      ...prev,
+      [lessonId]: {
+        ...(prev[lessonId] || {}),
+        watched_seconds,
+        total_seconds,
+        completed:
+          total_seconds > 0 && watched_seconds >= total_seconds - 2
+            ? true
+            : prev[lessonId]?.completed || false,
+      },
+    }));
+  };
+
+  if (!user) return null;
 
   return (
     <div
@@ -349,34 +483,28 @@ useEffect(() => {
         } md:pt-0 pt-16`}
       >
         <div className="p-6 flex-1 overflow-y-auto">
-          <div
-  className="flex flex-col items-center text-center mb-4 group select-none"
->
-  <SquareUserRound
-    className="w-16 h-16 text-pink-500 mb-2 group-hover:scale-110 transition-transform duration-300"
-  />
-  <h2 className="font-bold text-lg group-hover:text-pink-600 transition-colors">
-    {user.name || user.email.split("@")[0]}
-  </h2>
+          <div className="flex flex-col items-center text-center mb-4 group select-none">
+            <SquareUserRound className="w-16 h-16 text-pink-500 mb-2 group-hover:scale-110 transition-transform duration-300" />
+            <h2 className="font-bold text-lg group-hover:text-pink-600 transition-colors">
+              {user.name || user.email.split("@")[0]}
+            </h2>
+            <div className="mt-1">
+              {user.package === "pro" ? (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
+                  PRO
+                </span>
+              ) : (
+                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
+                  {t("Самостійний", "Самостоятельный")}
+                </span>
+              )}
+            </div>
+            <p className="text-sm opacity-70">
+              {t("Доступ до", "Доступ до")}: {user.expires_at}
+            </p>
+          </div>
 
-<div className="mt-1">
-    {user.package === "pro" ? (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
-        PRO
-      </span>
-    ) : (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
-        {t("Самостійний", "Самостоятельный")}
-      </span>
-    )}
-  </div>
-            
-  <p className="text-sm opacity-70">
-    {t("Доступ до", "Доступ до")}: {user.expires_at}
-  </p>
-</div>
-
-          {/* 📊 Загальний прогрес курсу */}
+          {/* Загальний прогрес */}
           {overallProgress > 0 && (
             <div className="mb-4 px-3">
               <p className="text-xs text-center font-medium text-pink-600">
@@ -429,7 +557,10 @@ useEffect(() => {
                         const prog = progress[l.id];
                         const percent =
                           prog && prog.total_seconds > 0
-                            ? Math.min(100, Math.round((prog.watched_seconds / prog.total_seconds) * 100))
+                            ? Math.min(
+                                100,
+                                Math.round((prog.watched_seconds / prog.total_seconds) * 100)
+                              )
                             : 0;
                         const done = prog?.completed || prog?.homework_done;
                         const isNew =
@@ -452,22 +583,38 @@ useEffect(() => {
                           >
                             <div className="flex items-center gap-2">
                               {done ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="w-4 h-4 text-green-500"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                >
                                   <circle cx="12" cy="12" r="10" />
                                   <path d="M9 12l2 2 4-4" />
                                 </svg>
                               ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg
+                                  xmlns="http://www.w3.org/2000/svg"
+                                  className="w-4 h-4 text-pink-400"
+                                  viewBox="0 0 24 24"
+                                  fill="none"
+                                  stroke="currentColor"
+                                  strokeWidth="2"
+                                >
                                   <circle cx="12" cy="12" r="10" />
                                 </svg>
                               )}
 
                               <span className="flex-1 truncate">{l.title}</span>
-                              {isNew && (
-  <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />
-)}
+                              {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
                               {percent > 0 && (
-                                <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
+                                <span
+                                  className={`text-[11px] ml-1 font-semibold ${
+                                    done ? "text-green-500" : "text-pink-500"
+                                  }`}
+                                >
                                   {percent}%
                                 </span>
                               )}
@@ -561,186 +708,159 @@ useEffect(() => {
       </aside>
 
       {/* Контент */}
-<main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
-{banner && banner.active && (
-  <div className="flex flex-col md:flex-row gap-4 mb-8">
-    {/* 🖼 Основний банер */}
-    <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-      {banner.image_url && (
-        <img
-          src={banner.image_url}
-          alt="Banner"
-          className="w-full h-48 md:h-64 object-cover"
-        />
-      )}
-      <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
-        {banner.title}
-      </div>
-    </div>
-
-    {/* 💅 Окрема менша рамка справа */}
-    <div
-  onClick={() => {
-    setSelectedLesson(null);
-    setMenuOpen(false);
-    localStorage.setItem("last_view", "dashboard");
-  }}
-  className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
-  title={t("Перейти до дашборду", "Перейти на главную")}
->
-  ANK Studio Online
-</div>
-  </div>
-)}
-
-
-
-{!selectedLesson ? (
-  <>
-    {view === "dashboard" && (
-      <DashboardSection
-        key={user?.xp}
-        modules={modules}
-        lessons={lessons}
-        progress={progress}
-        overallProgress={overallProgress}
-        darkMode={darkMode}
-        t={t}
-        user={user}
-        onOpenModules={() => setView("modules")}
-      />
-    )}
-
-    {view === "modules" && (
-      <ModulesPage
-        modules={modules}
-        darkMode={darkMode}
-        t={t}
-        onBack={() => setView("dashboard")}
-      />
-    )}
-  </>
-) : (
-    <div
-      className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
-        darkMode
-          ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
-          : "bg-white/80 border border-pink-200"
-      }`}
-    >
-     {/* 🔖 Заголовок, бейдж і опис уроку */}
-<div className="mb-4">
-  <div className="flex items-center justify-between">
-    <div className="flex items-center gap-3 flex-wrap">
-      <h2 className="text-2xl font-bold text-pink-600">
-        {selectedLesson.title}
-      </h2>
-
-      {selectedLesson.type === "theory" && (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
-          {t("Теорія", "Теория")}
-        </span>
-      )}
-
-      {selectedLesson.type === "practice" && (
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
-          {t("Практика", "Практика")}
-        </span>
-      )}
-    </div>
-  </div>
-
-  {/* 📄 Опис уроку */}
-  {selectedLesson.description && (
-    <p
-      className={`mt-2 text-sm leading-relaxed ${
-        darkMode ? "text-gray-300" : "text-gray-600"
-      }`}
-    >
-      {selectedLesson.description}
-    </p>
-  )}
-</div>
-
-      {/* 🎬 Відео з автопереходом і прогресом */}
-      <SafeVideo
-        lesson={selectedLesson}
-        t={t}
-        getNextLesson={(id) => {
-          const allLessons = Object.values(lessons).flat();
-          const idx = allLessons.findIndex((l) => l.id === id);
-          return allLessons[idx + 1] || null;
-        }}
-      
-      />
-
-      {/* 🧾 Домашнє завдання */}
-      {selectedLesson.homework && (
-        <div
-  className={`p-4 rounded-xl border mt-6 ${
-    darkMode
-      ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
-      : "bg-gray-50 border-gray-200 text-gray-800"
-  }`}
->
-          <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
-  {t("Домашнє завдання", "Домашнее задание")}
-</h3>
-
-          <p className="text-sm leading-relaxed whitespace-pre-wrap">
-            {selectedLesson.homework}
-          </p>
-
-          {/* ✅ Якщо домашнє завдання перевірене */}
-          {progress[selectedLesson.id]?.homework_done && (
-            <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
-              <CheckSquare className="w-4 h-4 text-green-600" />
-              {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+      <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
+        {banner && banner.active && (
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            {/* 🖼 Основний банер */}
+            <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+              {banner.image_url && (
+                <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />
+              )}
+              <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
+                {banner.title}
+              </div>
             </div>
-          )}
-        </div>
-      )}
 
-     {/* 📎 Матеріали */}
-      {selectedLesson.materials && (
-        <div
-    className={`p-4 rounded-xl border mt-6 ${
-      darkMode
-        ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
-        : "bg-gray-50 border-gray-200 text-gray-800"
-    }`}
-  >
-    <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
-      {t("Матеріали", "Материалы")}
-    </h3>
-          <a
-            href={selectedLesson.materials}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-block text-sm font-medium text-blue-600 hover:underline"
+            {/* 💅 Окрема менша рамка справа */}
+            <div
+              onClick={() => {
+                setSelectedLesson(null);
+                setMenuOpen(false);
+                localStorage.setItem("last_view", "dashboard");
+              }}
+              className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
+              title={t("Перейти до дашборду", "Перейти на главную")}
+            >
+              ANK Studio Online
+            </div>
+          </div>
+        )}
+
+        {!selectedLesson ? (
+          <>
+            {view === "dashboard" && (
+              <DashboardSection
+                key={user?.xp}
+                modules={modules}
+                lessons={lessons}
+                progress={progress}
+                overallProgress={overallProgress}
+                darkMode={darkMode}
+                t={t}
+                user={user}
+                onOpenModules={() => setView("modules")}
+              />
+            )}
+
+            {view === "modules" && (
+              <ModulesPage modules={modules} darkMode={darkMode} t={t} onBack={() => setView("dashboard")} />
+            )}
+          </>
+        ) : (
+          <div
+            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
+              darkMode ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40" : "bg-white/80 border border-pink-200"
+            }`}
           >
-            {t("Відкрити матеріали", "Открыть материалы")}
-          </a>
-        </div>
-      )}
-    </div>
-  )}
+            {/* 🔖 Заголовок, бейдж і опис уроку */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
 
-  {/* ⚙️ Footer */}
-  <footer
-    className={`mt-10 text-center py-6 text-sm border-t ${
-      darkMode
-        ? "border-fuchsia-900/30 text-fuchsia-100/80"
-        : "border-pink-200 text-gray-600"
-    }`}
-  >
-    <p className="font-medium">
-      © {new Date().getFullYear()}{" "}
-      <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
-      {t("Усі права захищені.", "Все права защищены.")}
-    </p>
-  </footer>
-</main>
+                  {selectedLesson.type === "theory" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
+                      {t("Теорія", "Теория")}
+                    </span>
+                  )}
+
+                  {selectedLesson.type === "practice" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
+                      {t("Практика", "Практика")}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* 📄 Опис уроку */}
+              {selectedLesson.description && (
+                <p className={`mt-2 text-sm leading-relaxed ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  {selectedLesson.description}
+                </p>
+              )}
+            </div>
+
+            {/* 🎬 Відео з автопереходом і прогресом */}
+            <SafeVideo
+              lesson={selectedLesson}
+              t={t}
+              userId={user?.id}
+              onProgress={handleProgressTick}
+              getNextLesson={(id) => {
+                const allLessons = Object.values(lessons).flat();
+                const idx = allLessons.findIndex((l) => l.id === id);
+                return allLessons[idx + 1] || null;
+              }}
+            />
+
+            {/* 🧾 Домашнє завдання */}
+            {selectedLesson.homework && (
+              <div
+                className={`p-4 rounded-xl border mt-6 ${
+                  darkMode ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100" : "bg-gray-50 border-gray-200 text-gray-800"
+                }`}
+              >
+                <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
+                  {t("Домашнє завдання", "Домашнее задание")}
+                </h3>
+
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedLesson.homework}</p>
+
+                {/* ✅ Якщо домашнє завдання перевірене */}
+                {progress[selectedLesson.id]?.homework_done && (
+                  <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
+                    <CheckSquare className="w-4 h-4 text-green-600" />
+                    {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* 📎 Матеріали */}
+            {selectedLesson.materials && (
+              <div
+                className={`p-4 rounded-xl border mt-6 ${
+                  darkMode ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100" : "bg-gray-50 border-gray-200 text-gray-800"
+                }`}
+              >
+                <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
+                  {t("Матеріали", "Материалы")}
+                </h3>
+                <a
+                  href={selectedLesson.materials}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-sm font-medium text-blue-600 hover:underline"
+                >
+                  {t("Відкрити матеріали", "Открыть материалы")}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* ⚙️ Footer */}
+        <footer
+          className={`mt-10 text-center py-6 text-sm border-t ${
+            darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"
+          }`}
+        >
+          <p className="font-medium">
+            © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
+            {t("Усі права захищені.", "Все права защищены.")}
+          </p>
+        </footer>
+      </main>
     </div>
   );
 }
