@@ -10,7 +10,12 @@ import {
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
+const isBunnyGuid = (s) =>
+  typeof s === "string" &&
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s);
+
 function PreviewBunny({ guid }) {
+  if (!isBunnyGuid(guid)) return null;
   const [src, setSrc] = useState(null);
 
   useEffect(() => {
@@ -531,7 +536,7 @@ export default function ModulesTab({ darkMode, i18n }) {
 
                                 {/* ТІЛЬКИ BUNNY */}
                                 {l.youtube_id && l.youtube_id.includes("-") && (
-                                  <PreviewBunny guid={l.youtube_id} />
+                                  {isBunnyGuid(l.youtube_id) && <PreviewBunny guid={l.youtube_id} />} />
                                 )}
 
                                 {l.homework && (
