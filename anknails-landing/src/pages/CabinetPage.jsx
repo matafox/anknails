@@ -685,6 +685,7 @@ export default function CabinetPage() {
     }}
   />
 </div>
+                            </div>
                         );
                       })}
                     </div>
