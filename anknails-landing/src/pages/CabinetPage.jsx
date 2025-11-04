@@ -33,7 +33,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
   const [showNext, setShowNext] = useState(false);
   const [completed, setCompleted] = useState(false);
 
-  const nextLesson = getNextLesson?.(lesson?.id);
   const iframeRef = useRef(null);
   const pollTimerRef = useRef(null);
   const saveTimerRef = useRef(null);
@@ -59,7 +58,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
     };
   }, []);
 
-  // завжди беремо свіжий підписаний iframe URL
+  // свіжий підписаний iframe URL
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -78,26 +77,43 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
         if (!cancelled) setLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [lesson]);
 
-  // слухаємо події Bunny (timeupdate/duration/ended)
+  // слухаємо події Bunny (універсально)
   useEffect(() => {
     if (!videoUrl) return;
 
     const handler = (e) => {
       if (!String(e.origin).includes("mediadelivery.net")) return;
       const data = e.data || {};
-      if (data.event === "timeupdate" && typeof data.currentTime === "number") {
+      const ev = data.event || data.type;
+
+      // currentTime
+      if (typeof data.currentTime === "number") {
         setCurrent(data.currentTime);
+      } else if (ev === "timeupdate" && typeof data.time === "number") {
+        setCurrent(data.time);
       }
-      if (data.event === "durationchange" && typeof data.duration === "number") {
+
+      // duration
+      if (typeof data.duration === "number" && data.duration > 0) {
         setDuration(data.duration);
+      } else if (ev === "durationchange" && typeof data.value === "number" && data.value > 0) {
+        setDuration(data.value);
       }
-      if (data.event === "ended") {
+
+      // ended
+      if (ev === "ended" || data.ended === true) {
         setCompleted(true);
         setShowNext(true);
         setCurrent((c) => (duration ? duration : c));
+        // добираємо тривалість, якщо її ще нема
+        try {
+          iframeRef.current?.contentWindow?.postMessage({ command: "getDuration" }, "*");
+        } catch {}
       }
     };
 
@@ -105,11 +121,12 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
 
     const ask = () => {
       try {
-        iframeRef.current?.contentWindow?.postMessage({ command: "getCurrentTime" }, "*");
-        iframeRef.current?.contentWindow?.postMessage({ command: "getDuration" }, "*");
+        const w = iframeRef.current?.contentWindow;
+        w?.postMessage({ command: "getCurrentTime" }, "*");
+        w?.postMessage({ command: "getDuration" }, "*");
       } catch {}
     };
-    pollTimerRef.current = window.setInterval(ask, 500);
+    pollTimerRef.current = window.setInterval(ask, 700);
 
     return () => {
       window.removeEventListener("message", handler);
@@ -180,10 +197,17 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgress }) => {
           allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
           allowFullScreen
           referrerPolicy="origin"
+          onLoad={() => {
+            // одразу тягнемо duration/current після завантаження
+            try {
+              const w = iframeRef.current?.contentWindow;
+              w?.postMessage({ command: "getDuration" }, "*");
+              w?.postMessage({ command: "getCurrentTime" }, "*");
+            } catch {}
+          }}
         />
       </div>
 
-      {/* кнопка "далі" за 10с до кінця / після завершення */}
       {getNextLesson && showNext && (
         <button
           onClick={() => {
