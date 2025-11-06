@@ -453,7 +453,7 @@ export default function CabinetPage() {
 
   return (
     <div
-      className={`min-h-screen flex ${
+      className={`min-h-screen flex flex-col ${
         darkMode
           ? "bg-gradient-to-br from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
@@ -790,7 +790,7 @@ export default function CabinetPage() {
         )}
 
         {/* Footer */}
-        <footer className={`mt-10 text-center py-6 text-sm border-t ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}>
+        <footer className={`mt-auto text-center py-6 text-sm border-t ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}>
           <p className="font-medium">
             © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> • {t("Усі права захищені.", "Все права защищены.")}
           </p>
