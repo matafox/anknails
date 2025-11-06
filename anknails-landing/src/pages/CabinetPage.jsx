@@ -58,6 +58,31 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     []
   );
 
+  // ⬇️ встав це поруч із іншими useEffect у SafeVideo
+useEffect(() => {
+  if (!lesson?.youtube_id) return;
+
+  // почекаємо 2 c: якщо duration досі 0 — тягнемо метадані напряму з бекенду
+  const t = setTimeout(async () => {
+    if (duration > 0) return;
+    try {
+      const r = await fetch(`${BACKEND}/api/bunny/meta/${lesson.youtube_id}`);
+      if (!r.ok) return;
+      const j = await r.json(); // { length: <секунди> }
+      const len = Number(j?.length || 0);
+      if (len > 0) {
+        console.debug("[SV] fallback meta length:", len);
+        setDuration(len);
+      }
+    } catch (e) {
+      console.debug("[SV] meta fallback failed", e);
+    }
+  }, 2000);
+
+  return () => clearTimeout(t);
+}, [lesson?.youtube_id, duration]);
+
+
   useEffect(() => {
     console.debug("[SV] mount for lesson", lesson?.id, lesson?.title);
     setDuration(0);
@@ -219,27 +244,27 @@ useEffect(() => {
   }, [videoUrl, duration, onCompleted]);
 
   // локальні тики кожні ~10с
-  useEffect(() => {
-    const total = duration || 0;
-    const watched = total ? Math.min(current, total) : current;
+useEffect(() => {
+  const total = duration || 0;
+  const watched = total ? Math.min(current, total) : current;
 
-    if (total > 0) {
-      const bucket = Math.floor((watched || 0) / 10);
-      if (bucket !== lastBucketRef.current) {
-        lastBucketRef.current = bucket;
-        onProgressTick?.({
-          lessonId: lesson?.id,
-          watched_seconds: Math.floor(watched || 0),
-          total_seconds: Math.floor(total),
-          completed: total > 0 && watched >= total - 2,
-        });
-      }
-    }
+  const bucket = Math.floor((watched || 0) / 10);
+  if (bucket !== lastBucketRef.current) {
+    lastBucketRef.current = bucket;
+    onProgressTick?.({
+      lessonId: lesson?.id,
+      watched_seconds: Math.floor(watched || 0),
+      total_seconds: Math.floor(total),   // спершу 0, потім встановиться з метаданих/плеєра
+      completed: total > 0 && watched >= total - 2,
+    });
+  }
 
-    // кнопка “далі”
-    const remaining = total > 0 ? Math.max(0, total - watched) : null;
-    if (remaining !== null && remaining <= 10) setShowNext(true);
-  }, [current, duration, lesson?.id, onProgressTick]);
+  // кнопка «далі» тільки коли відомо total
+  if (total > 0) {
+    const remaining = Math.max(0, total - watched);
+    if (remaining <= 10) setShowNext(true);
+  }
+}, [current, duration, lesson?.id, onProgressTick]);
 
   // періодичний пуш у бекенд
   useEffect(() => {
