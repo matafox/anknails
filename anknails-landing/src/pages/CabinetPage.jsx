@@ -66,38 +66,68 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     lastBucketRef.current = -1;
   }, [lesson?.id]);
 
-  // підписаний iframe URL
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      if (!lesson || !isBunnyGuid(lesson.youtube_id)) {
-        console.debug("[SV] lesson missing or not Bunny GUID:", lesson?.youtube_id);
-        setVideoUrl(null);
-        setLoading(false);
+  /// підписаний iframe URL (нормалізація query через URL API)
+useEffect(() => {
+  let cancelled = false;
+
+  (async () => {
+    // 1) валідація уроку/GUID
+    if (!lesson || !isBunnyGuid(lesson.youtube_id)) {
+      console.debug("[SV] lesson missing or not Bunny GUID:", lesson?.youtube_id);
+      setVideoUrl(null);
+      setLoading(false);
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      // 2) тягнемо URL з бекенду
+      const res = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
+      if (!res.ok) {
+        const txt = await res.text().catch(() => "");
+        console.warn("[SV] embed fetch !ok", res.status, txt);
+        if (!cancelled) setVideoUrl(null);
         return;
       }
-      try {
-        const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
-        const j = await r.json();
-        let url = j.url || null;
- if (url) {
-   const sep = url.includes("?") ? "&" : "?";
-   // Bunny / деякі проксі очікують булеві як "true/false"
-   url = `${url}${sep}autoplay=true&muted=true&controls=true&playerId=ank&transparent=false`;
- }
-        console.debug("[SV] got embed url:", url);
-        if (!cancelled) setVideoUrl(url);
-      } catch (e) {
-        console.warn("[SV] embed fetch failed", e);
-        if (!cancelled) setVideoUrl(null);
-      } finally {
-        if (!cancelled) setLoading(false);
+
+      const j = await res.json().catch(() => ({}));
+      let url = j.url || null;
+
+      // 3) нормалізуємо query-параметри через URL — перезаписуємо все потрібне
+      if (url) {
+        try {
+          const u = new URL(url);
+          u.searchParams.set("autoplay", "true");
+          u.searchParams.set("muted", "true");
+          u.searchParams.set("controls", "true");
+          u.searchParams.set("playerId", "ank");
+          u.searchParams.set("transparent", "false");
+          // (опційно) прибрати шумний RUM-скрипт Bunny
+          // u.searchParams.set("disableRUM", "true");
+
+          url = u.toString();
+        } catch (e) {
+          console.warn("[SV] URL normalize failed, fallback to raw", e);
+        }
       }
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [lesson]);
+
+      console.debug("[SV] got embed url:", url);
+      if (!cancelled) setVideoUrl(url);
+    } catch (e) {
+      console.warn("[SV] embed fetch failed", e);
+      if (!cancelled) setVideoUrl(null);
+    } finally {
+      if (!cancelled) setLoading(false);
+    }
+  })();
+
+  return () => {
+    cancelled = true;
+  };
+  // залежність по конкретному GUID, щоб не тригерити зайвий раз
+}, [lesson?.youtube_id]);
+
 
   // слухач подій Bunny
   useEffect(() => {
