@@ -453,13 +453,13 @@ export default function CabinetPage() {
 
   return (
     <div
-      className={`min-h-screen w-full flex ${
+      className={`min-h-screen flex ${
         darkMode
           ? "bg-gradient-to-br from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
-      {/* HEADER (mobile) */}
+      {/* HEADER */}
       <header
         className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 ${
           darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/70"
@@ -661,145 +661,136 @@ export default function CabinetPage() {
         </div>
       </aside>
 
-      {/* MAIN COLUMN (контент + футер) */}
-      <main className="flex flex-col flex-1 pt-16 md:pt-0 px-5 md:px-10">
-        {/* ===== CONTENT AREA ===== */}
-        <div className="flex-1">
-          {banner && banner.active && (
-            <div className="flex flex-col md:flex-row gap-4 mb-8">
-              {/* 🖼 Основний банер */}
-              <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-                {banner.image_url && <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />}
-                <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
-                  {banner.title}
-                </div>
-              </div>
-
-              {/* 💅 Перехід на дашборд */}
-              <div
-                onClick={() => {
-                  setSelectedLesson(null);
-                  setMenuOpen(false);
-                  localStorage.setItem("last_view", "dashboard");
-                }}
-                className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
-                title={t("Перейти до дашборду", "Перейти на главную")}
-              >
-                ANK Studio Online
+      {/* Контент */}
+      <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
+        {banner && banner.active && (
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            {/* 🖼 Основний банер */}
+            <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+              {banner.image_url && <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />}
+              <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
+                {banner.title}
               </div>
             </div>
-          )}
 
-          {!selectedLesson ? (
-            <>
-              {view === "dashboard" && (
-                <DashboardSection
-                  key={user?.xp}
-                  modules={modules}
-                  lessons={lessons}
-                  progress={progress}
-                  overallProgress={overallProgress}
-                  darkMode={darkMode}
-                  t={t}
-                  user={user}
-                  onOpenModules={() => setView("modules")}
-                />
-              )}
-
-              {view === "modules" && (
-                <ModulesPage modules={modules} darkMode={darkMode} t={t} onBack={() => setView("dashboard")} />
-              )}
-            </>
-          ) : (
+            {/* 💅 Перехід на дашборд */}
             <div
-              className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
-                darkMode ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40" : "bg-white/80 border border-pink-200"
-              }`}
+              onClick={() => {
+                setSelectedLesson(null);
+                setMenuOpen(false);
+                localStorage.setItem("last_view", "dashboard");
+              }}
+              className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
+              title={t("Перейти до дашборду", "Перейти на главную")}
             >
-              {/* Заголовок + тип */}
-              <div className="mb-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3 flex-wrap">
-                    <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
-                    {selectedLesson.type === "theory" && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
-                        {t("Теорія", "Теория")}
-                      </span>
-                    )}
-                    {selectedLesson.type === "practice" && (
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
-                        {t("Практика", "Практика")}
-                      </span>
-                    )}
-                  </div>
-                </div>
-                {selectedLesson.description && (
-                  <p className={`mt-2 text-sm leading-relaxed ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
-                    {selectedLesson.description}
-                  </p>
-                )}
-              </div>
+              ANK Studio Online
+            </div>
+          </div>
+        )}
 
-              {/* Відео + прогрес */}
-              <SafeVideo
-                lesson={selectedLesson}
+        {!selectedLesson ? (
+          <>
+            {view === "dashboard" && (
+              <DashboardSection
+                key={user?.xp}
+                modules={modules}
+                lessons={lessons}
+                progress={progress}
+                overallProgress={overallProgress}
+                darkMode={darkMode}
                 t={t}
-                userId={user?.id}
-                onProgressTick={handleProgressTick}
-                getNextLesson={(id) => {
-                  const allLessons = Object.values(lessons).flat();
-                  const idx = allLessons.findIndex((l) => l.id === id);
-                  return allLessons[idx + 1] || null;
-                }}
+                user={user}
+                onOpenModules={() => setView("modules")}
               />
+            )}
 
-              {/* Домашка */}
-              {selectedLesson.homework && (
-                <div
-                  className={`p-4 rounded-xl border mt-6 ${
-                    darkMode ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100" : "bg-gray-50 border-gray-200 text-gray-800"
-                  }`}
-                >
-                  <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
-                    {t("Домашнє завдання", "Домашнее задание")}
-                  </h3>
-                  <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedLesson.homework}</p>
-                  {progress[selectedLesson.id]?.homework_done && (
-                    <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
-                      <CheckSquare className="w-4 h-4 text-green-600" />
-                      {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
-                    </div>
+            {view === "modules" && (
+              <ModulesPage modules={modules} darkMode={darkMode} t={t} onBack={() => setView("dashboard")} />
+            )}
+          </>
+        ) : (
+          <div
+            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
+              darkMode ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40" : "bg-white/80 border border-pink-200"
+            }`}
+          >
+            {/* Заголовок + тип */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
+                  {selectedLesson.type === "theory" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
+                      {t("Теорія", "Теория")}
+                    </span>
+                  )}
+                  {selectedLesson.type === "practice" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
+                      {t("Практика", "Практика")}
+                    </span>
                   )}
                 </div>
-              )}
-
-              {/* Матеріали */}
-              {selectedLesson.materials && (
-                <div
-                  className={`p-4 rounded-xl border mt-6 ${
-                    darkMode ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100" : "bg-gray-50 border-gray-200 text-gray-800"
-                  }`}
-                >
-                  <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
-                    {t("Матеріали", "Материалы")}
-                  </h3>
-                  <a href={selectedLesson.materials} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-blue-600 hover:underline">
-                    {t("Відкрити матеріали", "Открыть материалы")}
-                  </a>
-                </div>
+              </div>
+              {selectedLesson.description && (
+                <p className={`mt-2 text-sm leading-relaxed ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  {selectedLesson.description}
+                </p>
               )}
             </div>
-          )}
-        </div>
 
-        {/* ===== GLOBAL FOOTER (завжди внизу) ===== */}
-        <footer
-          className={`mt-auto text-center py-6 text-xs md:text-sm border-t ${
-            darkMode
-              ? "border-fuchsia-900/40 text-fuchsia-100/70 bg-[#0c0016]/40"
-              : "border-pink-200 text-gray-600 bg-white/60"
-          } backdrop-blur-md`}
-        >
+            {/* Відео + прогрес */}
+            <SafeVideo
+              lesson={selectedLesson}
+              t={t}
+              userId={user?.id}
+              onProgressTick={handleProgressTick}
+              getNextLesson={(id) => {
+                const allLessons = Object.values(lessons).flat();
+                const idx = allLessons.findIndex((l) => l.id === id);
+                return allLessons[idx + 1] || null;
+              }}
+            />
+
+            {/* Домашка */}
+            {selectedLesson.homework && (
+              <div
+                className={`p-4 rounded-xl border mt-6 ${
+                  darkMode ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100" : "bg-gray-50 border-gray-200 text-gray-800"
+                }`}
+              >
+                <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
+                  {t("Домашнє завдання", "Домашнее задание")}
+                </h3>
+                <p className="text-sm leading-relaxed whitespace-pre-wrap">{selectedLesson.homework}</p>
+                {progress[selectedLesson.id]?.homework_done && (
+                  <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
+                    <CheckSquare className="w-4 h-4 text-green-600" />
+                    {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Матеріали */}
+            {selectedLesson.materials && (
+              <div
+                className={`p-4 rounded-xl border mt-6 ${
+                  darkMode ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100" : "bg-gray-50 border-gray-200 text-gray-800"
+                }`}
+              >
+                <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
+                  {t("Матеріали", "Материалы")}
+                </h3>
+                <a href={selectedLesson.materials} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-blue-600 hover:underline">
+                  {t("Відкрити матеріали", "Открыть материалы")}
+                </a>
+              </div>
+            )}
+          </div>
+        )}
+
+        {/* Footer */}
+        <footer className={`mt-10 text-center py-6 text-sm border-t ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}>
           <p className="font-medium">
             © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> • {t("Усі права захищені.", "Все права защищены.")}
           </p>
