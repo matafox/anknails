@@ -924,7 +924,7 @@ export default function CabinetPage() {
                   {t("Матеріали", "Материалы")}
                 </h3>
                 <a href={selectedLesson.materials} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-blue-600 hover:underline">
-                  {t("Відкрити матеріали", "Открыть материалы")}
+                  {t("Відкрити посилання", "Открыть ссылку")}
                 </a>
               </div>
             )}
