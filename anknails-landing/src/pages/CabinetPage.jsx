@@ -19,7 +19,7 @@ import {
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
-/* ================= SAFEVIDEO (BUNNY + прогрес у бекенд, "далі" за 10с до кінця) ================= */
+/* ================= SAFEVIDEO (BUNNY + дебаг + “живучий” парсер) ================= */
 const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onCompleted }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -34,6 +34,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
   const iframeRef = useRef(null);
   const pollTimerRef = useRef(null);
   const saveTimerRef = useRef(null);
+  const askKickTimerRef = useRef(null);
 
   // для “кожні 10с”
   const lastBucketRef = useRef(-1);
@@ -41,14 +42,16 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
   const postProgress = useMemo(
     () => async (payload) => {
       try {
+        console.debug("[SV] POST /progress/update", payload);
         const r = await fetch(`${BACKEND}/api/progress/update`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(payload),
         });
+        console.debug("[SV] /progress/update →", r.status);
         return r.ok;
       } catch (e) {
-        console.warn("progress update error", e);
+        console.warn("[SV] progress update error", e);
         return false;
       }
     },
@@ -56,6 +59,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
   );
 
   useEffect(() => {
+    console.debug("[SV] mount for lesson", lesson?.id, lesson?.title);
     setDuration(0);
     setCurrent(0);
     setShowNext(false);
@@ -67,6 +71,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     let cancelled = false;
     (async () => {
       if (!lesson || !isBunnyGuid(lesson.youtube_id)) {
+        console.debug("[SV] lesson missing or not Bunny GUID:", lesson?.youtube_id);
         setVideoUrl(null);
         setLoading(false);
         return;
@@ -74,8 +79,16 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
       try {
         const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
         const j = await r.json();
-        if (!cancelled) setVideoUrl(j.url || null);
-      } catch {
+        let url = j.url || null;
+        // додаємо параметри керування плеєром
+        if (url) {
+          const sep = url.includes("?") ? "&" : "?";
+          url = `${url}${sep}autoplay=1&muted=1&controls=1&playerId=ank&transparent=0`;
+        }
+        console.debug("[SV] got embed url:", url);
+        if (!cancelled) setVideoUrl(url);
+      } catch (e) {
+        console.warn("[SV] embed fetch failed", e);
         if (!cancelled) setVideoUrl(null);
       } finally {
         if (!cancelled) setLoading(false);
@@ -90,29 +103,64 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
   useEffect(() => {
     if (!videoUrl) return;
 
+    const ORIGIN_OK = (origin) => {
+      // Bunny iframe зазвичай з *.mediadelivery.net
+      return /mediadelivery\.net/i.test(origin) || /bunnycdn/i.test(origin);
+    };
+
     const handler = (e) => {
-      if (!String(e.origin).includes("mediadelivery.net")) return;
-      const data = e.data ?? {};
-      const ev = data.event || data.type || data.action;
+      try {
+        if (!ORIGIN_OK(String(e.origin))) {
+          // покажемо, що щось прилетіло, але не з очікуваного origin
+          console.debug("[SV] postMessage (ignored origin)", e.origin, e.data);
+          return;
+        }
+        const data = e.data ?? {};
+        const ev = data.event || data.type || data.action || "unknown";
+        console.debug("[SV] postMessage", ev, data);
 
-      if (typeof data.currentTime === "number") setCurrent(data.currentTime);
-      else if (typeof data.time === "number") setCurrent(data.time);
-      else if (typeof data.value === "number" && (ev === "timeupdate" || ev === "currentTime"))
-        setCurrent(data.value);
+        // різні варіанти полів часу
+        const now =
+          typeof data.currentTime === "number"
+            ? data.currentTime
+            : typeof data.time === "number"
+            ? data.time
+            : typeof data.value === "number" && (ev === "timeupdate" || ev === "currentTime")
+            ? data.value
+            : null;
 
-      if (typeof data.duration === "number" && data.duration > 0) setDuration(data.duration);
-      else if (typeof data.value === "number" && (ev === "durationchange" || ev === "duration") && data.value > 0)
-        setDuration(data.value);
+        if (typeof now === "number" && !Number.isNaN(now)) {
+          setCurrent(now);
+        }
 
-      if (ev === "ended" || data.ended === true) {
-        setShowNext(true);
-        setCurrent((c) => (duration ? duration : c));
-        try { onCompleted?.(); } catch {}           // 🆕 повідомляємо про завершення
+        const dur =
+          typeof data.duration === "number" && data.duration > 0
+            ? data.duration
+            : typeof data.value === "number" && (ev === "durationchange" || ev === "duration") && data.value > 0
+            ? data.value
+            : null;
+
+        if (typeof dur === "number" && dur > 0) {
+          setDuration(dur);
+        }
+
+        if (ev === "ended" || data.ended === true) {
+          console.debug("[SV] ended event");
+          setShowNext(true);
+          setCurrent((c) => (duration ? duration : c));
+          try {
+            onCompleted?.();
+          } catch {}
+        }
+      } catch (err) {
+        console.warn("[SV] handler error", err);
       }
     };
 
+    // активуємо слухач
     window.addEventListener("message", handler);
 
+    // активно питаємо час/тривалість (на випадок, якщо автоподії не йдуть)
     const ask = () => {
       try {
         const w = iframeRef.current?.contentWindow;
@@ -120,18 +168,27 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
         w?.postMessage({ command: "getDuration" }, "*");
         w?.postMessage("getCurrentTime", "*");
         w?.postMessage("getDuration", "*");
-      } catch {}
+      } catch (e) {}
     };
     ask();
-    pollTimerRef.current = window.setInterval(ask, 700);
+    pollTimerRef.current = window.setInterval(ask, 800);
+
+    // якщо через 2 сек не знаємо duration — ще раз “підштовхнемо”
+    askKickTimerRef.current = window.setTimeout(() => {
+      if (!duration) {
+        console.debug("[SV] duration still 0 → extra ask()");
+        ask();
+      }
+    }, 2000);
 
     return () => {
       window.removeEventListener("message", handler);
       if (pollTimerRef.current) window.clearInterval(pollTimerRef.current);
+      if (askKickTimerRef.current) window.clearTimeout(askKickTimerRef.current);
     };
   }, [videoUrl, duration, onCompleted]);
 
-  // локальні тики кожні 10с для миттєвого руху смужок
+  // локальні тики кожні ~10с
   useEffect(() => {
     const total = duration || 0;
     const watched = total ? Math.min(current, total) : current;
@@ -187,9 +244,30 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
 
   if (!videoUrl) {
     return (
-      <p className="text-sm text-gray-500 text-center py-4">
-        ❌ {t("Відео не знайдено або посилання некоректне", "Видео не найдено или ссылка некорректна")}
-      </p>
+      <div className="text-center py-4">
+        <p className="text-sm text-gray-500">
+          ❌ {t("Відео не знайдено або посилання некоректне", "Видео не найдено или ссылка некорректна")}
+        </p>
+        {/* debug кнопка, щоб перевірити бекенд прогрес */}
+        {userId && lesson?.id && (
+          <button
+            onClick={async () => {
+              await postProgress({
+                user_id: userId,
+                lesson_id: lesson.id,
+                watched_seconds: 999,
+                total_seconds: 1000,
+                completed: true,
+              });
+              try { onCompleted?.(); } catch {}
+              alert("Debug: прогрес відправлено як завершений.");
+            }}
+            className="mt-3 px-4 py-2 rounded-lg bg-pink-500 text-white text-sm"
+          >
+            ⚡ Mark complete (debug)
+          </button>
+        )}
+      </div>
     );
   }
 
@@ -204,6 +282,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
           allowFullScreen
           referrerPolicy="origin"
           onLoad={() => {
+            console.debug("[SV] iframe onLoad");
             try {
               const w = iframeRef.current?.contentWindow;
               w?.postMessage({ command: "getDuration" }, "*");
@@ -230,7 +309,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
               completed: true,
             });
 
-            try { onCompleted?.(); } catch {}        {/* 🆕 колбек після ручного завершення */}
+            try { onCompleted?.(); } catch {}
 
             localStorage.setItem("last_lesson", JSON.stringify(n));
             localStorage.setItem("last_view", "lesson");
@@ -245,6 +324,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     </div>
   );
 };
+
 
 
 /* ================= CABINET PAGE ================= */
