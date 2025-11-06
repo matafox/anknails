@@ -80,11 +80,11 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
         const r = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
         const j = await r.json();
         let url = j.url || null;
-        // додаємо параметри керування плеєром
-        if (url) {
-          const sep = url.includes("?") ? "&" : "?";
-          url = `${url}${sep}autoplay=1&muted=1&controls=1&playerId=ank&transparent=0`;
-        }
+ if (url) {
+   const sep = url.includes("?") ? "&" : "?";
+   // Bunny / деякі проксі очікують булеві як "true/false"
+   url = `${url}${sep}autoplay=true&muted=true&controls=true&playerId=ank&transparent=false`;
+ }
         console.debug("[SV] got embed url:", url);
         if (!cancelled) setVideoUrl(url);
       } catch (e) {
