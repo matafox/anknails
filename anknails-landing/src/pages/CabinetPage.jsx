@@ -259,13 +259,32 @@ export default function CabinetPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const refreshCourseProgress = async () => {
+  const refreshAfterLessonComplete = async () => {
   if (!user?.id) return;
+
   try {
-    const r = await fetch(`${BACKEND}/api/progress/course/${user.id}`);
-    const d = await r.json();
-    setOverallProgress(d.percent ?? 0);
-  } catch {}
+    // 1) Загальний прогрес курсу
+    const resCourse = await fetch(`${BACKEND}/api/progress/course/${user.id}`);
+    const dataCourse = await resCourse.json();
+    setOverallProgress(dataCourse.percent ?? 0);
+
+    // 2) Деталі прогресу користувача по уроках + XP/Level
+    const resUser = await fetch(`${BACKEND}/api/progress/user/${user.id}`);
+    const dataUser = await resUser.json();
+
+    const map = {};
+    (dataUser.progress || []).forEach((p) => (map[p.lesson_id] = p));
+    setProgress(map);
+
+    // 3) Оновити XP/Level у локальному user, щоб перерендерився DashboardSection
+    setUser((prev) =>
+      prev
+        ? { ...prev, xp: dataUser.xp ?? prev.xp, level: dataUser.level ?? prev.level }
+        : prev
+    );
+  } catch (e) {
+    console.warn("⚠️ refreshAfterLessonComplete failed", e);
+  }
 };
 
   // нове: прогрес мапою { [lessonId]: {watched_seconds,total_seconds,completed,homework_done} }
@@ -756,7 +775,7 @@ export default function CabinetPage() {
               t={t}
               userId={user?.id}
               onProgressTick={handleProgressTick}
-              onCompleted={refreshCourseProgress}
+              onCompleted={refreshAfterLessonComplete}
               getNextLesson={(id) => {
                 const allLessons = Object.values(lessons).flat();
                 const idx = allLessons.findIndex((l) => l.id === id);
