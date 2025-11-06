@@ -20,7 +20,7 @@ import {
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
 /* ================= SAFEVIDEO (BUNNY + прогрес у бекенд, "далі" за 10с до кінця) ================= */
-const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick }) => {
+const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onCompleted }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -107,6 +107,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick }) => {
       if (ev === "ended" || data.ended === true) {
         setShowNext(true);
         setCurrent((c) => (duration ? duration : c));
+        try { onCompleted?.(); } catch {}           // 🆕 повідомляємо про завершення
       }
     };
 
@@ -128,7 +129,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick }) => {
       window.removeEventListener("message", handler);
       if (pollTimerRef.current) window.clearInterval(pollTimerRef.current);
     };
-  }, [videoUrl, duration]);
+  }, [videoUrl, duration, onCompleted]);
 
   // локальні тики кожні 10с для миттєвого руху смужок
   useEffect(() => {
@@ -229,6 +230,8 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick }) => {
               completed: true,
             });
 
+            try { onCompleted?.(); } catch {}        {/* 🆕 колбек після ручного завершення */}
+
             localStorage.setItem("last_lesson", JSON.stringify(n));
             localStorage.setItem("last_view", "lesson");
             window.location.reload();
@@ -255,6 +258,15 @@ export default function CabinetPage() {
   const [banner, setBanner] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+
+  const refreshCourseProgress = async () => {
+  if (!user?.id) return;
+  try {
+    const r = await fetch(`${BACKEND}/api/progress/course/${user.id}`);
+    const d = await r.json();
+    setOverallProgress(d.percent ?? 0);
+  } catch {}
+};
 
   // нове: прогрес мапою { [lessonId]: {watched_seconds,total_seconds,completed,homework_done} }
   const [progress, setProgress] = useState({});
@@ -744,6 +756,7 @@ export default function CabinetPage() {
               t={t}
               userId={user?.id}
               onProgressTick={handleProgressTick}
+              onCompleted={refreshCourseProgress}
               getNextLesson={(id) => {
                 const allLessons = Object.values(lessons).flat();
                 const idx = allLessons.findIndex((l) => l.id === id);
