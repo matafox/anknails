@@ -58,6 +58,33 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     []
   );
 
+  // коли вперше з’явився duration — одразу насіння прогресу в БД + локальне оновлення
+const seededRef = useRef(false);
+useEffect(() => {
+  if (!userId || !lesson?.id || !duration || seededRef.current) return;
+  seededRef.current = true;
+
+  // локально одразу порахувати % (щоб смужка в сайдбарі зрушила без очікування чергового timeupdate)
+  onProgressTick?.({
+    lessonId: lesson.id,
+    watched_seconds: Math.floor(Math.min(current || 0, duration)),
+    total_seconds: Math.floor(duration),
+    completed: false,
+  });
+
+  // і відправити один «посівний» POST у бекенд
+  (async () => {
+    await postProgress({
+      user_id: userId,
+      lesson_id: lesson.id,
+      watched_seconds: Math.floor(Math.min(current || 0, duration)),
+      total_seconds: Math.floor(duration),
+      completed: false,
+    });
+  })();
+}, [userId, lesson?.id, duration, current, onProgressTick, postProgress]);
+
+
   // ⬇️ встав це поруч із іншими useEffect у SafeVideo
 useEffect(() => {
   if (!lesson?.youtube_id) return;
@@ -713,9 +740,9 @@ export default function CabinetPage() {
                       {lessons[mod.id]?.map((l) => {
                         const prog = progress[l.id];
                         const percent =
-                          prog && prog.total_seconds > 0
-                            ? Math.min(100, Math.round((prog.watched_seconds / prog.total_seconds) * 100))
-                            : 0;
+  prog && prog.total_seconds > 0
+    ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
+    : 0;
                         const done = !!prog?.completed;
                         const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
