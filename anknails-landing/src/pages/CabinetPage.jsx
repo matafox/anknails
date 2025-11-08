@@ -654,17 +654,17 @@ export default function CabinetPage() {
     >
       {/* HEADER */}
       <header
-        className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 ${
-          darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/70"
-        }`}
-      >
-        <h1 className="font-bold bg-gradient-to-r from-fuchsia-500 to-rose-400 bg-clip-text text-transparent">
-          ANK Studio
-        </h1>
-        <button onClick={() => setMenuOpen(!menuOpen)}>
-          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-        </button>
-      </header>
+  className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 rounded-b-[6px] ${
+    darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/70"
+  }`}
+>
+  <h1 className="font-bold bg-gradient-to-r from-fuchsia-500 to-rose-400 bg-clip-text text-transparent">
+    ANK Studio
+  </h1>
+  <button onClick={() => setMenuOpen(!menuOpen)}>
+    {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+  </button>
+</header>
 
       {/* SIDEBAR */}
       <aside
