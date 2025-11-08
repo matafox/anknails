@@ -796,9 +796,6 @@ export default function ModulesTab({ darkMode, i18n }) {
           );
         })}
       </div>
-    </div>
-  );
-}
 
 {visibilityForModuleId && (
    <ModuleVisibilityPicker
@@ -810,6 +807,10 @@ export default function ModulesTab({ darkMode, i18n }) {
      onSaved={() => fetchModules(selectedCourse)}
    />
  )}
+      
+    </div>
+  );
+}
 
 /* --- Допоміжні компоненти --- */
 
