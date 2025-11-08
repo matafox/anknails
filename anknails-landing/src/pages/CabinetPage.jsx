@@ -975,7 +975,7 @@ export default function CabinetPage() {
                 <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
                   {t("Матеріали", "Материалы")}
                 </h3>
-                <a href={selectedLesson.materials} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-blue-600 hover:underline">
+                <a href={selectedLesson.materials} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-green-600 hover:underline">
                   {t("Відкрити посилання", "Открыть ссылку")}
                 </a>
               </div>
