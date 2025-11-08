@@ -449,6 +449,24 @@ export default function CabinetPage() {
   }
 };
 
+  // Notion helpers
+const isNotionUrl = (s) =>
+  typeof s === "string" && /(notion\.so|notion\.site)\//i.test(s);
+
+const stripQuery = (url) => {
+  try {
+    const u = new URL(url);
+    u.search = "";
+    return u.toString();
+  } catch {
+    return url;
+  }
+};
+
+const notionEmbedSrc = (url) =>
+  `https://www.notion.so/embed?url=${encodeURIComponent(stripQuery(url))}`;
+
+
   // нове: прогрес мапою { [lessonId]: {watched_seconds,total_seconds,completed,homework_done} }
   const [progress, setProgress] = useState({});
   // нове: загальний відсоток курсу
@@ -967,21 +985,48 @@ export default function CabinetPage() {
 
             {/* Матеріали */}
             {selectedLesson.materials && (
-              <div
-                className={`p-4 rounded-xl border mt-6 ${
-                  darkMode ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100" : "bg-gray-50 border-gray-200 text-gray-800"
-                }`}
-              >
-                <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
-                  {t("Матеріали", "Материалы")}
-                </h3>
-                <a href={selectedLesson.materials} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-green-600 hover:underline">
-                  {t("Відкрити посилання", "Открыть ссылку")}
-                </a>
-              </div>
-            )}
+  <div
+    className={`p-4 rounded-xl border mt-6 ${
+      darkMode
+        ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
+        : "bg-gray-50 border-gray-200 text-gray-800"
+    }`}
+  >
+    <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
+      {t("Матеріали", "Материалы")}
+    </h3>
+
+    {/* Якщо це не Notion — лишаємо стару кнопку */}
+    {!isNotionUrl(selectedLesson.materials) ? (
+      <a
+        href={selectedLesson.materials}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="inline-block text-sm font-medium text-green-600 hover:underline"
+      >
+        {t("Відкрити посилання", "Открыть ссылку")}
+      </a>
+    ) : (
+      <>
+        <p className="text-sm opacity-70 mb-3">
+          {t("Вбудована сторінка Notion", "Встроенная страница Notion")}
+        </p>
+        <div className="rounded-lg overflow-hidden border border-pink-200/60 dark:border-fuchsia-800/40">
+          {/* Висота: 70vh на десктопі, 60vh на мобі */}
+          <div className="w-full h-[60vh] md:h-[70vh]">
+            <iframe
+              src={notionEmbedSrc(selectedLesson.materials)}
+              className="w-full h-full"
+              loading="lazy"
+              referrerPolicy="no-referrer"
+              allow="clipboard-read; clipboard-write"
+            />
           </div>
-        )}
+        </div>
+      </>
+    )}
+  </div>
+)}
 
         {/* Footer */}
         <footer className={`mt-10 text-center py-6 text-sm border-t ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}>
