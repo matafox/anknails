@@ -1032,6 +1032,7 @@ const markLessonComplete = async () => {
 <div className="mt-6 grid md:grid-cols-[1fr_auto] gap-4 items-start">
   {/* Ліва колонка: тексти/картки */}
   <div className="space-y-4">
+    {/* Домашка */}
     {selectedLesson.homework && (
       <div
         className={`p-4 rounded-xl border ${
@@ -1046,9 +1047,17 @@ const markLessonComplete = async () => {
         <p className="text-sm leading-relaxed whitespace-pre-wrap">
           {selectedLesson.homework}
         </p>
+
+        {progress[selectedLesson.id]?.homework_done && (
+          <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
+            <CheckSquare className="w-4 h-4 text-green-600" />
+            {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+          </div>
+        )}
       </div>
     )}
 
+    {/* Матеріали */}
     {selectedLesson.materials && (
       <div
         className={`p-4 rounded-xl border ${
@@ -1064,7 +1073,7 @@ const markLessonComplete = async () => {
           href={selectedLesson.materials}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-block text-sm font-medium text-green-600 hover:underline"
+          className="inline-block text-sm font-medium hover:underline"
         >
           {t("Відкрити посилання", "Открыть ссылку")}
         </a>
@@ -1096,8 +1105,7 @@ const markLessonComplete = async () => {
       {progSelected.homework_done ? (
         <CheckSquare className="w-6 h-6" />
       ) : (
-        <div className="w-5 h-5 border-2 rounded-[6px] 
-            border-current opacity-70 group-hover:opacity-100" />
+        <div className="w-5 h-5 border-2 rounded-[6px] border-current opacity-70 group-hover:opacity-100" />
       )}
     </button>
 
