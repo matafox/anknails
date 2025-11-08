@@ -1047,13 +1047,6 @@ const markLessonComplete = async () => {
                       {selectedLesson.homework}
                     </p>
 
-                    {progress[selectedLesson.id]?.homework_done && (
-                      <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
-                        <CheckSquare className="w-4 h-4 text-green-600" />
-                        {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
-                      </div>
-                    )}
-
                     {/* Кнопки під домашкою (mobile-first) */}
                     <div className="mt-4 flex items-center gap-3 md:hidden">
                       {!progSelected.homework_done ? (
