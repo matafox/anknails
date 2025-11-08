@@ -645,37 +645,39 @@ export default function CabinetPage() {
   // поточний прогрес по вибраному уроку
 const progSelected = selectedLesson ? (progress[selectedLesson.id] || {}) : {};
 
-// 🔘 Позначити / скасувати виконання домашки
+// 🔘 Позначити / скасувати виконання домашки (пише у бекенд)
 const toggleHomeworkDone = async (done) => {
   if (!user?.id || !selectedLesson?.id) return;
   try {
-    await fetch(`${BACKEND}/api/progress/update`, {
+    const r = await fetch(`${BACKEND}/api/progress/homework`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         user_id: user.id,
         lesson_id: selectedLesson.id,
-        homework_done: done,
-        // передаємо те, що вже є (щоб нічого не загубити)
-        watched_seconds: progSelected.watched_seconds ?? 0,
-        total_seconds: progSelected.total_seconds ?? 0,
-        completed: progSelected.completed ?? false,
+        homework_done: !!done, // <- важливо
       }),
     });
 
-    // локально оновити стан
+    if (!r.ok) throw new Error("bad status " + r.status);
+
+    // локально оновити стан, щоб UI миттєво змінився
     setProgress((prev) => ({
       ...prev,
       [selectedLesson.id]: {
         ...(prev[selectedLesson.id] || {}),
-        homework_done: done,
+        homework_done: !!done,
       },
     }));
+
+    // підтягнути XP/level (бо +10 XP при first True)
+    await refreshAfterLessonComplete();
   } catch (e) {
     console.warn("toggleHomeworkDone failed", e);
     alert(t("Не вдалося оновити статус домашнього завдання", "Не удалось обновить статус домашнего задания"));
   }
 };
+
 
 // ✅ Ручне завершення уроку
 const markLessonComplete = async () => {
