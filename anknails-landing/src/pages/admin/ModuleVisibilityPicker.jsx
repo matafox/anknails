@@ -32,7 +32,7 @@ export default function ModuleVisibilityPicker({
         let fetchedMode = null;
         let fetchedSelected = [];
         try {
-          const r = await fetch(`${BACKEND}/api/modules/visibility/${moduleId}?admin=true`);
+          const r = await fetch(`${BACKEND}/api/modules/visibility/${moduleId}`);
           if (r.ok) {
             const j = await r.json();
             fetchedMode = j?.mode || null;
