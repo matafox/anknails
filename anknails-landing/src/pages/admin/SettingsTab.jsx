@@ -161,6 +161,28 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
+  // ✅ Позначити домашку виконаною
+  const markHomeworkDone = async (lesson_id) => {
+    try {
+      const res = await fetch(`${BACKEND}/api/progress/homework`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: selectedUser,
+          lesson_id,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        await loadProgress(selectedUser);
+      } else {
+        alert(i18n.language === "ru" ? "❌ Ошибка обновления домашки" : "❌ Помилка оновлення домашки");
+      }
+    } catch (err) {
+      console.error("Помилка:", err);
+    }
+  };
+
   return (
     <section>
       {/* 🧾 Створення користувача */}
@@ -478,17 +500,17 @@ export default function SettingsTab({ i18n, darkMode }) {
                       <td className="py-2 px-3">{p.lesson_title}</td>
                       <td className="py-2 px-3">{percent}%</td>
                       <td className="py-2 px-3">
-  {p.homework_done ? (
-    <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-      ✅ {i18n.language === "ru" ? "Выполнено" : "Виконано"}
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-      — {i18n.language === "ru" ? "Нет отметки" : "Немає позначки"}
-    </span>
-  )}
-</td>
-
+                        {p.homework_done ? (
+                          <span className="text-green-500">✅</span>
+                        ) : (
+                          <button
+                            onClick={() => markHomeworkDone(p.lesson_id)}
+                            className="text-xs px-3 py-1 rounded-md bg-pink-100 text-pink-700 hover:bg-pink-200"
+                          >
+                            {i18n.language === "ru" ? "Отметить" : "Позначити"}
+                          </button>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
