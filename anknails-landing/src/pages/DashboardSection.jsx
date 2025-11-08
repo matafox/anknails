@@ -178,7 +178,7 @@ export default function DashboardSection({
               </div>
             </div>
 
-           {/* інфо-вікно */}
+          {/* інфо-вікно */}
 <div
   className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
     showInfo ? "opacity-100 scale-100" : "opacity-0 scale-95"
@@ -199,6 +199,7 @@ export default function DashboardSection({
     </p>
   </div>
 </div>
+   </div>         
 
           {/* 📈 Прогрес курсу */}
           <div
