@@ -463,8 +463,14 @@ const stripQuery = (url) => {
   }
 };
 
-const notionEmbedSrc = (url) =>
-  `https://www.notion.so/embed?url=${encodeURIComponent(stripQuery(url))}`;
+const toNotionEmbed = (url) => {
+  const clean = stripQuery(url);
+  try {
+    const u = new URL(clean);
+    if (/\/ebd(\/|$)/.test(u.pathname)) return clean; // вже ebd
+  } catch {}
+  return `https://www.notion.so/ebd?url=${encodeURIComponent(clean)}`;
+};
 
 
   // нове: прогрес мапою { [lessonId]: {watched_seconds,total_seconds,completed,homework_done} }
@@ -983,8 +989,8 @@ const notionEmbedSrc = (url) =>
               </div>
             )}
 
-            {/* Матеріали */}
-            {selectedLesson.materials && (
+{/* Матеріали */}
+{selectedLesson.materials && (
   <div
     className={`p-4 rounded-xl border mt-6 ${
       darkMode
@@ -996,7 +1002,6 @@ const notionEmbedSrc = (url) =>
       {t("Матеріали", "Материалы")}
     </h3>
 
-    {/* Якщо це не Notion — лишаємо стару кнопку */}
     {!isNotionUrl(selectedLesson.materials) ? (
       <a
         href={selectedLesson.materials}
@@ -1012,13 +1017,16 @@ const notionEmbedSrc = (url) =>
           {t("Вбудована сторінка Notion", "Встроенная страница Notion")}
         </p>
         <div className="rounded-lg overflow-hidden border border-pink-200/60 dark:border-fuchsia-800/40">
-          {/* Висота: 70vh на десктопі, 60vh на мобі */}
           <div className="w-full h-[60vh] md:h-[70vh]">
             <iframe
-              src={notionEmbedSrc(selectedLesson.materials)}
+              title="Notion embed"
+              src={toNotionEmbed(selectedLesson.materials)}
               className="w-full h-full"
               loading="lazy"
               referrerPolicy="no-referrer"
+              frameBorder={0}
+              allowFullScreen
+              sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-top-navigation-by-user-activation"
               allow="clipboard-read; clipboard-write"
             />
           </div>
