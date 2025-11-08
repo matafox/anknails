@@ -27,6 +27,20 @@ const extractGuid = (s) => {
   return m ? m[0] : null;
 };
 
+function decorateBunnyUrl(u) {
+  try {
+    const url = new URL(u);
+    url.searchParams.set("autoplay", "false");
+    url.searchParams.set("muted", "false");
+    url.searchParams.set("controls", "true");
+    url.searchParams.set("preload", "false"); // щоб не тягнуло трафік
+    return url.toString();
+  } catch {
+    const sep = u && u.includes("?") ? "&" : "?";
+    return `${u || ""}${sep}autoplay=false&muted=false&controls=true&preload=false`;
+  }
+}
+
 function PreviewBunny({ guid }) {
   if (!isBunnyGuid(guid)) return null;
   const [src, setSrc] = useState(null);
@@ -37,14 +51,12 @@ function PreviewBunny({ guid }) {
       try {
         const r = await fetch(`${BACKEND}/api/bunny/embed/${guid}`);
         const j = await r.json();
-        if (alive) setSrc(j?.url || null);
+        if (alive) setSrc(j?.url ? decorateBunnyUrl(j.url) : null);
       } catch {
         if (alive) setSrc(null);
       }
     })();
-    return () => {
-      alive = false;
-    };
+    return () => { alive = false; };
   }, [guid]);
 
   if (!src) return null;
@@ -54,7 +66,8 @@ function PreviewBunny({ guid }) {
       <iframe
         src={src}
         className="w-full aspect-video rounded-lg border border-pink-200"
-        allow="autoplay; encrypted-media; fullscreen; picture-in-picture"
+        // важливо: без дозволу autoplay
+        allow="encrypted-media; fullscreen; picture-in-picture"
         allowFullScreen
         loading="lazy"
         referrerPolicy="origin"
