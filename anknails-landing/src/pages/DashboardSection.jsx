@@ -4,6 +4,7 @@ import { CheckSquare, Award, Info, X, ChevronRight } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
+/* 🎨 Кольори (light) */
 const STAGE_COLORS = {
   1: "from-pink-100 to-pink-50 border-pink-200 text-pink-600",
   2: "from-rose-100 to-rose-50 border-rose-200 text-rose-600",
@@ -12,35 +13,14 @@ const STAGE_COLORS = {
   5: "from-yellow-100 to-amber-50 border-yellow-300 text-yellow-700",
 };
 
-function extractProgressMap(payload) {
-  if (!payload || typeof payload !== "object") return {};
-  if (payload.map && typeof payload.map === "object") return payload.map;
-  if (payload.progress && Array.isArray(payload.progress)) {
-    const out = {};
-    for (const it of payload.progress) {
-      out[String(it.lesson_id)] = {
-        completed: !!it.completed,
-        homework_done: !!it.homework_done,
-        watched_seconds: it.watched_seconds ?? 0,
-        total_seconds: it.total_seconds ?? 0,
-      };
-    }
-    return out;
-  }
-  if (payload.items && Array.isArray(payload.items)) {
-    const out = {};
-    for (const it of payload.items) {
-      out[String(it.lesson_id ?? it.id)] = {
-        completed: !!it.completed,
-        homework_done: !!it.homework_done,
-        watched_seconds: it.watched_seconds ?? 0,
-        total_seconds: it.total_seconds ?? 0,
-      };
-    }
-    return out;
-  }
-  return {};
-}
+/* 🌚 Кольори (dark) — більш насичені, без «молочних» фонових */
+const STAGE_COLORS_DARK = {
+  1: "from-[#2a0f2a] to-[#1a0a1f] border-fuchsia-800/40 text-pink-200",
+  2: "from-[#2a0f1c] to-[#14080e] border-rose-800/40 text-rose-200",
+  3: "from-[#150a2a] to-[#0e071b] border-fuchsia-800/40 text-fuchsia-200",
+  4: "from-[#0f0a2a] to-[#07061a] border-violet-800/40 text-violet-200",
+  5: "from-[#2a210a] to-[#120a06] border-amber-800/40 text-amber-200",
+};
 
 export default function DashboardSection({
   modules,
@@ -56,95 +36,48 @@ export default function DashboardSection({
   const [skills, setSkills] = useState(user?.xp || 0);
   const [stage, setStage] = useState(user?.level || 1);
   const [localLessons, setLocalLessons] = useState(lessons || {});
-  const [progressMap, setProgressMap] = useState({});
-  const [overallPct, setOverallPct] = useState(
-    typeof overallProgress === "number" ? overallProgress : 0
-  );
 
-  // XP/Level (+ можливий одночасний прогрес)
+  // 🧩 XP/Level
   useEffect(() => {
     if (!user?.id) return;
     fetch(`${BACKEND}/api/progress/user/${user.id}`)
       .then((r) => r.json())
       .then((data) => {
-        if (data.xp !== undefined) setSkills(data.xp);
-        if (data.level !== undefined) setStage(data.level);
-        const m = extractProgressMap(data);
-        if (Object.keys(m).length) setProgressMap(m);
+        if (data.xp !== undefined) {
+          setSkills(data.xp);
+          setStage(data.level);
+        }
       })
       .catch(() => {});
   }, [user?.id]);
 
-  // Додаткові спроби витягти мапу прогресу (фолбек)
-  useEffect(() => {
-    if (!user?.id) return;
-    (async () => {
-      const urls = [
-        `${BACKEND}/api/progress/map/${user.id}`,
-        `${BACKEND}/api/progress/${user.id}`,
-        `${BACKEND}/api/progress/user/${user.id}/map`,
-        `${BACKEND}/api/progress/list/${user.id}`,
-      ];
-      for (const url of urls) {
-        try {
-          const r = await fetch(url);
-          if (!r.ok) continue;
-          const j = await r.json();
-          const m = extractProgressMap(j);
-          if (Object.keys(m).length) {
-            setProgressMap((prev) => (Object.keys(prev).length ? prev : m));
-            break;
-          }
-        } catch {}
-      }
-    })();
-  }, [user?.id]);
-
-  // Підтягнути список уроків, щоб порахувати загальну кількість
+  // 🧠 К-сть уроків в модулях
   useEffect(() => {
     if (!modules?.length) return;
     (async () => {
       const updated = {};
-      for (const mod of modules) {
+      for (const m of modules) {
         try {
-          const res = await fetch(`${BACKEND}/api/lessons/${mod.id}`);
-          const data = await res.json();
-          updated[mod.id] = data.lessons || [];
+          const r = await fetch(`${BACKEND}/api/lessons/${m.id}`);
+          const j = await r.json();
+          updated[m.id] = j.lessons || [];
         } catch {}
       }
       setLocalLessons(updated);
     })();
   }, [modules]);
 
-  // Джерело прогресу: пропс або локальний фолбек
-  const source =
-    progress && Object.keys(progress).length ? progress : progressMap;
-
-  const completedLessons = Object.values(source).filter((p) => p?.completed).length;
-
-  // Якщо не передали overallProgress — перерахуємо самі
-  useEffect(() => {
-    if (typeof overallProgress === "number") {
-      setOverallPct(overallProgress);
-      return;
-    }
-    const total = Object.values(localLessons).reduce(
-      (acc, arr) => acc + (arr?.length || 0),
-      0
-    );
-    if (total > 0) {
-      setOverallPct(Math.round((completedLessons / total) * 100));
-    } else {
-      setOverallPct(0);
-    }
-  }, [overallProgress, localLessons, completedLessons]);
-
-  // Скіли/рівень
+  // 🧮 Обчислення
+  const completedLessons = Object.values(progress).filter((p) => p.completed).length;
   const realSkills = skills ?? completedLessons * 20;
   const realStage = Math.min(stage ?? Math.floor(realSkills / 100) + 1, 5);
   const nextStageSkills = 100 * realStage;
   const progressToNext = ((realSkills % 100) / 100) * 100;
-  const stageColor = STAGE_COLORS[realStage] || STAGE_COLORS[5];
+
+  // 🎨 Палітра блоку «Моя майстерність»
+  const stageColor =
+    (darkMode ? STAGE_COLORS_DARK : STAGE_COLORS)[realStage] ||
+    (darkMode ? STAGE_COLORS_DARK[5] : STAGE_COLORS[5]);
 
   return (
     <div
@@ -154,7 +87,7 @@ export default function DashboardSection({
     >
       <div className="flex-1">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
-          {/* Модулі (прев’ю) */}
+          {/* 📦 Модулі */}
           <div
             onClick={() => onOpenModules && onOpenModules()}
             className={`relative p-6 rounded-2xl border shadow-md transition overflow-y-auto max-h-[400px] cursor-pointer hover:scale-[1.02] ${
@@ -194,22 +127,24 @@ export default function DashboardSection({
             )}
           </div>
 
-          {/* Етап майстерності */}
+          {/* 💅 Моя майстерність */}
           <div
             className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 bg-gradient-to-br ${stageColor}`}
           >
+            {/* ℹ️ Кнопка інформації — z нижче за header */}
             <button
               onClick={() => setShowInfo(!showInfo)}
-              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/30 transition z-20"
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-10"
               title={t("Як підвищити майстерність", "Как развивать мастерство")}
             >
               {showInfo ? (
                 <X className="w-5 h-5 text-yellow-500" />
               ) : (
-                <Info className="w-5 h-5 text-pink-600" />
+                <Info className="w-5 h-5" />
               )}
             </button>
 
+            {/* контент */}
             <div
               className={`transition-all duration-700 ${
                 showInfo ? "opacity-0 scale-95" : "opacity-100 scale-100"
@@ -226,35 +161,35 @@ export default function DashboardSection({
                 </p>
 
                 <p className="text-sm opacity-80 mb-3">
-                  {realSkills} {t("навичок", "навыков")} / {nextStageSkills}{" "}
-                  {t("навичок", "навыков")}
+                  {realSkills} {t("навичок", "навыков")} / {nextStageSkills} {t("навичок", "навыков")}
                 </p>
 
-                <div className="h-2 w-full bg-white/40 rounded-full overflow-hidden mb-2">
+                <div className="h-2 w-full bg-white/30 rounded-full overflow-hidden mb-2">
                   <div
                     className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-700"
                     style={{ width: `${progressToNext}%` }}
-                  ></div>
+                  />
                 </div>
 
-                <p className="text-xs opacity-70">
+                <p className="text-xs opacity-80">
                   {t("До наступного рівня залишилось", "До следующего уровня осталось")}{" "}
                   {100 - (realSkills % 100)} {t("навичок", "навыков")}
                 </p>
               </div>
             </div>
 
+            {/* інфо-вікно */}
             <div
               className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
                 showInfo ? "opacity-100 scale-100" : "opacity-0 scale-95"
               }`}
             >
               <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40"></div>
-              <div className="relative z-10">
-                <h3 className="text-2xl font-bold mb-3 text-pink-600">
+              <div className="relative z-0">
+                <h3 className="text-2xl font-bold mb-3">
                   {t("Як розвивати майстерність", "Как развивать мастерство")}
                 </h3>
-                <p className="text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5 text-gray-700">
+                <p className="text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5">
                   {t(
                     "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 - новий рівень! Виконуйте домашні завдання - отримуйте бонусні 10 одиниць майстерності.",
                     "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 - новый уровень! Выполняйте домашние задания - бонус 10 единиц мастерства."
@@ -264,44 +199,34 @@ export default function DashboardSection({
             </div>
           </div>
 
-          {/* Прогрес курсу */}
+          {/* 📈 Прогрес курсу */}
           <div
             className={`p-6 rounded-2xl border shadow-md transition ${
-              darkMode
-                ? "bg-[#1a0a1f]/70 border-fuchsia-900/30"
-                : "bg-white border-pink-200"
+              darkMode ? "bg-[#1a0a1f]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
             }`}
           >
             <h3 className="text-xl font-bold mb-3 text-pink-600">
               {t("Прогрес курсу", "Прогресс курса")}
             </h3>
             <div className="text-center">
-              <p className="text-5xl font-extrabold text-pink-500 mb-2">
-                {overallPct}%
-              </p>
+              <p className="text-5xl font-extrabold text-pink-500 mb-2">{overallProgress}%</p>
               <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-3">
                 <div
                   className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700"
-                  style={{ width: `${overallPct}%` }}
-                ></div>
+                  style={{ width: `${overallProgress}%` }}
+                />
               </div>
               <p className="text-sm opacity-70">
-                {t("Ви переглянули", "Вы просмотрели")}{" "}
-                {completedLessons} {t("уроків з", "уроков из")}{" "}
-                {Object.values(localLessons).reduce(
-                  (acc, arr) => acc + (arr?.length || 0),
-                  0
-                )}
+                {t("Ви переглянули", "Вы просмотрели")} {completedLessons} {t("уроків з", "уроков из")}{" "}
+                {Object.values(progress).length}
               </p>
             </div>
           </div>
 
-          {/* Домашні завдання */}
+          {/* 🧾 Домашні завдання */}
           <div
             className={`p-6 rounded-2xl border shadow-md transition ${
-              darkMode
-                ? "bg-[#1a0a1f]/70 border-fuchsia-900/30"
-                : "bg-white border-pink-200"
+              darkMode ? "bg-[#1a0a1f]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
             }`}
           >
             <h3 className="text-xl font-bold mb-3 text-pink-600 flex items-center gap-2">
@@ -310,19 +235,19 @@ export default function DashboardSection({
             </h3>
             <p className="text-sm opacity-80 mb-2">
               {t("Виконано завдань:", "Выполнено заданий:")}{" "}
-              {Object.values(source).filter((p) => p?.homework_done).length}
+              {Object.values(progress).filter((p) => p.homework_done).length}
             </p>
             <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden">
               <div
                 className="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-700"
                 style={{
                   width: `${
-                    (Object.values(source).filter((p) => p?.homework_done).length /
-                      Math.max(Object.values(source).length || 1, 1)) *
+                    (Object.values(progress).filter((p) => p.homework_done).length /
+                      Math.max(Object.values(progress).length, 1)) *
                     100
                   }%`,
                 }}
-              ></div>
+              />
             </div>
           </div>
         </div>
