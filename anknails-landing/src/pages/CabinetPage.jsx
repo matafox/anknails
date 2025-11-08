@@ -642,6 +642,76 @@ export default function CabinetPage() {
     window.location.href = "/login";
   };
 
+  // поточний прогрес по вибраному уроку
+const progSelected = selectedLesson ? (progress[selectedLesson.id] || {}) : {};
+
+// 🔘 Позначити / скасувати виконання домашки
+const toggleHomeworkDone = async (done) => {
+  if (!user?.id || !selectedLesson?.id) return;
+  try {
+    await fetch(`${BACKEND}/api/progress/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user.id,
+        lesson_id: selectedLesson.id,
+        homework_done: done,
+        // передаємо те, що вже є (щоб нічого не загубити)
+        watched_seconds: progSelected.watched_seconds ?? 0,
+        total_seconds: progSelected.total_seconds ?? 0,
+        completed: progSelected.completed ?? false,
+      }),
+    });
+
+    // локально оновити стан
+    setProgress((prev) => ({
+      ...prev,
+      [selectedLesson.id]: {
+        ...(prev[selectedLesson.id] || {}),
+        homework_done: done,
+      },
+    }));
+  } catch (e) {
+    console.warn("toggleHomeworkDone failed", e);
+    alert(t("Не вдалося оновити статус домашнього завдання", "Не удалось обновить статус домашнего задания"));
+  }
+};
+
+// ✅ Ручне завершення уроку
+const markLessonComplete = async () => {
+  if (!user?.id || !selectedLesson?.id) return;
+  try {
+    await fetch(`${BACKEND}/api/progress/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user.id,
+        lesson_id: selectedLesson.id,
+        completed: true,
+        watched_seconds: Math.max(progSelected.watched_seconds ?? 0, progSelected.total_seconds ?? 0),
+        total_seconds: progSelected.total_seconds ?? 0,
+        homework_done: progSelected.homework_done ?? false,
+      }),
+    });
+
+    setProgress((prev) => ({
+      ...prev,
+      [selectedLesson.id]: {
+        ...(prev[selectedLesson.id] || {}),
+        completed: true,
+        watched_seconds: Math.max(progSelected.watched_seconds ?? 0, progSelected.total_seconds ?? 0),
+      },
+    }));
+
+    // підтягнути глобальний прогрес/XP
+    await refreshAfterLessonComplete();
+  } catch (e) {
+    console.warn("markLessonComplete failed", e);
+    alert(t("Не вдалося позначити урок завершеним", "Не удалось отметить урок завершенным"));
+  }
+};
+
+
   if (!user) return null;
 
   return (
@@ -945,6 +1015,19 @@ export default function CabinetPage() {
               }}
             />
 
+            {/* Ручне завершення уроку */}
+{!progSelected.completed && (
+  <div className="mt-4">
+    <button
+      onClick={markLessonComplete}
+      className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold hover:scale-[1.02] transition"
+    >
+      {t("Позначити урок пройденим", "Отметить урок пройденным")}
+    </button>
+  </div>
+)}
+
+
             {/* Домашка */}
             {selectedLesson.homework && (
               <div
@@ -963,6 +1046,29 @@ export default function CabinetPage() {
                   </div>
                 )}
               </div>
+  <div className="mt-4 flex items-center gap-3">
+  {!progSelected.homework_done ? (
+    <button
+      onClick={() => toggleHomeworkDone(true)}
+      className="px-4 py-2 rounded-lg bg-emerald-500 text-white font-medium hover:opacity-95 transition"
+    >
+      {t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")}
+    </button>
+  ) : (
+    <>
+      <span className="inline-flex items-center gap-2 text-emerald-600 font-medium">
+        <CheckSquare className="w-4 h-4" />
+        {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+      </span>
+      <button
+        onClick={() => toggleHomeworkDone(false)}
+        className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-fuchsia-800/40 dark:text-gray-200 dark:hover:bg-fuchsia-950/30 transition"
+      >
+        {t("Скасувати", "Отменить")}
+      </button>
+    </>
+  )}
+</div>
             )}
 
             {/* Матеріали */}
