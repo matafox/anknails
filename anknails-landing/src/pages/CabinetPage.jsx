@@ -1027,6 +1027,8 @@ const notionEmbedSrc = (url) =>
     )}
   </div>
 )}
+            </div> 
+        )} 
 
         {/* Footer */}
         <footer className={`mt-10 text-center py-6 text-sm border-t ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}>
