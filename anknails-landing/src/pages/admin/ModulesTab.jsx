@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import ModuleVisibilityPicker from "./ModuleVisibilityPicker";
 import {
   Edit3,
   PlusCircle,
@@ -87,6 +88,8 @@ export default function ModulesTab({ darkMode, i18n }) {
 
   const [draggedLesson, setDraggedLesson] = useState(null);
   const [orderChangedModuleId, setOrderChangedModuleId] = useState(null);
+  const [visibilityForModuleId, setVisibilityForModuleId] = useState(null);
+  const [visibilityInitial, setVisibilityInitial] = useState(false);
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
@@ -169,17 +172,10 @@ export default function ModulesTab({ darkMode, i18n }) {
     await fetchModules(selectedCourse);
   };
 
-  const toggleVisibleModule = async (mod) => {
-    await fetch(`${BACKEND}/api/modules/update/${mod.id}`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        token: "anka12341",
-        visible: !mod.visible,
-      }),
-    });
-    await fetchModules(selectedCourse);
-  };
+  const openVisibilityPicker = (mod) => {
+   setVisibilityForModuleId(mod.id);
+   setVisibilityInitial(!!mod.visible);
+ };
 
   // --- Lesson drag / reorder ---
   const handleDragStart = (lesson) => setDraggedLesson(lesson);
@@ -469,18 +465,16 @@ export default function ModulesTab({ darkMode, i18n }) {
 
               {/* Перемикач видимості */}
               <div className="flex items-center justify-between mt-4">
-                <span className="text-sm opacity-70">
-                  {t("Видимий для учнів", "Видим для учеников")}:
-                </span>
-                <button
-                  onClick={() => toggleVisibleModule(mod)}
-                  className={`px-3 py-1 rounded-lg text-sm font-semibold ${
-                    mod.visible ? "bg-green-500 text-white" : "bg-gray-300 text-gray-700"
-                  }`}
-                >
-                  {mod.visible ? t("Відкрито", "Открыто") : t("Приховано", "Скрыто")}
-                </button>
-              </div>
+  <span className="text-sm opacity-70">
+    {t("Видимість модуля", "Видимость модуля")}:
+  </span>
+  <button
+    onClick={() => openVisibilityPicker(mod)}
+    className="px-3 py-1 rounded-lg text-sm font-semibold bg-pink-500 text-white"
+  >
+    {t("Відкрити / Приховати", "Открыть / Скрыть")}
+  </button>
+</div>
 
               {/* Кнопка показати уроки */}
               <button
@@ -805,6 +799,17 @@ export default function ModulesTab({ darkMode, i18n }) {
     </div>
   );
 }
+
+{visibilityForModuleId && (
+   <ModuleVisibilityPicker
+     BACKEND={BACKEND}
+     moduleId={visibilityForModuleId}
+     initialVisible={visibilityInitial}
+     t={t}
+     onClose={() => setVisibilityForModuleId(null)}
+     onSaved={() => fetchModules(selectedCourse)}
+   />
+ )}
 
 /* --- Допоміжні компоненти --- */
 
