@@ -18,6 +18,24 @@ const isBunnyGuid = (s) =>
     s
   );
 
+// Notion helpers
+const isNotionUrl = (s) =>
+  typeof s === "string" && /(notion\.so|notion\.site)\//i.test(s);
+
+const stripQuery = (url) => {
+  try {
+    const u = new URL(url);
+    u.search = ""; // прибрати `?source=copy_link` та інше сміття
+    return u.toString();
+  } catch {
+    return url;
+  }
+};
+
+const notionEmbedSrc = (url) =>
+  `https://www.notion.so/embed?url=${encodeURIComponent(stripQuery(url))}`;
+
+
 // витягує GUID із будь-якого рядка/URL, або повертає null
 const extractGuid = (s) => {
   if (!s || typeof s !== "string") return null;
@@ -597,11 +615,44 @@ export default function ModulesTab({ darkMode, i18n }) {
                                   </p>
                                 )}
                                 {l.materials && (
-                                  <p className="mt-1 text-xs opacity-80">
-                                    📁 <b>{t("Матеріали", "Материалы")}:</b>{" "}
-                                    {l.materials}
-                                  </p>
-                                )}
+  <div className="mt-2 space-y-1">
+    <p className="text-xs opacity-80">
+      📁 <b>{t("Матеріали", "Материалы")}:</b>{" "}
+      {!isNotionUrl(l.materials) ? (
+        <a
+          href={l.materials}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-green-600 underline"
+        >
+          {t("Відкрити посилання", "Открыть ссылку")}
+        </a>
+      ) : (
+        <span className="opacity-70">
+          {t("Вбудована сторінка Notion нижче", "Встроенная страница Notion ниже")}
+        </span>
+      )}
+    </p>
+
+    {isNotionUrl(l.materials) && (
+      <div
+        className={`rounded-lg border ${
+          darkMode ? "border-fuchsia-900/40 bg-fuchsia-950/20" : "border-pink-200 bg-pink-50/40"
+        }`}
+      >
+        <div className="w-full h-[420px] overflow-hidden rounded-lg">
+          <iframe
+            src={notionEmbedSrc(l.materials)}
+            className="w-full h-full"
+            loading="lazy"
+            referrerPolicy="no-referrer"
+            allow="clipboard-read; clipboard-write"
+          />
+        </div>
+      </div>
+    )}
+  </div>
+)}
                               </div>
 
                               <div className="flex flex-col gap-1">
