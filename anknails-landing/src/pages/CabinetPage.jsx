@@ -894,7 +894,7 @@ const markLessonComplete = async () => {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <Globe className="w-4 h-4 text-pink-500" />
-              <span>{t("Язык", "Мова")}</span>
+              <span>{t("Мова", "Язык")}</span>
             </div>
             <div className="flex gap-2">
               {["ru", "uk"].map((lang) => (
@@ -1144,6 +1144,8 @@ const markLessonComplete = async () => {
                 </div>
               )}
             </div>
+             </div> 
+       )} 
 
 
         {/* Footer */}
