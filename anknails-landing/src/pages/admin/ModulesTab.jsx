@@ -438,15 +438,16 @@ export default function ModulesTab({ darkMode, i18n }) {
         {modules.map((mod) => {
           const isEditingModule = editingModuleId === mod.id;
           const modLessons = lessons[mod.id] || [];
+          const isOpen = expanded === mod.id;
 
           return (
             <div
               key={mod.id}
-              className={`p-5 rounded-2xl border ${
+              className={`p-5 rounded-2xl border transition-all ${
                 darkMode
                   ? "border-fuchsia-900/30 bg-[#1a0a1f]/70"
                   : "border-pink-200 bg-white/80"
-              }`}
+              } ${isOpen ? "sm:col-span-2" : ""}`} // 👉 розкритий модуль на дві колонки
             >
               {/* Заголовок / Інлайн-редагування модуля */}
               {!isEditingModule ? (
@@ -531,407 +532,423 @@ export default function ModulesTab({ darkMode, i18n }) {
               {/* Кнопка показати уроки */}
               <button
                 onClick={() => {
-                  setExpanded(expanded === mod.id ? null : mod.id);
-                  if (!lessons[mod.id]) fetchLessons(mod.id);
+                  const willOpen = expanded !== mod.id;
+                  setExpanded(willOpen ? mod.id : null);
+                  if (willOpen && !lessons[mod.id]) fetchLessons(mod.id);
                 }}
                 className="mt-3 text-pink-500 underline text-sm"
               >
-                {expanded === mod.id
+                {isOpen
                   ? t("Сховати уроки", "Скрыть уроки")
                   : t("Показати уроки", "Показать уроки")}
               </button>
 
-              {/* Секція уроків */}
-              {expanded === mod.id && (
-                <div className="mt-3 space-y-3 border-t border-pink-200 pt-3">
-                  {modLessons.map((l) => {
-                    const isEditingLesson = editingLessonId === l.id;
-                    const typedGuid =
-                      isEditingLesson && extractGuid(lessonDraft.videoGuid);
+              {/* Секція уроків — ТЕПЕР ҐРІД */}
+              {isOpen && (
+                <div className="mt-3 border-t border-pink-200 pt-3">
+                  {modLessons.length === 0 ? (
+                    <p className="text-sm opacity-70">
+                      {t("У цьому модулі ще немає уроків", "В этом модуле пока нет уроков")}
+                    </p>
+                  ) : (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                      {modLessons.map((l) => {
+                        const isEditingLesson = editingLessonId === l.id;
+                        const typedGuid =
+                          isEditingLesson && extractGuid(lessonDraft.videoGuid);
 
-                    return (
-                      <div
-                        key={l.id}
-                        draggable
-                        onDragStart={() => handleDragStart(l)}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={() => handleDrop(mod.id, l)}
-                        className={`p-3 rounded-lg text-sm ${
-                          darkMode ? "bg-fuchsia-950/40" : "bg-pink-50"
-                        }`}
-                      >
-                        {!isEditingLesson ? (
-                          <>
-                            <div className="flex justify-between">
-                              <div className="w-full">
-                                <div className="flex items-center gap-2">
-                                  <b>{l.title}</b>
-                                  {l.type && (
-                                    <span
-                                      className={`text-xs px-2 py-[2px] rounded-full ${
-                                        l.type === "practice"
-                                          ? "bg-purple-200 text-purple-700"
-                                          : "bg-pink-200 text-pink-700"
+                        return (
+                          <div
+                            key={l.id}
+                            draggable
+                            onDragStart={() => handleDragStart(l)}
+                            onDragOver={(e) => e.preventDefault()}
+                            onDrop={() => handleDrop(mod.id, l)}
+                            className={`p-3 rounded-lg text-sm ${
+                              darkMode ? "bg-fuchsia-950/40" : "bg-pink-50"
+                            }`}
+                          >
+                            {!isEditingLesson ? (
+                              <>
+                                <div className="flex justify-between">
+                                  <div className="w-full">
+                                    <div className="flex items-center gap-2">
+                                      <b className="truncate" title={l.title}>{l.title}</b>
+                                      {l.type && (
+                                        <span
+                                          className={`text-xs px-2 py-[2px] rounded-full whitespace-nowrap ${
+                                            l.type === "practice"
+                                              ? "bg-purple-200 text-purple-700"
+                                              : "bg-pink-200 text-pink-700"
+                                          }`}
+                                        >
+                                          {l.type === "practice"
+                                            ? t("Практика", "Практика")
+                                            : t("Теорія", "Теория")}
+                                        </span>
+                                      )}
+                                    </div>
+
+                                    {l.description && (
+                                      <p className="mt-1 line-clamp-3">{l.description}</p>
+                                    )}
+
+                                    {/* Превʼю для існуючого GUID */}
+                                    {isBunnyGuid(l.youtube_id) && (
+                                      <PreviewBunny guid={l.youtube_id} />
+                                    )}
+
+                                    {l.homework && (
+                                      <p className="mt-2 text-xs opacity-80">
+                                        📝 <b>{t("Завдання", "Задание")}:</b>{" "}
+                                        {l.homework}
+                                      </p>
+                                    )}
+                                    {l.materials && (
+                                      <p className="mt-1 text-xs opacity-80">
+                                        📁 <b>{t("Матеріали", "Материалы")}:</b>{" "}
+                                        {l.materials}
+                                      </p>
+                                    )}
+                                  </div>
+
+                                  <div className="flex flex-col gap-1 ml-2 shrink-0">
+                                    <button
+                                      onClick={() => startEditLesson(l)}
+                                      className="text-blue-500 text-xs flex items-center gap-1"
+                                    >
+                                      <Edit3 className="w-3 h-3" /> {t("ред.", "ред.")}
+                                    </button>
+                                    <button
+                                      onClick={() => deleteLesson(l.id, mod.id)}
+                                      className="text-red-500 text-xs flex items-center gap-1"
+                                    >
+                                      <Trash2 className="w-3 h-3" /> {t("вид.", "удал.")}
+                                    </button>
+                                  </div>
+                                </div>
+                              </>
+                            ) : (
+                              // ІНЛАЙН-РЕДАГУВАННЯ УРОКУ
+                              <div className="rounded-lg border border-pink-200/70 bg-white/70 p-3">
+                                <div className="grid gap-2">
+                                  <input
+                                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                                    placeholder={t("Назва уроку", "Название урока")}
+                                    value={lessonDraft.title}
+                                    onChange={(e) =>
+                                      setLessonDraft((s) => ({
+                                        ...s,
+                                        title: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  <textarea
+                                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                                    placeholder={t("Опис", "Описание")}
+                                    value={lessonDraft.description}
+                                    onChange={(e) =>
+                                      setLessonDraft((s) => ({
+                                        ...s,
+                                        description: e.target.value,
+                                      }))
+                                    }
+                                  />
+
+                                  {/* Тип уроку */}
+                                  <div className="flex gap-2">
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setLessonDraft((s) => ({
+                                          ...s,
+                                          type: "theory",
+                                        }))
+                                      }
+                                      className={`flex-1 py-2 rounded-lg font-medium ${
+                                        lessonDraft.type === "theory"
+                                          ? "bg-pink-500 text-white"
+                                          : "bg-pink-100 text-pink-600"
                                       }`}
                                     >
-                                      {l.type === "practice"
-                                        ? t("Практика", "Практика")
-                                        : t("Теорія", "Теория")}
-                                    </span>
+                                      🩷 {t("Теорія", "Теория")}
+                                    </button>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        setLessonDraft((s) => ({
+                                          ...s,
+                                          type: "practice",
+                                        }))
+                                      }
+                                      className={`flex-1 py-2 rounded-lg font-medium ${
+                                        lessonDraft.type === "practice"
+                                          ? "bg-purple-500 text-white"
+                                          : "bg-purple-100 text-purple-600"
+                                      }`}
+                                    >
+                                      💜 {t("Практика", "Практика")}
+                                    </button>
+                                  </div>
+
+                                  <input
+                                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                                    placeholder={t("Завдання", "Задание")}
+                                    value={lessonDraft.homework}
+                                    onChange={(e) =>
+                                      setLessonDraft((s) => ({
+                                        ...s,
+                                        homework: e.target.value,
+                                      }))
+                                    }
+                                  />
+
+                                  <input
+                                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                                    placeholder={t(
+                                      "Матеріали (посилання або короткий опис)",
+                                      "Материалы (ссылка или краткое описание)"
+                                    )}
+                                    value={lessonDraft.materials}
+                                    onChange={(e) =>
+                                      setLessonDraft((s) => ({
+                                        ...s,
+                                        materials: e.target.value,
+                                      }))
+                                    }
+                                  />
+
+                                  {/* 🆔 Вставити GUID/URL */}
+                                  <label className="block text-sm font-medium">
+                                    🆔 {t("Bunny GUID або повний URL", "Bunny GUID или полный URL")}
+                                  </label>
+                                  <input
+                                    className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                                    placeholder={t(
+                                      "Вставте GUID або лінк із Bunny",
+                                      "Вставьте GUID или ссылку из Bunny"
+                                    )}
+                                    value={lessonDraft.videoGuid}
+                                    onChange={(e) =>
+                                      setLessonDraft((s) => ({
+                                        ...s,
+                                        videoGuid: e.target.value,
+                                      }))
+                                    }
+                                  />
+                                  {typedGuid && <PreviewBunny guid={typedGuid} />}
+                                  <p className="text-xs opacity-60">
+                                    {t(
+                                      "Можна або вставити GUID/URL, або завантажити файл нижче",
+                                      "Можно либо вставить GUID/URL, либо загрузить файл ниже"
+                                    )}
+                                  </p>
+
+                                  {/* або завантажити файл */}
+                                  <label className="block text-sm font-medium mt-1">
+                                    🎥 {t("Відео BunnyCDN (оновити)", "Видео BunnyCDN (обновить)")}
+                                  </label>
+                                  <input
+                                    type="file"
+                                    accept="video/*"
+                                    onChange={(e) =>
+                                      setLessonDraft((s) => ({
+                                        ...s,
+                                        videoFile: e.target.files?.[0] || null,
+                                      }))
+                                    }
+                                    className="w-full border border-pink-300 rounded-lg p-2"
+                                  />
+                                  {lessonDraft.uploading && (
+                                    <ProgressBar value={lessonDraft.uploadProgress} t={t} />
                                   )}
+
+                                  <div className="mt-2 flex items-center gap-2">
+                                    <button
+                                      onClick={() => saveEditedLesson(mod.id, l)}
+                                      disabled={lessonDraft.uploading}
+                                      className="px-4 py-2 bg-pink-500 text-white rounded-lg font-semibold flex items-center gap-2"
+                                    >
+                                      <Save className="w-4 h-4" />
+                                      {t("Зберегти", "Сохранить")}
+                                    </button>
+                                    <button
+                                      onClick={cancelEditLesson}
+                                      className="px-4 py-2 bg-gray-300 rounded-lg text-sm flex items-center gap-2"
+                                    >
+                                      <XCircle className="w-4 h-4" />
+                                      {t("Скасувати", "Отменить")}
+                                    </button>
+                                  </div>
                                 </div>
-
-                                {l.description && (
-                                  <p className="mt-1">{l.description}</p>
-                                )}
-
-                                {/* Превʼю для існуючого GUID */}
-                                {isBunnyGuid(l.youtube_id) && (
-                                  <PreviewBunny guid={l.youtube_id} />
-                                )}
-
-                                {l.homework && (
-                                  <p className="mt-2 text-xs opacity-80">
-                                    📝 <b>{t("Завдання", "Задание")}:</b>{" "}
-                                    {l.homework}
-                                  </p>
-                                )}
-                                {l.materials && (
-                                  <p className="mt-1 text-xs opacity-80">
-                                    📁 <b>{t("Матеріали", "Материалы")}:</b>{" "}
-                                    {l.materials}
-                                  </p>
-                                )}
                               </div>
-
-                              <div className="flex flex-col gap-1">
-                                <button
-                                  onClick={() => startEditLesson(l)}
-                                  className="text-blue-500 text-xs flex items-center gap-1"
-                                >
-                                  <Edit3 className="w-3 h-3" /> {t("ред.", "ред.")}
-                                </button>
-                                <button
-                                  onClick={() => deleteLesson(l.id, mod.id)}
-                                  className="text-red-500 text-xs flex items-center gap-1"
-                                >
-                                  <Trash2 className="w-3 h-3" /> {t("вид.", "удал.")}
-                                </button>
-                              </div>
-                            </div>
-                          </>
-                        ) : (
-                          // ІНЛАЙН-РЕДАГУВАННЯ УРОКУ
-                          <div className="rounded-lg border border-pink-200/70 bg-white/70 p-3">
-                            <div className="grid gap-2">
-                              <input
-                                className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                                placeholder={t(
-                                  "Назва уроку",
-                                  "Название урока"
-                                )}
-                                value={lessonDraft.title}
-                                onChange={(e) =>
-                                  setLessonDraft((s) => ({
-                                    ...s,
-                                    title: e.target.value,
-                                  }))
-                                }
-                              />
-                              <textarea
-                                className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                                placeholder={t("Опис", "Описание")}
-                                value={lessonDraft.description}
-                                onChange={(e) =>
-                                  setLessonDraft((s) => ({
-                                    ...s,
-                                    description: e.target.value,
-                                  }))
-                                }
-                              />
-
-                              {/* Тип уроку */}
-                              <div className="flex gap-2">
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setLessonDraft((s) => ({
-                                      ...s,
-                                      type: "theory",
-                                    }))
-                                  }
-                                  className={`flex-1 py-2 rounded-lg font-medium ${
-                                    lessonDraft.type === "theory"
-                                      ? "bg-pink-500 text-white"
-                                      : "bg-pink-100 text-pink-600"
-                                  }`}
-                                >
-                                  🩷 {t("Теорія", "Теория")}
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() =>
-                                    setLessonDraft((s) => ({
-                                      ...s,
-                                      type: "practice",
-                                    }))
-                                  }
-                                  className={`flex-1 py-2 rounded-lg font-medium ${
-                                    lessonDraft.type === "practice"
-                                      ? "bg-purple-500 text-white"
-                                      : "bg-purple-100 text-purple-600"
-                                  }`}
-                                >
-                                  💜 {t("Практика", "Практика")}
-                                </button>
-                              </div>
-
-                              <input
-                                className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                                placeholder={t("Завдання", "Задание")}
-                                value={lessonDraft.homework}
-                                onChange={(e) =>
-                                  setLessonDraft((s) => ({
-                                    ...s,
-                                    homework: e.target.value,
-                                  }))
-                                }
-                              />
-
-                              <input
-                                className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                                placeholder={t(
-                                  "Матеріали (посилання або короткий опис)",
-                                  "Материалы (ссылка или краткое описание)"
-                                )}
-                                value={lessonDraft.materials}
-                                onChange={(e) =>
-                                  setLessonDraft((s) => ({
-                                    ...s,
-                                    materials: e.target.value,
-                                  }))
-                                }
-                              />
-
-                              {/* 🆔 Вставити GUID/URL */}
-                              <label className="block text-sm font-medium">
-                                🆔 {t("Bunny GUID або повний URL", "Bunny GUID или полный URL")}
-                              </label>
-                              <input
-                                className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                                placeholder={t(
-                                  "Вставте GUID або лінк із Bunny",
-                                  "Вставьте GUID или ссылку из Bunny"
-                                )}
-                                value={lessonDraft.videoGuid}
-                                onChange={(e) =>
-                                  setLessonDraft((s) => ({
-                                    ...s,
-                                    videoGuid: e.target.value,
-                                  }))
-                                }
-                              />
-                              {typedGuid && <PreviewBunny guid={typedGuid} />}
-                              <p className="text-xs opacity-60">
-                                {t(
-                                  "Можна або вставити GUID/URL, або завантажити файл нижче",
-                                  "Можно либо вставить GUID/URL, либо загрузить файл ниже"
-                                )}
-                              </p>
-
-                              {/* або завантажити файл */}
-                              <label className="block text-sm font-medium mt-1">
-                                🎥 {t("Відео BunnyCDN (оновити)", "Видео BunnyCDN (обновить)")}
-                              </label>
-                              <input
-                                type="file"
-                                accept="video/*"
-                                onChange={(e) =>
-                                  setLessonDraft((s) => ({
-                                    ...s,
-                                    videoFile: e.target.files?.[0] || null,
-                                  }))
-                                }
-                                className="w-full border border-pink-300 rounded-lg p-2"
-                              />
-                              {lessonDraft.uploading && (
-                                <ProgressBar value={lessonDraft.uploadProgress} t={t} />
-                              )}
-
-                              <div className="mt-2 flex items-center gap-2">
-                                <button
-                                  onClick={() => saveEditedLesson(mod.id, l)}
-                                  disabled={lessonDraft.uploading}
-                                  className="px-4 py-2 bg-pink-500 text-white rounded-lg font-semibold flex items-center gap-2"
-                                >
-                                  <Save className="w-4 h-4" />
-                                  {t("Зберегти", "Сохранить")}
-                                </button>
-                                <button
-                                  onClick={cancelEditLesson}
-                                  className="px-4 py-2 bg-gray-300 rounded-lg text-sm flex items-center gap-2"
-                                >
-                                  <XCircle className="w-4 h-4" />
-                                  {t("Скасувати", "Отменить")}
-                                </button>
-                              </div>
-                            </div>
+                            )}
                           </div>
-                        )}
-                      </div>
-                    );
-                  })}
+                        );
+                      })}
 
-                  {/* Кнопка зберегти порядок (якщо мінявся саме в цьому модулі) */}
-                  {orderChangedModuleId === mod.id && (
-                    <button
-                      onClick={() => saveLessonOrder(mod.id)}
-                      className="w-full mt-1 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg font-semibold flex items-center justify-center gap-2"
-                    >
-                      <Save className="w-4 h-4" />
-                      {t("Зберегти порядок", "Сохранить порядок")}
-                    </button>
-                  )}
-
-                  {/* ➕ ДОДАТИ НОВИЙ УРОК */}
-                  <div
-                    className={`p-3 rounded-lg border mt-3 ${
-                      darkMode ? "border-fuchsia-900/30" : "border-pink-200"
-                    }`}
-                  >
-                    <h5 className="font-semibold mb-2">
-                      {t("Новий урок", "Новый урок")}
-                    </h5>
-                    <div className="grid gap-2">
-                      <input
-                        className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                        placeholder={t("Назва уроку", "Название урока")}
-                        value={newLesson.title}
-                        onChange={(e) =>
-                          setNewLesson((s) => ({ ...s, title: e.target.value }))
-                        }
-                      />
-                      <textarea
-                        className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                        placeholder={t("Опис", "Описание")}
-                        value={newLesson.description}
-                        onChange={(e) =>
-                          setNewLesson((s) => ({
-                            ...s,
-                            description: e.target.value,
-                          }))
-                        }
-                      />
-
-                      <div className="flex gap-2">
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setNewLesson((s) => ({ ...s, type: "theory" }))
-                          }
-                          className={`flex-1 py-2 rounded-lg font-medium ${
-                            newLesson.type === "theory"
-                              ? "bg-pink-500 text-white"
-                              : "bg-pink-100 text-pink-600"
-                          }`}
-                        >
-                          🩷 {t("Теорія", "Теория")}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setNewLesson((s) => ({ ...s, type: "practice" }))
-                          }
-                          className={`flex-1 py-2 rounded-lg font-medium ${
-                            newLesson.type === "practice"
-                              ? "bg-purple-500 text-white"
-                              : "bg-purple-100 text-purple-600"
-                          }`}
-                        >
-                          💜 {t("Практика", "Практика")}
-                        </button>
-                      </div>
-
-                      <input
-                        className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                        placeholder={t("Завдання", "Задание")}
-                        value={newLesson.homework}
-                        onChange={(e) =>
-                          setNewLesson((s) => ({
-                            ...s,
-                            homework: e.target.value,
-                          }))
-                        }
-                      />
-                      <input
-                        className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                        placeholder={t(
-                          "Матеріали (посилання або короткий опис)",
-                          "Материалы (ссылка или краткое описание)"
-                        )}
-                        value={newLesson.materials}
-                        onChange={(e) =>
-                          setNewLesson((s) => ({
-                            ...s,
-                            materials: e.target.value,
-                          }))
-                        }
-                      />
-
-                      {/* 🆔 Вставити GUID/URL */}
-                      <label className="block text-sm font-medium">
-                        🆔 {t("Bunny GUID або повний URL", "Bunny GUID или полный URL")}
-                      </label>
-                      <input
-                        className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                        placeholder={t(
-                          "Вставте GUID або лінк із Bunny",
-                          "Вставьте GUID или ссылку из Bunny"
-                        )}
-                        value={newLesson.videoGuid}
-                        onChange={(e) =>
-                          setNewLesson((s) => ({ ...s, videoGuid: e.target.value }))
-                        }
-                      />
-                      {extractGuid(newLesson.videoGuid) && (
-                        <PreviewBunny guid={extractGuid(newLesson.videoGuid)} />
-                      )}
-                      <p className="text-xs opacity-60">
-                        {t(
-                          "Можна або вставити GUID/URL, або завантажити файл нижче",
-                          "Можно либо вставить GUID/URL, либо загрузить файл ниже"
-                        )}
-                      </p>
-
-                      {/* або завантажити файл */}
-                      <label className="block text-sm font-medium">
-                        🎥 {t("Відео BunnyCDN (за бажанням)", "Видео BunnyCDN (по желанию)")}
-                      </label>
-                      <input
-                        type="file"
-                        accept="video/*"
-                        onChange={(e) =>
-                          setNewLesson((s) => ({
-                            ...s,
-                            videoFile: e.target.files?.[0] || null,
-                          }))
-                        }
-                        className="w-full border border-pink-300 rounded-lg p-2"
-                      />
-                      {newLesson.uploading && (
-                        <ProgressBar value={newLesson.uploadProgress} t={t} />
+                      {/* Кнопка зберегти порядок для цього модуля */}
+                      {orderChangedModuleId === mod.id && (
+                        <div className="col-span-full">
+                          <button
+                            onClick={() => saveLessonOrder(mod.id)}
+                            className="w-full mt-1 py-2 bg-gradient-to-r from-pink-500 to-rose-500 text-white rounded-lg font-semibold flex items-center justify-center gap-2"
+                          >
+                            <Save className="w-4 h-4" />
+                            {t("Зберегти порядок", "Сохранить порядок")}
+                          </button>
+                        </div>
                       )}
 
-                      <button
-                        onClick={() => createLesson(mod.id)}
-                        disabled={newLesson.uploading}
-                        className="mt-1 flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg font-semibold"
+                      {/* ➕ ДОДАТИ НОВИЙ УРОК */}
+                      <div
+                        className={`col-span-full p-3 rounded-lg border mt-1 ${
+                          darkMode ? "border-fuchsia-900/30" : "border-pink-200"
+                        }`}
                       >
-                        <PlusCircle className="w-4 h-4" />
-                        {t("Додати урок", "Добавить урок")}
-                      </button>
+                        <h5 className="font-semibold mb-2">
+                          {t("Новий урок", "Новый урок")}
+                        </h5>
+                        <div className="grid gap-2 md:grid-cols-2">
+                          <input
+                            className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                            placeholder={t("Назва уроку", "Название урока")}
+                            value={newLesson.title}
+                            onChange={(e) =>
+                              setNewLesson((s) => ({ ...s, title: e.target.value }))
+                            }
+                          />
+                          <div className="md:col-span-2">
+                            <textarea
+                              className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                              placeholder={t("Опис", "Описание")}
+                              value={newLesson.description}
+                              onChange={(e) =>
+                                setNewLesson((s) => ({
+                                  ...s,
+                                  description: e.target.value,
+                                }))
+                              }
+                            />
+                          </div>
+
+                          <div className="flex gap-2 md:col-span-2">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setNewLesson((s) => ({ ...s, type: "theory" }))
+                              }
+                              className={`flex-1 py-2 rounded-lg font-medium ${
+                                newLesson.type === "theory"
+                                  ? "bg-pink-500 text-white"
+                                  : "bg-pink-100 text-pink-600"
+                              }`}
+                            >
+                              🩷 {t("Теорія", "Теория")}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setNewLesson((s) => ({ ...s, type: "practice" }))
+                              }
+                              className={`flex-1 py-2 rounded-lg font-medium ${
+                                newLesson.type === "practice"
+                                  ? "bg-purple-500 text-white"
+                                  : "bg-purple-100 text-purple-600"
+                              }`}
+                            >
+                              💜 {t("Практика", "Практика")}
+                            </button>
+                          </div>
+
+                          <input
+                            className="w-full px-3 py-2 border border-pink-300 rounded-lg md:col-span-2"
+                            placeholder={t("Завдання", "Задание")}
+                            value={newLesson.homework}
+                            onChange={(e) =>
+                              setNewLesson((s) => ({
+                                ...s,
+                                homework: e.target.value,
+                              }))
+                            }
+                          />
+                          <input
+                            className="w-full px-3 py-2 border border-pink-300 rounded-lg md:col-span-2"
+                            placeholder={t(
+                              "Матеріали (посилання або короткий опис)",
+                              "Материалы (ссылка или краткое описание)"
+                            )}
+                            value={newLesson.materials}
+                            onChange={(e) =>
+                              setNewLesson((s) => ({
+                                ...s,
+                                materials: e.target.value,
+                              }))
+                            }
+                          />
+
+                          {/* 🆔 Вставити GUID/URL */}
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium">
+                              🆔 {t("Bunny GUID або повний URL", "Bunny GUID или полный URL")}
+                            </label>
+                            <input
+                              className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                              placeholder={t(
+                                "Вставте GUID або лінк із Bunny",
+                                "Вставьте GUID или ссылку из Bunny"
+                              )}
+                              value={newLesson.videoGuid}
+                              onChange={(e) =>
+                                setNewLesson((s) => ({ ...s, videoGuid: e.target.value }))
+                              }
+                            />
+                            {extractGuid(newLesson.videoGuid) && (
+                              <PreviewBunny guid={extractGuid(newLesson.videoGuid)} />
+                            )}
+                            <p className="text-xs opacity-60 mt-1">
+                              {t(
+                                "Можна або вставити GUID/URL, або завантажити файл нижче",
+                                "Можно либо вставить GUID/URL, либо загрузить файл ниже"
+                              )}
+                            </p>
+                          </div>
+
+                          {/* або завантажити файл */}
+                          <div className="md:col-span-2">
+                            <label className="block text-sm font-medium">
+                              🎥 {t("Відео BunnyCDN (за бажанням)", "Видео BunnyCDN (по желанию)")}
+                            </label>
+                            <input
+                              type="file"
+                              accept="video/*"
+                              onChange={(e) =>
+                                setNewLesson((s) => ({
+                                  ...s,
+                                  videoFile: e.target.files?.[0] || null,
+                                }))
+                              }
+                              className="w-full border border-pink-300 rounded-lg p-2"
+                            />
+                            {newLesson.uploading && (
+                              <ProgressBar value={newLesson.uploadProgress} t={t} />
+                            )}
+                          </div>
+
+                          <div className="md:col-span-2">
+                            <button
+                              onClick={() => createLesson(mod.id)}
+                              disabled={newLesson.uploading}
+                              className="mt-1 w-full flex items-center justify-center gap-2 px-4 py-2 bg-pink-500 text-white rounded-lg font-semibold"
+                            >
+                              <PlusCircle className="w-4 h-4" />
+                              {t("Додати урок", "Добавить урок")}
+                            </button>
+                          </div>
+                        </div>
+                      </div>
                     </div>
-                  </div>
+                  )}
                 </div>
               )}
             </div>
@@ -992,7 +1009,7 @@ function CreateModuleInline({ onCreate, t }) {
             required
           />
           <textarea
-            className="w-full px-4 py-2 rounded-xl border border-pink-300"
+            className="w-full px-4 py-2 rounded-xl border border-пink-300"
             placeholder={t("Опис модуля", "Описание модуля")}
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
