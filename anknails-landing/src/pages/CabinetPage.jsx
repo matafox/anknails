@@ -565,7 +565,7 @@ export default function CabinetPage() {
   // modules + префетч уроків
   useEffect(() => {
     if (!user?.course_id) return;
-    fetch(`${BACKEND}/api/modules/${user.course_id}`)
+    fetch(`${BACKEND}/api/modules/${user.course_id}?user_id=${user.id}`)
       .then((res) => res.json())
       .then(async (data) => {
         const mods = data.modules || [];
