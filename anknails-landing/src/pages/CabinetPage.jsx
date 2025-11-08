@@ -1001,7 +1001,7 @@ const markLessonComplete = async () => {
               )}
             </div>
 
-            {/* Відео + прогрес */}
+                      {/* Відео + прогрес */}
             <SafeVideo
               lesson={selectedLesson}
               t={t}
@@ -1016,106 +1016,134 @@ const markLessonComplete = async () => {
             />
 
             {/* Ручне завершення уроку */}
-{!progSelected.completed && (
-  <div className="mt-4">
-    <button
-      onClick={markLessonComplete}
-      className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold hover:scale-[1.02] transition"
-    >
-      {t("Позначити урок пройденим", "Отметить урок пройденным")}
-    </button>
-  </div>
-)}
+            {!progSelected.completed && (
+              <div className="mt-4">
+                <button
+                  onClick={markLessonComplete}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold hover:scale-[1.02] transition"
+                >
+                  {t("Позначити урок пройденим", "Отметить урок пройденным")}
+                </button>
+              </div>
+            )}
 
+            {/* Домашка + Матеріали + квадратик справа */}
+            <div className="mt-6 grid md:grid-cols-[1fr_auto] gap-4 items-start">
+              {/* Ліва колонка: тексти/картки */}
+              <div className="space-y-4">
+                {/* Домашка */}
+                {selectedLesson.homework && (
+                  <div
+                    className={`p-4 rounded-xl border ${
+                      darkMode
+                        ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
+                        : "bg-gray-50 border-gray-200 text-gray-800"
+                    }`}
+                  >
+                    <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
+                      {t("Домашнє завдання", "Домашнее задание")}
+                    </h3>
+                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                      {selectedLesson.homework}
+                    </p>
 
-{/* Домашка + Матеріали + квадратик справа */}
-<div className="mt-6 grid md:grid-cols-[1fr_auto] gap-4 items-start">
-  {/* Ліва колонка: тексти/картки */}
-  <div className="space-y-4">
-    {/* Домашка */}
-    {selectedLesson.homework && (
-      <div
-        className={`p-4 rounded-xl border ${
-          darkMode
-            ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
-            : "bg-gray-50 border-gray-200 text-gray-800"
-        }`}
-      >
-        <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
-          {t("Домашнє завдання", "Домашнее задание")}
-        </h3>
-        <p className="text-sm leading-relaxed whitespace-pre-wrap">
-          {selectedLesson.homework}
-        </p>
+                    {progress[selectedLesson.id]?.homework_done && (
+                      <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
+                        <CheckSquare className="w-4 h-4 text-green-600" />
+                        {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+                      </div>
+                    )}
 
-        {progress[selectedLesson.id]?.homework_done && (
-          <div className="mt-3 flex items-center gap-2 bg-green-100 text-green-700 px-3 py-2 rounded-lg text-sm font-medium w-fit">
-            <CheckSquare className="w-4 h-4 text-green-600" />
-            {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
-          </div>
-        )}
-      </div>
-    )}
+                    {/* Кнопки під домашкою (mobile-first) */}
+                    <div className="mt-4 flex items-center gap-3 md:hidden">
+                      {!progSelected.homework_done ? (
+                        <button
+                          onClick={() => toggleHomeworkDone(true)}
+                          className="px-4 py-2 rounded-lg bg-emerald-500 text-white font-medium hover:opacity-95 transition"
+                        >
+                          {t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")}
+                        </button>
+                      ) : (
+                        <>
+                          <span className="inline-flex items-center gap-2 text-emerald-600 font-medium">
+                            <CheckSquare className="w-4 h-4" />
+                            {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
+                          </span>
+                          <button
+                            onClick={() => toggleHomeworkDone(false)}
+                            className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-fuchsia-800/40 dark:text-gray-200 dark:hover:bg-fuchsia-950/30 transition"
+                          >
+                            {t("Скасувати", "Отменить")}
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                )}
 
-    {/* Матеріали */}
-    {selectedLesson.materials && (
-      <div
-        className={`p-4 rounded-xl border ${
-          darkMode
-            ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
-            : "bg-gray-50 border-gray-200 text-gray-800"
-        }`}
-      >
-        <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
-          {t("Матеріали", "Материалы")}
-        </h3>
-        <a
-          href={selectedLesson.materials}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-block text-sm font-medium hover:underline"
-        >
-          {t("Відкрити посилання", "Открыть ссылку")}
-        </a>
-      </div>
-    )}
-  </div>
+                {/* Матеріали */}
+                {selectedLesson.materials && (
+                  <div
+                    className={`p-4 rounded-xl border ${
+                      darkMode
+                        ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
+                        : "bg-gray-50 border-gray-200 text-gray-800"
+                    }`}
+                  >
+                    <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
+                      {t("Матеріали", "Материалы")}
+                    </h3>
+                    <a
+                      href={selectedLesson.materials}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block text-sm font-medium hover:underline"
+                    >
+                      {t("Відкрити посилання", "Открыть ссылку")}
+                    </a>
+                  </div>
+                )}
+              </div>
 
-  {/* Права колонка: квадрат-тогл статусу ДЗ */}
-  <div className="md:sticky md:top-4 flex md:block items-start">
-    <button
-      onClick={() => toggleHomeworkDone(!progSelected.homework_done)}
-      aria-label={
-        progSelected.homework_done
-          ? t("Скасувати позначку ДЗ", "Снять отметку ДЗ")
-          : t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")
-      }
-      title={
-        progSelected.homework_done
-          ? t("Скасувати позначку ДЗ", "Снять отметку ДЗ")
-          : t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")
-      }
-      className={`group w-14 h-14 rounded-xl border flex items-center justify-center transition-all select-none
-        ${progSelected.homework_done
-          ? "bg-emerald-500 border-emerald-600 text-white shadow-md hover:opacity-95"
-          : darkMode
-            ? "border-fuchsia-800/40 bg-fuchsia-950/30 text-fuchsia-100 hover:bg-fuchsia-900/30"
-            : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"}`}
-    >
-      {progSelected.homework_done ? (
-        <CheckSquare className="w-6 h-6" />
-      ) : (
-        <div className="w-5 h-5 border-2 rounded-[6px] border-current opacity-70 group-hover:opacity-100" />
-      )}
-    </button>
+              {/* Права колонка: квадрат-тогл статусу ДЗ (sticky на десктопі) */}
+              {selectedLesson.homework && (
+                <div className="md:sticky md:top-4 flex md:block items-start">
+                  <button
+                    onClick={() => toggleHomeworkDone(!progSelected.homework_done)}
+                    aria-label={
+                      progSelected.homework_done
+                        ? t("Скасувати позначку ДЗ", "Снять отметку ДЗ")
+                        : t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")
+                    }
+                    title={
+                      progSelected.homework_done
+                        ? t("Скасувати позначку ДЗ", "Снять отметку ДЗ")
+                        : t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")
+                    }
+                    className={`group w-14 h-14 rounded-xl border flex items-center justify-center transition-all select-none
+                      ${
+                        progSelected.homework_done
+                          ? "bg-emerald-500 border-emerald-600 text-white shadow-md hover:opacity-95"
+                          : darkMode
+                          ? "border-fuchsia-800/40 bg-fuchsia-950/30 text-fuchsia-100 hover:bg-fuchsia-900/30"
+                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                      }`}
+                  >
+                    {progSelected.homework_done ? (
+                      <CheckSquare className="w-6 h-6" />
+                    ) : (
+                      <div className="w-5 h-5 border-2 rounded-[6px] border-current opacity-70 group-hover:opacity-100" />
+                    )}
+                  </button>
 
-    <div className="mt-2 text-center text-xs opacity-70 md:block hidden">
-      {progSelected.homework_done
-        ? t("ДЗ виконано", "ДЗ выполнено")
-        : t("Позначити ДЗ", "Отметить ДЗ")}
-    </div>
-  </div>
-</div>
+                  <div className="mt-2 text-center text-xs opacity-70 md:block hidden">
+                    {progSelected.homework_done
+                      ? t("ДЗ виконано", "ДЗ выполнено")
+                      : t("Позначити ДЗ", "Отметить ДЗ")}
+                  </div>
+                </div>
+              )}
+            </div>
 
 
         {/* Footer */}
