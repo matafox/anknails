@@ -13,8 +13,8 @@ import {
   ChevronUp,
   Moon,
   Globe,
-  CheckSquare,
   Flame,
+  Check,
 } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
@@ -59,56 +59,51 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
   );
 
   // коли вперше з’явився duration — одразу насіння прогресу в БД + локальне оновлення
-const seededRef = useRef(false);
-useEffect(() => {
-  if (!userId || !lesson?.id || !duration || seededRef.current) return;
-  seededRef.current = true;
+  const seededRef = useRef(false);
+  useEffect(() => {
+    if (!userId || !lesson?.id || !duration || seededRef.current) return;
+    seededRef.current = true;
 
-  // локально одразу порахувати % (щоб смужка в сайдбарі зрушила без очікування чергового timeupdate)
-  onProgressTick?.({
-    lessonId: lesson.id,
-    watched_seconds: Math.floor(Math.min(current || 0, duration)),
-    total_seconds: Math.floor(duration),
-    completed: false,
-  });
-
-  // і відправити один «посівний» POST у бекенд
-  (async () => {
-    await postProgress({
-      user_id: userId,
-      lesson_id: lesson.id,
+    onProgressTick?.({
+      lessonId: lesson.id,
       watched_seconds: Math.floor(Math.min(current || 0, duration)),
       total_seconds: Math.floor(duration),
       completed: false,
     });
-  })();
-}, [userId, lesson?.id, duration, current, onProgressTick, postProgress]);
 
+    (async () => {
+      await postProgress({
+        user_id: userId,
+        lesson_id: lesson.id,
+        watched_seconds: Math.floor(Math.min(current || 0, duration)),
+        total_seconds: Math.floor(duration),
+        completed: false,
+      });
+    })();
+  }, [userId, lesson?.id, duration, current, onProgressTick, postProgress]);
 
-  // ⬇️ встав це поруч із іншими useEffect у SafeVideo
-useEffect(() => {
-  if (!lesson?.youtube_id) return;
+  // fallback тривалості з бекенду
+  useEffect(() => {
+    if (!lesson?.youtube_id) return;
 
-  // почекаємо 2 c: якщо duration досі 0 — тягнемо метадані напряму з бекенду
-  const t = setTimeout(async () => {
-    if (duration > 0) return;
-    try {
-      const r = await fetch(`${BACKEND}/api/bunny/meta/${lesson.youtube_id}`);
-      if (!r.ok) return;
-      const j = await r.json(); // { length: <секунди> }
-      const len = Number(j?.length || 0);
-      if (len > 0) {
-        console.debug("[SV] fallback meta length:", len);
-        setDuration(len);
+    const t = setTimeout(async () => {
+      if (duration > 0) return;
+      try {
+        const r = await fetch(`${BACKEND}/api/bunny/meta/${lesson.youtube_id}`);
+        if (!r.ok) return;
+        const j = await r.json();
+        const len = Number(j?.length || 0);
+        if (len > 0) {
+          console.debug("[SV] fallback meta length:", len);
+          setDuration(len);
+        }
+      } catch (e) {
+        console.debug("[SV] meta fallback failed", e);
       }
-    } catch (e) {
-      console.debug("[SV] meta fallback failed", e);
-    }
-  }, 2000);
+    }, 2000);
 
-  return () => clearTimeout(t);
-}, [lesson?.youtube_id, duration]);
-
+    return () => clearTimeout(t);
+  }, [lesson?.youtube_id, duration]);
 
   useEffect(() => {
     console.debug("[SV] mount for lesson", lesson?.id, lesson?.title);
@@ -118,82 +113,70 @@ useEffect(() => {
     lastBucketRef.current = -1;
   }, [lesson?.id]);
 
-  /// підписаний iframe URL (нормалізація query через URL API)
-useEffect(() => {
-  let cancelled = false;
+  /// підписаний iframe URL
+  useEffect(() => {
+    let cancelled = false;
 
-  (async () => {
-    // 1) валідація уроку/GUID
-    if (!lesson || !isBunnyGuid(lesson.youtube_id)) {
-      console.debug("[SV] lesson missing or not Bunny GUID:", lesson?.youtube_id);
-      setVideoUrl(null);
-      setLoading(false);
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      // 2) тягнемо URL з бекенду
-      const res = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
-      if (!res.ok) {
-        const txt = await res.text().catch(() => "");
-        console.warn("[SV] embed fetch !ok", res.status, txt);
-        if (!cancelled) setVideoUrl(null);
+    (async () => {
+      if (!lesson || !isBunnyGuid(lesson.youtube_id)) {
+        console.debug("[SV] lesson missing or not Bunny GUID:", lesson?.youtube_id);
+        setVideoUrl(null);
+        setLoading(false);
         return;
       }
 
-      const j = await res.json().catch(() => ({}));
-      let url = j.url || null;
+      setLoading(true);
 
-      // 3) нормалізуємо query-параметри через URL — перезаписуємо все потрібне
-      if (url) {
-        try {
-          const u = new URL(url);
-          u.searchParams.set("autoplay", "true");
-          u.searchParams.set("muted", "true");
-          u.searchParams.set("controls", "true");
-          u.searchParams.set("playerId", "ank");
-          u.searchParams.set("transparent", "false");
-          // (опційно) прибрати шумний RUM-скрипт Bunny
-          // u.searchParams.set("disableRUM", "true");
-
-          url = u.toString();
-        } catch (e) {
-          console.warn("[SV] URL normalize failed, fallback to raw", e);
+      try {
+        const res = await fetch(`${BACKEND}/api/bunny/embed/${lesson.youtube_id}`);
+        if (!res.ok) {
+          const txt = await res.text().catch(() => "");
+          console.warn("[SV] embed fetch !ok", res.status, txt);
+          if (!cancelled) setVideoUrl(null);
+          return;
         }
+
+        const j = await res.json().catch(() => ({}));
+        let url = j.url || null;
+
+        if (url) {
+          try {
+            const u = new URL(url);
+            u.searchParams.set("autoplay", "true");
+            u.searchParams.set("muted", "true");
+            u.searchParams.set("controls", "true");
+            u.searchParams.set("playerId", "ank");
+            u.searchParams.set("transparent", "false");
+            url = u.toString();
+          } catch (e) {
+            console.warn("[SV] URL normalize failed, fallback to raw", e);
+          }
+        }
+
+        console.debug("[SV] got embed url:", url);
+        if (!cancelled) setVideoUrl(url);
+      } catch (e) {
+        console.warn("[SV] embed fetch failed", e);
+        if (!cancelled) setVideoUrl(null);
+      } finally {
+        if (!cancelled) setLoading(false);
       }
+    })();
 
-      console.debug("[SV] got embed url:", url);
-      if (!cancelled) setVideoUrl(url);
-    } catch (e) {
-      console.warn("[SV] embed fetch failed", e);
-      if (!cancelled) setVideoUrl(null);
-    } finally {
-      if (!cancelled) setLoading(false);
-    }
-  })();
-
-  return () => {
-    cancelled = true;
-  };
-  // залежність по конкретному GUID, щоб не тригерити зайвий раз
-}, [lesson?.youtube_id]);
-
+    return () => {
+      cancelled = true;
+    };
+  }, [lesson?.youtube_id]);
 
   // слухач подій Bunny
   useEffect(() => {
     if (!videoUrl) return;
 
-    const ORIGIN_OK = (origin) => {
-      // Bunny iframe зазвичай з *.mediadelivery.net
-      return /mediadelivery\.net/i.test(origin) || /bunnycdn/i.test(origin);
-    };
+    const ORIGIN_OK = (origin) => /mediadelivery\.net/i.test(origin) || /bunnycdn/i.test(origin);
 
     const handler = (e) => {
       try {
         if (!ORIGIN_OK(String(e.origin))) {
-          // покажемо, що щось прилетіло, але не з очікуваного origin
           console.debug("[SV] postMessage (ignored origin)", e.origin, e.data);
           return;
         }
@@ -201,7 +184,6 @@ useEffect(() => {
         const ev = data.event || data.type || data.action || "unknown";
         console.debug("[SV] postMessage", ev, data);
 
-        // різні варіанти полів часу
         const now =
           typeof data.currentTime === "number"
             ? data.currentTime
@@ -222,9 +204,7 @@ useEffect(() => {
             ? data.value
             : null;
 
-        if (typeof dur === "number" && dur > 0) {
-          setDuration(dur);
-        }
+        if (typeof dur === "number" && dur > 0) setDuration(dur);
 
         if (ev === "ended" || data.ended === true) {
           console.debug("[SV] ended event");
@@ -239,10 +219,8 @@ useEffect(() => {
       }
     };
 
-    // активуємо слухач
     window.addEventListener("message", handler);
 
-    // активно питаємо час/тривалість (на випадок, якщо автоподії не йдуть)
     const ask = () => {
       try {
         const w = iframeRef.current?.contentWindow;
@@ -255,7 +233,6 @@ useEffect(() => {
     ask();
     pollTimerRef.current = window.setInterval(ask, 800);
 
-    // якщо через 2 сек не знаємо duration — ще раз “підштовхнемо”
     askKickTimerRef.current = window.setTimeout(() => {
       if (!duration) {
         console.debug("[SV] duration still 0 → extra ask()");
@@ -271,27 +248,26 @@ useEffect(() => {
   }, [videoUrl, duration, onCompleted]);
 
   // локальні тики кожні ~10с
-useEffect(() => {
-  const total = duration || 0;
-  const watched = total ? Math.min(current, total) : current;
+  useEffect(() => {
+    const total = duration || 0;
+    const watched = total ? Math.min(current, total) : current;
 
-  const bucket = Math.floor((watched || 0) / 10);
-  if (bucket !== lastBucketRef.current) {
-    lastBucketRef.current = bucket;
-    onProgressTick?.({
-      lessonId: lesson?.id,
-      watched_seconds: Math.floor(watched || 0),
-      total_seconds: Math.floor(total),   // спершу 0, потім встановиться з метаданих/плеєра
-      completed: total > 0 && watched >= total - 2,
-    });
-  }
+    const bucket = Math.floor((watched || 0) / 10);
+    if (bucket !== lastBucketRef.current) {
+      lastBucketRef.current = bucket;
+      onProgressTick?.({
+        lessonId: lesson?.id,
+        watched_seconds: Math.floor(watched || 0),
+        total_seconds: Math.floor(total),
+        completed: total > 0 && watched >= total - 2,
+      });
+    }
 
-  // кнопка «далі» тільки коли відомо total
-  if (total > 0) {
-    const remaining = Math.max(0, total - watched);
-    if (remaining <= 10) setShowNext(true);
-  }
-}, [current, duration, lesson?.id, onProgressTick]);
+    if (total > 0) {
+      const remaining = Math.max(0, total - watched);
+      if (remaining <= 10) setShowNext(true);
+    }
+  }, [current, duration, lesson?.id, onProgressTick]);
 
   // періодичний пуш у бекенд
   useEffect(() => {
@@ -311,7 +287,6 @@ useEffect(() => {
     saveTimerRef.current = window.setInterval(save, 5000);
     return () => {
       if (saveTimerRef.current) window.clearInterval(saveTimerRef.current);
-      // фінальний пуш
       save();
     };
   }, [userId, lesson?.id, current, duration, postProgress]);
@@ -330,7 +305,6 @@ useEffect(() => {
         <p className="text-sm text-gray-500">
           ❌ {t("Відео не знайдено або посилання некоректне", "Видео не найдено или ссылка некорректна")}
         </p>
-        {/* debug кнопка, щоб перевірити бекенд прогрес */}
         {userId && lesson?.id && (
           <button
             onClick={async () => {
@@ -382,7 +356,6 @@ useEffect(() => {
             const n = getNextLesson(lesson?.id);
             if (!n) return;
 
-            // позначаємо як завершений
             await postProgress({
               user_id: userId,
               lesson_id: lesson.id,
@@ -407,8 +380,6 @@ useEffect(() => {
   );
 };
 
-
-
 /* ================= CABINET PAGE ================= */
 export default function CabinetPage() {
   const { i18n } = useTranslation();
@@ -422,36 +393,31 @@ export default function CabinetPage() {
   const [menuOpen, setMenuOpen] = useState(false);
 
   const refreshAfterLessonComplete = async () => {
-  if (!user?.id) return;
+    if (!user?.id) return;
 
-  try {
-    // 1) Загальний прогрес курсу
-    const resCourse = await fetch(`${BACKEND}/api/progress/course/${user.id}`);
-    const dataCourse = await resCourse.json();
-    setOverallProgress(dataCourse.percent ?? 0);
+    try {
+      const resCourse = await fetch(`${BACKEND}/api/progress/course/${user.id}`);
+      const dataCourse = await resCourse.json();
+      setOverallProgress(dataCourse.percent ?? 0);
 
-    // 2) Деталі прогресу користувача по уроках + XP/Level
-    const resUser = await fetch(`${BACKEND}/api/progress/user/${user.id}`);
-    const dataUser = await resUser.json();
+      const resUser = await fetch(`${BACKEND}/api/progress/user/${user.id}`);
+      const dataUser = await resUser.json();
 
-    const map = {};
-    (dataUser.progress || []).forEach((p) => (map[p.lesson_id] = p));
-    setProgress(map);
+      const map = {};
+      (dataUser.progress || []).forEach((p) => (map[p.lesson_id] = p));
+      setProgress(map);
 
-    // 3) Оновити XP/Level у локальному user, щоб перерендерився DashboardSection
-    setUser((prev) =>
-      prev
-        ? { ...prev, xp: dataUser.xp ?? prev.xp, level: dataUser.level ?? prev.level }
-        : prev
-    );
-  } catch (e) {
-    console.warn("⚠️ refreshAfterLessonComplete failed", e);
-  }
-};
+      setUser((prev) =>
+        prev
+          ? { ...prev, xp: dataUser.xp ?? prev.xp, level: dataUser.level ?? prev.level }
+          : prev
+      );
+    } catch (e) {
+      console.warn("⚠️ refreshAfterLessonComplete failed", e);
+    }
+  };
 
-  // нове: прогрес мапою { [lessonId]: {watched_seconds,total_seconds,completed,homework_done} }
   const [progress, setProgress] = useState({});
-  // нове: загальний відсоток курсу
   const [overallProgress, setOverallProgress] = useState(0);
 
   const [view, setView] = useState("dashboard");
@@ -587,7 +553,6 @@ export default function CabinetPage() {
   useEffect(() => {
     if (!user?.id) return;
 
-    // мапа прогресу
     fetch(`${BACKEND}/api/progress/user/${user.id}`)
       .then((r) => r.json())
       .then((data) => {
@@ -597,14 +562,13 @@ export default function CabinetPage() {
       })
       .catch(() => {});
 
-    // відсоток курсу
     fetch(`${BACKEND}/api/progress/course/${user.id}`)
       .then((r) => r.json())
       .then((data) => setOverallProgress(data.percent ?? 0))
       .catch(() => setOverallProgress(0));
   }, [user]);
 
-  // локальне оновлення від SafeVideo (щоб смужка рухалась без перезавантаження)
+  // локальне оновлення від SafeVideo
   const handleProgressTick = ({ lessonId, watched_seconds, total_seconds, completed }) => {
     if (!lessonId) return;
     setProgress((prev) => ({
@@ -643,76 +607,71 @@ export default function CabinetPage() {
   };
 
   // поточний прогрес по вибраному уроку
-const progSelected = selectedLesson ? (progress[selectedLesson.id] || {}) : {};
+  const progSelected = selectedLesson ? (progress[selectedLesson.id] || {}) : {};
 
-// 🔘 Позначити / скасувати виконання домашки (пише у бекенд)
-const toggleHomeworkDone = async (done) => {
-  if (!user?.id || !selectedLesson?.id) return;
-  try {
-    const r = await fetch(`${BACKEND}/api/progress/homework`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user.id,
-        lesson_id: selectedLesson.id,
-        homework_done: !!done, // <- важливо
-      }),
-    });
+  // 🔘 Позначити / скасувати виконання домашки (пише у бекенд)
+  const toggleHomeworkDone = async (done) => {
+    if (!user?.id || !selectedLesson?.id) return;
+    try {
+      const r = await fetch(`${BACKEND}/api/progress/homework`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          lesson_id: selectedLesson.id,
+          homework_done: !!done,
+        }),
+      });
 
-    if (!r.ok) throw new Error("bad status " + r.status);
+      if (!r.ok) throw new Error("bad status " + r.status);
 
-    // локально оновити стан, щоб UI миттєво змінився
-    setProgress((prev) => ({
-      ...prev,
-      [selectedLesson.id]: {
-        ...(prev[selectedLesson.id] || {}),
-        homework_done: !!done,
-      },
-    }));
+      setProgress((prev) => ({
+        ...prev,
+        [selectedLesson.id]: {
+          ...(prev[selectedLesson.id] || {}),
+          homework_done: !!done,
+        },
+      }));
 
-    // підтягнути XP/level (бо +10 XP при first True)
-    await refreshAfterLessonComplete();
-  } catch (e) {
-    console.warn("toggleHomeworkDone failed", e);
-    alert(t("Не вдалося оновити статус домашнього завдання", "Не удалось обновить статус домашнего задания"));
-  }
-};
+      await refreshAfterLessonComplete();
+    } catch (e) {
+      console.warn("toggleHomeworkDone failed", e);
+      alert(t("Не вдалося оновити статус домашнього завдання", "Не удалось обновить статус домашнего задания"));
+    }
+  };
 
+  // ✅ Ручне завершення уроку
+  const markLessonComplete = async () => {
+    if (!user?.id || !selectedLesson?.id) return;
+    try {
+      await fetch(`${BACKEND}/api/progress/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          lesson_id: selectedLesson.id,
+          completed: true,
+          watched_seconds: Math.max(progSelected.watched_seconds ?? 0, progSelected.total_seconds ?? 0),
+          total_seconds: progSelected.total_seconds ?? 0,
+          homework_done: progSelected.homework_done ?? false,
+        }),
+      });
 
-// ✅ Ручне завершення уроку
-const markLessonComplete = async () => {
-  if (!user?.id || !selectedLesson?.id) return;
-  try {
-    await fetch(`${BACKEND}/api/progress/update`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user.id,
-        lesson_id: selectedLesson.id,
-        completed: true,
-        watched_seconds: Math.max(progSelected.watched_seconds ?? 0, progSelected.total_seconds ?? 0),
-        total_seconds: progSelected.total_seconds ?? 0,
-        homework_done: progSelected.homework_done ?? false,
-      }),
-    });
+      setProgress((prev) => ({
+        ...prev,
+        [selectedLesson.id]: {
+          ...(prev[selectedLesson.id] || {}),
+          completed: true,
+          watched_seconds: Math.max(progSelected.watched_seconds ?? 0, progSelected.total_seconds ?? 0),
+        },
+      }));
 
-    setProgress((prev) => ({
-      ...prev,
-      [selectedLesson.id]: {
-        ...(prev[selectedLesson.id] || {}),
-        completed: true,
-        watched_seconds: Math.max(progSelected.watched_seconds ?? 0, progSelected.total_seconds ?? 0),
-      },
-    }));
-
-    // підтягнути глобальний прогрес/XP
-    await refreshAfterLessonComplete();
-  } catch (e) {
-    console.warn("markLessonComplete failed", e);
-    alert(t("Не вдалося позначити урок завершеним", "Не удалось отметить урок завершенным"));
-  }
-};
-
+      await refreshAfterLessonComplete();
+    } catch (e) {
+      console.warn("markLessonComplete failed", e);
+      alert(t("Не вдалося позначити урок завершеним", "Не удалось отметить урок завершенным"));
+    }
+  };
 
   if (!user) return null;
 
@@ -726,17 +685,17 @@ const markLessonComplete = async () => {
     >
       {/* HEADER */}
       <header
-  className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 rounded-b-[6px] ${
-    darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/70"
-  }`}
->
-  <h1 className="font-bold bg-gradient-to-r from-fuchsia-500 to-rose-400 bg-clip-text text-transparent">
-    ANK Studio
-  </h1>
-  <button onClick={() => setMenuOpen(!menuOpen)}>
-    {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-  </button>
-</header>
+        className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 rounded-b-[6px] ${
+          darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/70"
+        }`}
+      >
+        <h1 className="font-bold bg-gradient-to-r from-fuchsia-500 to-rose-400 bg-clip-text text-transparent">
+          ANK Studio
+        </h1>
+        <button onClick={() => setMenuOpen(!menuOpen)}>
+          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </header>
 
       {/* SIDEBAR */}
       <aside
@@ -812,9 +771,9 @@ const markLessonComplete = async () => {
                       {lessons[mod.id]?.map((l) => {
                         const prog = progress[l.id];
                         const percent =
-  prog && prog.total_seconds > 0
-    ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
-    : 0;
+                          prog && prog.total_seconds > 0
+                            ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
+                            : 0;
                         const done = !!prog?.completed;
                         const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
@@ -1003,7 +962,7 @@ const markLessonComplete = async () => {
               )}
             </div>
 
-                      {/* Відео + прогрес */}
+            {/* Відео + прогрес */}
             <SafeVideo
               lesson={selectedLesson}
               t={t}
@@ -1029,119 +988,71 @@ const markLessonComplete = async () => {
               </div>
             )}
 
-            {/* Домашка + Матеріали + квадратик справа */}
-            <div className="mt-6 grid md:grid-cols-[1fr_auto] gap-4 items-start">
-              {/* Ліва колонка: тексти/картки */}
-              <div className="space-y-4">
-                {/* Домашка */}
-                {selectedLesson.homework && (
-                  <div
-                    className={`p-4 rounded-xl border ${
-                      darkMode
-                        ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
-                        : "bg-gray-50 border-gray-200 text-gray-800"
-                    }`}
-                  >
-                    <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
-                      {t("Домашнє завдання", "Домашнее задание")}
-                    </h3>
-                    <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                      {selectedLesson.homework}
-                    </p>
-
-                    {/* Кнопки під домашкою (mobile-first) */}
-                    <div className="mt-4 flex items-center gap-3 md:hidden">
-                      {!progSelected.homework_done ? (
-                        <button
-                          onClick={() => toggleHomeworkDone(true)}
-                          className="px-4 py-2 rounded-lg bg-emerald-500 text-white font-medium hover:opacity-95 transition"
-                        >
-                          {t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")}
-                        </button>
-                      ) : (
-                        <>
-                          <span className="inline-flex items-center gap-2 text-emerald-600 font-medium">
-                            <CheckSquare className="w-4 h-4" />
-                            {t("Домашнє завдання виконано", "Домашнее задание выполнено")}
-                          </span>
-                          <button
-                            onClick={() => toggleHomeworkDone(false)}
-                            className="px-3 py-2 rounded-lg border border-gray-300 text-gray-700 hover:bg-gray-50 dark:border-fuchsia-800/40 dark:text-gray-200 dark:hover:bg-fuchsia-950/30 transition"
-                          >
-                            {t("Скасувати", "Отменить")}
-                          </button>
-                        </>
-                      )}
-                    </div>
-                  </div>
-                )}
-
-                {/* Матеріали */}
-                {selectedLesson.materials && (
-                  <div
-                    className={`p-4 rounded-xl border ${
-                      darkMode
-                        ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
-                        : "bg-gray-50 border-gray-200 text-gray-800"
-                    }`}
-                  >
-                    <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
-                      {t("Матеріали", "Материалы")}
-                    </h3>
-                    <a
-                      href={selectedLesson.materials}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-block text-sm font-medium hover:underline"
-                    >
-                      {t("Відкрити посилання", "Открыть ссылку")}
-                    </a>
-                  </div>
-                )}
-              </div>
-
-              {/* Права колонка: квадрат-тогл статусу ДЗ (sticky на десктопі) */}
+            {/* Домашка + Матеріали */}
+            <div className="mt-6 space-y-4">
+              {/* Домашка */}
               {selectedLesson.homework && (
-                <div className="md:sticky md:top-4 flex md:block items-start">
-                  <button
-                    onClick={() => toggleHomeworkDone(!progSelected.homework_done)}
-                    aria-label={
-                      progSelected.homework_done
-                        ? t("Скасувати позначку ДЗ", "Снять отметку ДЗ")
-                        : t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")
-                    }
-                    title={
-                      progSelected.homework_done
-                        ? t("Скасувати позначку ДЗ", "Снять отметку ДЗ")
-                        : t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")
-                    }
-                    className={`group w-14 h-14 rounded-xl border flex items-center justify-center transition-all select-none
-                      ${
-                        progSelected.homework_done
-                          ? "bg-emerald-500 border-emerald-600 text-white shadow-md hover:opacity-95"
-                          : darkMode
-                          ? "border-fuchsia-800/40 bg-fuchsia-950/30 text-fuchsia-100 hover:bg-fuchsia-900/30"
-                          : "border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
-                      }`}
-                  >
-                    {progSelected.homework_done ? (
-                      <CheckSquare className="w-6 h-6" />
-                    ) : (
-                      <div className="w-5 h-5 border-2 rounded-[6px] border-current opacity-70 group-hover:opacity-100" />
-                    )}
-                  </button>
+                <div
+                  className={`p-4 rounded-xl border relative ${
+                    darkMode
+                      ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
+                      : "bg-gray-50 border-gray-200 text-gray-800"
+                  }`}
+                >
+                  {/* 🔖 Бейдж у правому верхньому куті */}
+                  {!progSelected.homework_done ? (
+                    <button
+                      onClick={() => toggleHomeworkDone(true)}
+                      className="absolute top-3 right-3 text-[11px] font-medium opacity-70 hover:opacity-100 underline-offset-2 hover:underline text-gray-500 dark:text-gray-300"
+                      title={t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")}
+                    >
+                      {t("Виконано?", "Выполнено?")}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => toggleHomeworkDone(false)}
+                      className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200"
+                      title={t("Скасувати позначку ДЗ", "Снять отметку ДЗ")}
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      {t("Виконано", "Выполнено")}
+                    </button>
+                  )}
 
-                  <div className="mt-2 text-center text-xs opacity-70 md:block hidden">
-                    {progSelected.homework_done
-                      ? t("ДЗ виконано", "ДЗ выполнено")
-                      : t("Позначити ДЗ", "Отметить ДЗ")}
-                  </div>
+                  <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
+                    {t("Домашнє завдання", "Домашнее задание")}
+                  </h3>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {selectedLesson.homework}
+                  </p>
+                </div>
+              )}
+
+              {/* Матеріали */}
+              {selectedLesson.materials && (
+                <div
+                  className={`p-4 rounded-xl border ${
+                    darkMode
+                      ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
+                      : "bg-gray-50 border-gray-200 text-gray-800"
+                  }`}
+                >
+                  <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
+                    {t("Матеріали", "Материалы")}
+                  </h3>
+                  <a
+                    href={selectedLesson.materials}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-sm font-medium hover:underline"
+                  >
+                    {t("Відкрити посилання", "Открыть ссылку")}
+                  </a>
                 </div>
               )}
             </div>
-             </div> 
-       )} 
-
+          </div>
+        )}
 
         {/* Footer */}
         <footer className={`mt-10 text-center py-6 text-sm border-t ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}>
