@@ -449,30 +449,6 @@ export default function CabinetPage() {
   }
 };
 
-  // Notion helpers
-const isNotionUrl = (s) =>
-  typeof s === "string" && /(notion\.so|notion\.site)\//i.test(s);
-
-const stripQuery = (url) => {
-  try {
-    const u = new URL(url);
-    u.search = "";
-    return u.toString();
-  } catch {
-    return url;
-  }
-};
-
-const toNotionEmbed = (url) => {
-  const clean = stripQuery(url);
-  try {
-    const u = new URL(clean);
-    if (/\/ebd(\/|$)/.test(u.pathname)) return clean; // вже ebd
-  } catch {}
-  return `https://www.notion.so/ebd?url=${encodeURIComponent(clean)}`;
-};
-
-
   // нове: прогрес мапою { [lessonId]: {watched_seconds,total_seconds,completed,homework_done} }
   const [progress, setProgress] = useState({});
   // нове: загальний відсоток курсу
@@ -989,54 +965,23 @@ const toNotionEmbed = (url) => {
               </div>
             )}
 
-{/* Матеріали */}
-{selectedLesson.materials && (
-  <div
-    className={`p-4 rounded-xl border mt-6 ${
-      darkMode
-        ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
-        : "bg-gray-50 border-gray-200 text-gray-800"
-    }`}
-  >
-    <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
-      {t("Матеріали", "Материалы")}
-    </h3>
-
-    {!isNotionUrl(selectedLesson.materials) ? (
-      <a
-        href={selectedLesson.materials}
-        target="_blank"
-        rel="noopener noreferrer"
-        className="inline-block text-sm font-medium text-green-600 hover:underline"
-      >
-        {t("Відкрити посилання", "Открыть ссылку")}
-      </a>
-    ) : (
-      <>
-        <p className="text-sm opacity-70 mb-3">
-          {t("Вбудована сторінка Notion", "Встроенная страница Notion")}
-        </p>
-        <div className="rounded-lg overflow-hidden border border-pink-200/60 dark:border-fuchsia-800/40">
-          <div className="w-full h-[60vh] md:h-[70vh]">
-            <iframe
-              title="Notion embed"
-              src={toNotionEmbed(selectedLesson.materials)}
-              className="w-full h-full"
-              loading="lazy"
-              referrerPolicy="no-referrer"
-              frameBorder={0}
-              allowFullScreen
-              sandbox="allow-scripts allow-popups allow-forms allow-same-origin allow-top-navigation-by-user-activation"
-              allow="clipboard-read; clipboard-write"
-            />
+            {/* Матеріали */}
+            {selectedLesson.materials && (
+              <div
+                className={`p-4 rounded-xl border mt-6 ${
+                  darkMode ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100" : "bg-gray-50 border-gray-200 text-gray-800"
+                }`}
+              >
+                <h3 className="font-semibold mb-2 text-gray-700 dark:text-gray-200">
+                  {t("Матеріали", "Материалы")}
+                </h3>
+                <a href={selectedLesson.materials} target="_blank" rel="noopener noreferrer" className="inline-block text-sm font-medium text-green-600 hover:underline">
+                  {t("Відкрити посилання", "Открыть ссылку")}
+                </a>
+              </div>
+            )}
           </div>
-        </div>
-      </>
-    )}
-  </div>
-)}
-            </div> 
-        )} 
+        )}
 
         {/* Footer */}
         <footer className={`mt-10 text-center py-6 text-sm border-t ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}>
