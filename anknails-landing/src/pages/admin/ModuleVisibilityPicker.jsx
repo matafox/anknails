@@ -5,14 +5,14 @@ import { X, Save, Search, Users as UsersIcon, CheckSquare } from "lucide-react";
 export default function ModuleVisibilityPicker({
   BACKEND,
   moduleId,
-  initialVisible,     // boolean з картки модуля
+  initialVisible,     // boolean з картки модуля (fallback)
   t,                  // функція локалізації t(ua, ru)
   onClose,            // закрити модалку без збереження
   onSaved,            // колбек після успішного збереження (оновити список модулів)
 }) {
   const [loading, setLoading] = useState(true);
-  const [users, setUsers] = useState([]);             // всі користувачі
-  const [mode, setMode] = useState("all");            // 'all' | 'none' | 'selected'
+  const [users, setUsers] = useState([]);              // всі користувачі
+  const [mode, setMode] = useState("all");             // 'all' | 'none' | 'selected'
   const [selected, setSelected] = useState(new Set()); // обрані user_id
   const [q, setQ] = useState("");
 
@@ -28,8 +28,7 @@ export default function ModuleVisibilityPicker({
         if (!alive) return;
         setUsers(list);
 
-        // Поточна конфігурація видимості (якщо бекенд уже має цей роут)
-        // Очікуємо { mode: 'all'|'none'|'selected', user_ids: [1,2,3] }
+        // Поточна конфігурація видимості (очікуємо { mode: 'all'|'none'|'selected', user_ids: number[] })
         let fetchedMode = null;
         let fetchedSelected = [];
         try {
@@ -39,9 +38,11 @@ export default function ModuleVisibilityPicker({
             fetchedMode = j?.mode || null;
             fetchedSelected = Array.isArray(j?.user_ids) ? j.user_ids : [];
           }
-        } catch {/* опціонально */}
+        } catch {
+          // ignore
+        }
 
-        // Якщо немає окремої конфігурації — мапимо зі старого boolean
+        // Якщо бекенд ще не повертає конфіг — fallback із initialVisible
         const effectiveMode = fetchedMode || (initialVisible ? "all" : "none");
         setMode(effectiveMode);
         setSelected(new Set(fetchedSelected));
@@ -81,31 +82,25 @@ export default function ModuleVisibilityPicker({
 
   const clearAll = () => setSelected(new Set());
 
+  // 🔒 ЄДИНИЙ шлях збереження для всіх режимів — /api/modules/visibility/{id}
   const save = async () => {
-    // 2 варіанти збереження:
-    // - all / none → працюємо через існуючий update-роут (visible: true/false)
-    // - selected   → новий роут visibility (mode + user_ids)
     try {
-      if (mode === "all" || mode === "none") {
-        await fetch(`${BACKEND}/api/modules/update/${moduleId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: "anka12341",
-            visible: mode === "all",
-          }),
-        });
-      } else {
-        await fetch(`${BACKEND}/api/modules/visibility/${moduleId}`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            token: "anka12341",
-            mode: "selected",
-            user_ids: Array.from(selected),
-          }),
-        });
+      const body =
+        mode === "selected"
+          ? { token: "anka12341", mode: "selected", user_ids: Array.from(selected) }
+          : { token: "anka12341", mode }; // "all" або "none"
+
+      const r = await fetch(`${BACKEND}/api/modules/visibility/${moduleId}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+
+      if (!r.ok) {
+        const txt = await r.text();
+        throw new Error(txt || "Failed to save visibility");
       }
+
       onSaved?.();
       onClose?.();
     } catch (e) {
@@ -280,7 +275,8 @@ export default function ModuleVisibilityPicker({
           </button>
           <button
             onClick={save}
-            className="px-4 py-2 bg-pink-500 text-white rounded-lg font-semibold flex items-center gap-2"
+            disabled={mode === "selected" && selected.size === 0}
+            className="px-4 py-2 bg-pink-500 disabled:opacity-60 disabled:cursor-not-allowed text-white rounded-lg font-semibold flex items-center gap-2"
           >
             <Save className="w-4 h-4" />
             {t("Зберегти", "Сохранить")}
