@@ -472,7 +472,7 @@ export default function ModulesTab({ darkMode, i18n }) {
     onClick={() => openVisibilityPicker(mod)}
     className="px-3 py-1 rounded-lg text-sm font-semibold bg-pink-500 text-white"
   >
-    {t("Відкрити / Приховати", "Открыть / Скрыть")}
+    {t("Видимість", "Видимость")}
   </button>
 </div>
 
