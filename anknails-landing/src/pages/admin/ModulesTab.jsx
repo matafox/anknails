@@ -6,14 +6,26 @@ import {
   Trash2,
   Save,
   XCircle,
-  Upload,
+  Upload, // можна лишити, навіть якщо не використовується
 } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
+/* ===== Helpers ===== */
 const isBunnyGuid = (s) =>
   typeof s === "string" &&
-  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(s);
+  /^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$/.test(
+    s
+  );
+
+// витягує GUID із будь-якого рядка/URL, або повертає null
+const extractGuid = (s) => {
+  if (!s || typeof s !== "string") return null;
+  const m = s.match(
+    /[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/
+  );
+  return m ? m[0] : null;
+};
 
 function PreviewBunny({ guid }) {
   if (!isBunnyGuid(guid)) return null;
@@ -30,7 +42,9 @@ function PreviewBunny({ guid }) {
         if (alive) setSrc(null);
       }
     })();
-    return () => { alive = false; };
+    return () => {
+      alive = false;
+    };
   }, [guid]);
 
   if (!src) return null;
@@ -58,7 +72,10 @@ export default function ModulesTab({ darkMode, i18n }) {
 
   // інлайн-редагування МОДУЛЯ
   const [editingModuleId, setEditingModuleId] = useState(null);
-  const [moduleDraft, setModuleDraft] = useState({ title: "", description: "" });
+  const [moduleDraft, setModuleDraft] = useState({
+    title: "",
+    description: "",
+  });
 
   // уроки + інлайн-редагування УРОКУ
   const [lessons, setLessons] = useState({});
@@ -69,7 +86,9 @@ export default function ModulesTab({ darkMode, i18n }) {
     homework: "",
     materials: "",
     type: "theory",
-    videoFile: null, // тільки файл -> Bunny
+    // Варіант 1: або вставляємо GUID, або вантажимо файл
+    videoGuid: "", // 🆕 поле для GUID/URL
+    videoFile: null,
     uploadProgress: 0,
     uploading: false,
   });
@@ -81,6 +100,8 @@ export default function ModulesTab({ darkMode, i18n }) {
     homework: "",
     materials: "",
     type: "theory",
+    // Варіант 1: або вставляємо GUID, або вантажимо файл
+    videoGuid: "", // 🆕 поле для GUID/URL
     videoFile: null,
     uploadProgress: 0,
     uploading: false,
@@ -110,10 +131,12 @@ export default function ModulesTab({ darkMode, i18n }) {
 
   useEffect(() => {
     fetchCourses();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
     if (selectedCourse) fetchModules(selectedCourse);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedCourse]);
 
   // --- Lessons ---
@@ -173,9 +196,9 @@ export default function ModulesTab({ darkMode, i18n }) {
   };
 
   const openVisibilityPicker = (mod) => {
-   setVisibilityForModuleId(mod.id);
-   setVisibilityInitial(!!mod.visible);
- };
+    setVisibilityForModuleId(mod.id);
+    setVisibilityInitial(!!mod.visible);
+  };
 
   // --- Lesson drag / reorder ---
   const handleDragStart = (lesson) => setDraggedLesson(lesson);
@@ -226,14 +249,28 @@ export default function ModulesTab({ darkMode, i18n }) {
       xhr.onload = () => {
         try {
           const json = JSON.parse(xhr.responseText || "{}");
-          if (xhr.status >= 200 && xhr.status < 300 && json.success && json.video_id) {
+          if (
+            xhr.status >= 200 &&
+            xhr.status < 300 &&
+            json.success &&
+            json.video_id
+          ) {
             resolve(json.video_id); // GUID
           } else {
-            alert("❌ " + t("Помилка при завантаженні відео", "Ошибка при загрузке видео"));
+            alert(
+              "❌ " +
+                t(
+                  "Помилка при завантаженні відео",
+                  "Ошибка при загрузке видео"
+                )
+            );
             resolve(null);
           }
         } catch {
-          alert("❌ " + t("Помилка при завантаженні відео", "Ошибка при загрузке видео"));
+          alert(
+            "❌ " +
+              t("Помилка при завантаженні відео", "Ошибка при загрузке видео")
+          );
           resolve(null);
         } finally {
           setStateCb((prev) => ({ ...prev, uploading: false }));
@@ -241,7 +278,13 @@ export default function ModulesTab({ darkMode, i18n }) {
       };
 
       xhr.onerror = () => {
-        alert("❌ " + t("Не вдалося завантажити відео на BunnyCDN", "Не удалось загрузить видео на BunnyCDN"));
+        alert(
+          "❌ " +
+            t(
+              "Не вдалося завантажити відео на BunnyCDN",
+              "Не удалось загрузить видео на BunnyCDN"
+            )
+        );
         setStateCb((prev) => ({ ...prev, uploading: false }));
         resolve(null);
       };
@@ -260,6 +303,7 @@ export default function ModulesTab({ darkMode, i18n }) {
       homework: lesson.homework || "",
       materials: lesson.materials || "",
       type: lesson.type || "theory",
+      videoGuid: lesson.youtube_id || "", // 🆕 підтягнути чинний GUID
       videoFile: null,
       uploadProgress: 0,
       uploading: false,
@@ -274,6 +318,7 @@ export default function ModulesTab({ darkMode, i18n }) {
       homework: "",
       materials: "",
       type: "theory",
+      videoGuid: "", // 🆕
       videoFile: null,
       uploadProgress: 0,
       uploading: false,
@@ -281,9 +326,10 @@ export default function ModulesTab({ darkMode, i18n }) {
   };
 
   const saveEditedLesson = async (moduleId, lesson) => {
-    // якщо вибрано файл, заливаємо у Bunny та отримуємо GUID
-    let guid = lesson.youtube_id || null;
-    if (lessonDraft.videoFile) {
+    // Пріоритет: введений GUID > файл > лишаємо старий
+    let guid = extractGuid(lessonDraft.videoGuid) || lesson.youtube_id;
+
+    if (!extractGuid(lessonDraft.videoGuid) && lessonDraft.videoFile) {
       const newGuid = await uploadToBunny(lessonDraft.videoFile, setLessonDraft);
       if (newGuid) guid = newGuid;
     }
@@ -299,7 +345,7 @@ export default function ModulesTab({ darkMode, i18n }) {
         homework: lessonDraft.homework,
         materials: lessonDraft.materials,
         type: lessonDraft.type,
-        youtube: guid, // тільки Bunny GUID
+        youtube: guid, // GUID Bunny (або старий, якщо не змінювали)
       }),
     });
 
@@ -308,13 +354,21 @@ export default function ModulesTab({ darkMode, i18n }) {
   };
 
   const createLesson = async (moduleId) => {
-    // обовʼязково Bunny-файл → GUID
-    let guid = null;
-    if (newLesson.videoFile) {
+    // Пріоритет: введений GUID > аплоад файлу
+    let guid = extractGuid(newLesson.videoGuid);
+
+    if (!guid && newLesson.videoFile) {
       guid = await uploadToBunny(newLesson.videoFile, setNewLesson);
-      if (!guid) return; // не вдалося — не створюємо урок
-    } else {
-      alert("⚠️ " + t("Додай відео для уроку (BunnyCDN)", "Добавь видео для урока (BunnyCDN)"));
+    }
+
+    if (!guid) {
+      alert(
+        "⚠️ " +
+          t(
+            "Додай Bunny GUID або файл відео",
+            "Добавь Bunny GUID или файл видео"
+          )
+      );
       return;
     }
 
@@ -339,6 +393,7 @@ export default function ModulesTab({ darkMode, i18n }) {
       homework: "",
       materials: "",
       type: "theory",
+      videoGuid: "", // reset
       videoFile: null,
       uploadProgress: 0,
       uploading: false,
@@ -376,10 +431,7 @@ export default function ModulesTab({ darkMode, i18n }) {
       </div>
 
       {/* ➕ Створити новий модуль (компактна форма угорі) */}
-      <CreateModuleInline
-        onCreate={(title, desc) => createModule(title, desc)}
-        t={t}
-      />
+      <CreateModuleInline onCreate={(title, desc) => createModule(title, desc)} t={t} />
 
       {/* 🔹 Список модулів */}
       <div className="grid gap-4 sm:grid-cols-2">
@@ -465,16 +517,16 @@ export default function ModulesTab({ darkMode, i18n }) {
 
               {/* Перемикач видимості */}
               <div className="flex items-center justify-between mt-4">
-  <span className="text-sm opacity-70">
-    {t("Видимість модуля", "Видимость модуля")}:
-  </span>
-  <button
-    onClick={() => openVisibilityPicker(mod)}
-    className="px-3 py-1 rounded-lg text-sm font-semibold bg-pink-500 text-white"
-  >
-    {t("Видимість", "Видимость")}
-  </button>
-</div>
+                <span className="text-sm opacity-70">
+                  {t("Видимість модуля", "Видимость модуля")}:
+                </span>
+                <button
+                  onClick={() => openVisibilityPicker(mod)}
+                  className="px-3 py-1 rounded-lg text-sm font-semibold bg-pink-500 text-white"
+                >
+                  {t("Видимість", "Видимость")}
+                </button>
+              </div>
 
               {/* Кнопка показати уроки */}
               <button
@@ -494,6 +546,9 @@ export default function ModulesTab({ darkMode, i18n }) {
                 <div className="mt-3 space-y-3 border-t border-pink-200 pt-3">
                   {modLessons.map((l) => {
                     const isEditingLesson = editingLessonId === l.id;
+                    const typedGuid =
+                      isEditingLesson && extractGuid(lessonDraft.videoGuid);
+
                     return (
                       <div
                         key={l.id}
@@ -526,19 +581,25 @@ export default function ModulesTab({ darkMode, i18n }) {
                                   )}
                                 </div>
 
-                                {l.description && <p className="mt-1">{l.description}</p>}
+                                {l.description && (
+                                  <p className="mt-1">{l.description}</p>
+                                )}
 
-                                {/* ТІЛЬКИ BUNNY */}
-                                {isBunnyGuid(l.youtube_id) && <PreviewBunny guid={l.youtube_id} />}
+                                {/* Превʼю для існуючого GUID */}
+                                {isBunnyGuid(l.youtube_id) && (
+                                  <PreviewBunny guid={l.youtube_id} />
+                                )}
 
                                 {l.homework && (
                                   <p className="mt-2 text-xs opacity-80">
-                                    📝 <b>{t("Завдання", "Задание")}:</b> {l.homework}
+                                    📝 <b>{t("Завдання", "Задание")}:</b>{" "}
+                                    {l.homework}
                                   </p>
                                 )}
                                 {l.materials && (
                                   <p className="mt-1 text-xs opacity-80">
-                                    📁 <b>{t("Матеріали", "Материалы")}:</b> {l.materials}
+                                    📁 <b>{t("Матеріали", "Материалы")}:</b>{" "}
+                                    {l.materials}
                                   </p>
                                 )}
                               </div>
@@ -565,10 +626,16 @@ export default function ModulesTab({ darkMode, i18n }) {
                             <div className="grid gap-2">
                               <input
                                 className="w-full px-3 py-2 border border-pink-300 rounded-lg"
-                                placeholder={t("Назва уроку", "Название урока")}
+                                placeholder={t(
+                                  "Назва уроку",
+                                  "Название урока"
+                                )}
                                 value={lessonDraft.title}
                                 onChange={(e) =>
-                                  setLessonDraft((s) => ({ ...s, title: e.target.value }))
+                                  setLessonDraft((s) => ({
+                                    ...s,
+                                    title: e.target.value,
+                                  }))
                                 }
                               />
                               <textarea
@@ -576,7 +643,10 @@ export default function ModulesTab({ darkMode, i18n }) {
                                 placeholder={t("Опис", "Описание")}
                                 value={lessonDraft.description}
                                 onChange={(e) =>
-                                  setLessonDraft((s) => ({ ...s, description: e.target.value }))
+                                  setLessonDraft((s) => ({
+                                    ...s,
+                                    description: e.target.value,
+                                  }))
                                 }
                               />
 
@@ -585,7 +655,10 @@ export default function ModulesTab({ darkMode, i18n }) {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setLessonDraft((s) => ({ ...s, type: "theory" }))
+                                    setLessonDraft((s) => ({
+                                      ...s,
+                                      type: "theory",
+                                    }))
                                   }
                                   className={`flex-1 py-2 rounded-lg font-medium ${
                                     lessonDraft.type === "theory"
@@ -598,7 +671,10 @@ export default function ModulesTab({ darkMode, i18n }) {
                                 <button
                                   type="button"
                                   onClick={() =>
-                                    setLessonDraft((s) => ({ ...s, type: "practice" }))
+                                    setLessonDraft((s) => ({
+                                      ...s,
+                                      type: "practice",
+                                    }))
                                   }
                                   className={`flex-1 py-2 rounded-lg font-medium ${
                                     lessonDraft.type === "practice"
@@ -615,7 +691,10 @@ export default function ModulesTab({ darkMode, i18n }) {
                                 placeholder={t("Завдання", "Задание")}
                                 value={lessonDraft.homework}
                                 onChange={(e) =>
-                                  setLessonDraft((s) => ({ ...s, homework: e.target.value }))
+                                  setLessonDraft((s) => ({
+                                    ...s,
+                                    homework: e.target.value,
+                                  }))
                                 }
                               />
 
@@ -627,11 +706,40 @@ export default function ModulesTab({ darkMode, i18n }) {
                                 )}
                                 value={lessonDraft.materials}
                                 onChange={(e) =>
-                                  setLessonDraft((s) => ({ ...s, materials: e.target.value }))
+                                  setLessonDraft((s) => ({
+                                    ...s,
+                                    materials: e.target.value,
+                                  }))
                                 }
                               />
 
-                              {/* ТІЛЬКИ Bunny-файл */}
+                              {/* 🆔 Вставити GUID/URL */}
+                              <label className="block text-sm font-medium">
+                                🆔 {t("Bunny GUID або повний URL", "Bunny GUID или полный URL")}
+                              </label>
+                              <input
+                                className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                                placeholder={t(
+                                  "Вставте GUID або лінк із Bunny",
+                                  "Вставьте GUID или ссылку из Bunny"
+                                )}
+                                value={lessonDraft.videoGuid}
+                                onChange={(e) =>
+                                  setLessonDraft((s) => ({
+                                    ...s,
+                                    videoGuid: e.target.value,
+                                  }))
+                                }
+                              />
+                              {typedGuid && <PreviewBunny guid={typedGuid} />}
+                              <p className="text-xs opacity-60">
+                                {t(
+                                  "Можна або вставити GUID/URL, або завантажити файл нижче",
+                                  "Можно либо вставить GUID/URL, либо загрузить файл ниже"
+                                )}
+                              </p>
+
+                              {/* або завантажити файл */}
                               <label className="block text-sm font-medium mt-1">
                                 🎥 {t("Відео BunnyCDN (оновити)", "Видео BunnyCDN (обновить)")}
                               </label>
@@ -647,10 +755,7 @@ export default function ModulesTab({ darkMode, i18n }) {
                                 className="w-full border border-pink-300 rounded-lg p-2"
                               />
                               {lessonDraft.uploading && (
-                                <ProgressBar
-                                  value={lessonDraft.uploadProgress}
-                                  t={t}
-                                />
+                                <ProgressBar value={lessonDraft.uploadProgress} t={t} />
                               )}
 
                               <div className="mt-2 flex items-center gap-2">
@@ -688,13 +793,15 @@ export default function ModulesTab({ darkMode, i18n }) {
                     </button>
                   )}
 
-                  {/* ➕ ДОДАТИ НОВИЙ УРОК (тільки Bunny) */}
+                  {/* ➕ ДОДАТИ НОВИЙ УРОК */}
                   <div
                     className={`p-3 rounded-lg border mt-3 ${
                       darkMode ? "border-fuchsia-900/30" : "border-pink-200"
                     }`}
                   >
-                    <h5 className="font-semibold mb-2">{t("Новий урок", "Новый урок")}</h5>
+                    <h5 className="font-semibold mb-2">
+                      {t("Новий урок", "Новый урок")}
+                    </h5>
                     <div className="grid gap-2">
                       <input
                         className="w-full px-3 py-2 border border-pink-300 rounded-lg"
@@ -709,7 +816,10 @@ export default function ModulesTab({ darkMode, i18n }) {
                         placeholder={t("Опис", "Описание")}
                         value={newLesson.description}
                         onChange={(e) =>
-                          setNewLesson((s) => ({ ...s, description: e.target.value }))
+                          setNewLesson((s) => ({
+                            ...s,
+                            description: e.target.value,
+                          }))
                         }
                       />
 
@@ -747,7 +857,10 @@ export default function ModulesTab({ darkMode, i18n }) {
                         placeholder={t("Завдання", "Задание")}
                         value={newLesson.homework}
                         onChange={(e) =>
-                          setNewLesson((s) => ({ ...s, homework: e.target.value }))
+                          setNewLesson((s) => ({
+                            ...s,
+                            homework: e.target.value,
+                          }))
                         }
                       />
                       <input
@@ -758,12 +871,41 @@ export default function ModulesTab({ darkMode, i18n }) {
                         )}
                         value={newLesson.materials}
                         onChange={(e) =>
-                          setNewLesson((s) => ({ ...s, materials: e.target.value }))
+                          setNewLesson((s) => ({
+                            ...s,
+                            materials: e.target.value,
+                          }))
                         }
                       />
 
+                      {/* 🆔 Вставити GUID/URL */}
                       <label className="block text-sm font-medium">
-                        🎥 {t("Відео BunnyCDN (обовʼязково)", "Видео BunnyCDN (обязательно)")}
+                        🆔 {t("Bunny GUID або повний URL", "Bunny GUID или полный URL")}
+                      </label>
+                      <input
+                        className="w-full px-3 py-2 border border-pink-300 rounded-lg"
+                        placeholder={t(
+                          "Вставте GUID або лінк із Bunny",
+                          "Вставьте GUID или ссылку из Bunny"
+                        )}
+                        value={newLesson.videoGuid}
+                        onChange={(e) =>
+                          setNewLesson((s) => ({ ...s, videoGuid: e.target.value }))
+                        }
+                      />
+                      {extractGuid(newLesson.videoGuid) && (
+                        <PreviewBunny guid={extractGuid(newLesson.videoGuid)} />
+                      )}
+                      <p className="text-xs opacity-60">
+                        {t(
+                          "Можна або вставити GUID/URL, або завантажити файл нижче",
+                          "Можно либо вставить GUID/URL, либо загрузить файл ниже"
+                        )}
+                      </p>
+
+                      {/* або завантажити файл */}
+                      <label className="block text-sm font-medium">
+                        🎥 {t("Відео BunnyCDN (за бажанням)", "Видео BunnyCDN (по желанию)")}
                       </label>
                       <input
                         type="file"
@@ -797,17 +939,16 @@ export default function ModulesTab({ darkMode, i18n }) {
         })}
       </div>
 
-{visibilityForModuleId && (
-   <ModuleVisibilityPicker
-     BACKEND={BACKEND}
-     moduleId={visibilityForModuleId}
-     initialVisible={visibilityInitial}
-     t={t}
-     onClose={() => setVisibilityForModuleId(null)}
-     onSaved={() => fetchModules(selectedCourse)}
-   />
- )}
-      
+      {visibilityForModuleId && (
+        <ModuleVisibilityPicker
+          BACKEND={BACKEND}
+          moduleId={visibilityForModuleId}
+          initialVisible={visibilityInitial}
+          t={t}
+          onClose={() => setVisibilityForModuleId(null)}
+          onSaved={() => fetchModules(selectedCourse)}
+        />
+      )}
     </div>
   );
 }
@@ -839,7 +980,10 @@ function CreateModuleInline({ onCreate, t }) {
           {t("Створити модуль", "Создать модуль")}
         </button>
       ) : (
-        <form onSubmit={submit} className="space-y-3 rounded-2xl border border-pink-200 p-4 mt-1 bg-white/70">
+        <form
+          onSubmit={submit}
+          className="space-y-3 rounded-2xl border border-pink-200 p-4 mt-1 bg-white/70"
+        >
           <input
             className="w-full px-4 py-2 rounded-xl border border-pink-300"
             placeholder={t("Назва модуля", "Название модуля")}
