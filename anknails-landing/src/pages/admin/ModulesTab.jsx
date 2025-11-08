@@ -64,6 +64,7 @@ function PreviewBunny({ guid }) {
   return (
     <div className="relative mt-2">
       <iframe
+        title="Lesson preview"
         src={src}
         className="w-full aspect-video rounded-lg border border-pink-200"
         // важливо: без дозволу autoplay
@@ -1022,7 +1023,7 @@ function CreateModuleInline({ onCreate, t }) {
             required
           />
           <textarea
-            className="w-full px-4 py-2 rounded-xl border border-пink-300"
+            className="w-full px-4 py-2 rounded-xl border border-pink-300"
             placeholder={t("Опис модуля", "Описание модуля")}
             value={desc}
             onChange={(e) => setDesc(e.target.value)}
