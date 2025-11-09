@@ -399,18 +399,33 @@ export default function CabinetPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const [showWelcome, setShowWelcome] = useState(false);
-
-  const WELCOME_VER = 2; 
+const [showWelcome, setShowWelcome] = useState(false);
+const WELCOME_VER = 2;
+const welcomeKeyFor = (uid) => `welcome_seen_v${WELCOME_VER}_${uid}`;
 
   useEffect(() => {
   if (!user?.id) return;
-  const key = `welcome_seen_v${WELCOME_VER}_${user.id}`;
-  if (!localStorage.getItem(key)) {
-    setShowWelcome(true);
-    localStorage.setItem(key, "1");
-  }
+
+  const key = welcomeKeyFor(user.id);
+  const seenLocal = localStorage.getItem(key) === "1";
+  const seenSession = sessionStorage.getItem(key) === "1";
+
+  // Якщо вже бачили — не показуємо
+  if (seenLocal || seenSession) return;
+
+  // Показуємо один раз у поточній сесії навіть без кліку користувача
+  sessionStorage.setItem(key, "1");
+  setShowWelcome(true);
 }, [user?.id]);
+
+// ⬇️ ДОДАЙ універсальний маркер «побачено»
+const markWelcomeSeen = () => {
+  if (!user?.id) { setShowWelcome(false); return; }
+  const key = welcomeKeyFor(user.id);
+  localStorage.setItem(key, "1");   // назавжди для цього користувача/версії
+  sessionStorage.setItem(key, "1"); // на поточну вкладку
+  setShowWelcome(false);
+};
   
   const IMGUR_CLIENT_ID = "8f3cb6e4c248b26"; // як у BannerTab
 
@@ -750,10 +765,10 @@ export default function CabinetPage() {
       {showWelcome && (
   <WelcomeModal
     open={showWelcome}
-    onClose={() => setShowWelcome(false)}
-    onStart={() => {
-      setShowWelcome(false);
-      setView("modules"); // одразу ведемо в «Мої модулі»
+    onClose={markWelcomeSeen}            
+    onStart={() => {                     
+      markWelcomeSeen();
+      setView("modules");
     }}
     t={t}
     darkMode={darkMode}
