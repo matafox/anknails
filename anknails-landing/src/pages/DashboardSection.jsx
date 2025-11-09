@@ -1,6 +1,5 @@
-// src/pages/DashboardSection.jsx
-import { useEffect, useState } from "react";
-import { CheckSquare, Award, Info, X, ChevronRight, Lock, FileDown } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
+import { CheckSquare, Award, Info, X, ChevronRight, Lock, FileDown, Send } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
@@ -37,33 +36,32 @@ export default function DashboardSection({
   const [stage, setStage] = useState(user?.level || 1);
   const [localLessons, setLocalLessons] = useState(lessons || {});
 
-  /* ====== Сертифікат: логіка блокування на 4 тижні ====== */
+  /* ====== Сертифікат: статус із бекенду ====== */
   const [certInfoOpen, setCertInfoOpen] = useState(false);
-  const [unlockAt, setUnlockAt] = useState(null); // timestamp ms
+  const [certStatus, setCertStatus] = useState({
+    unlocked: false,
+    unlock_at: null,        // ISO
+    seconds_left: 0,
+    requested: false,
+    approved: false,
+  });
+
+  // тік для інфо-таймера (тільки в підказці)
   const [nowTs, setNowTs] = useState(Date.now());
-
-  // Ініціалізуємо дату розблокування по юзеру (перший вхід = зараз + 28 днів)
-  useEffect(() => {
-    if (!user?.id) return;
-    const key = `cert_unlock_at_${user.id}`;
-    let ts = Number(localStorage.getItem(key) || 0);
-
-    // валідність і ключ не виставлений — встановлюємо на 4 тижні від зараз
-    if (!ts || Number.isNaN(ts) || ts < 0) {
-      ts = Date.now() + 28 * 24 * 60 * 60 * 1000;
-      localStorage.setItem(key, String(ts));
-    }
-    setUnlockAt(ts);
-  }, [user?.id]);
-
-  // Тік таймера раз на секунду
   useEffect(() => {
     const id = setInterval(() => setNowTs(Date.now()), 1000);
     return () => clearInterval(id);
   }, []);
 
-  const secondsLeft = unlockAt ? Math.max(0, Math.floor((unlockAt - nowTs) / 1000)) : 0;
-  const unlocked = unlockAt ? nowTs >= unlockAt : false;
+  const unlockAtMs = useMemo(
+    () => (certStatus.unlock_at ? new Date(certStatus.unlock_at).getTime() : null),
+    [certStatus.unlock_at]
+  );
+  const secondsLeft = useMemo(() => {
+    if (!unlockAtMs) return 0;
+    const left = Math.max(0, Math.floor((unlockAtMs - nowTs) / 1000));
+    return left;
+  }, [unlockAtMs, nowTs]);
 
   const pad = (n) => String(n).padStart(2, "0");
   const d = Math.floor(secondsLeft / 86400);
@@ -71,6 +69,8 @@ export default function DashboardSection({
   const m = Math.floor((secondsLeft % 3600) / 60);
   const s = secondsLeft % 60;
   const countdownStr = `${d}${t("д", "д")} ${pad(h)}:${pad(m)}:${pad(s)}`;
+
+  const unlocked = !!certStatus.unlocked;
 
   // 🧩 XP/Level
   useEffect(() => {
@@ -102,7 +102,29 @@ export default function DashboardSection({
     })();
   }, [modules]);
 
-  // 🧮 Обчислення
+  // 🧾 Статус сертифіката з бекенду
+  const loadCertStatus = async () => {
+    if (!user?.id) return;
+    try {
+      const res = await fetch(`${BACKEND}/api/cert/status?user_id=${user.id}`);
+      const data = await res.json();
+      setCertStatus({
+        unlocked: !!data.unlocked,
+        unlock_at: data.unlock_at ?? null,
+        seconds_left: data.seconds_left ?? 0,
+        requested: !!data.requested,
+        approved: !!data.approved,
+      });
+    } catch (e) {
+      // тихо ігноруємо
+    }
+  };
+
+  useEffect(() => {
+    loadCertStatus();
+  }, [user?.id]);
+
+  // 🧮 Обчислення рівня
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
   const realSkills = skills ?? completedLessons * 20;
   const realStage = Math.min(stage ?? Math.floor(realSkills / 100) + 1, 5);
@@ -114,14 +136,44 @@ export default function DashboardSection({
     (darkMode ? STAGE_COLORS_DARK : STAGE_COLORS)[realStage] ||
     (darkMode ? STAGE_COLORS_DARK[5] : STAGE_COLORS[5]);
 
+  /* === Дії з сертифікатом === */
+  const handleRequestCert = async () => {
+    if (!user?.id || !user?.session_token) return;
+    try {
+      const res = await fetch(`${BACKEND}/api/cert/request`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ user_id: user.id, session_token: user.session_token }),
+      });
+      const j = await res.json();
+      if (j.success) {
+        setCertStatus((prev) => ({ ...prev, requested: true }));
+        alert(
+          t(
+            "Запит на сертифікат відправлено. Ми повідомимо, коли його буде схвалено.",
+            "Запрос на сертификат отправлен. Мы сообщим, когда он будет одобрен."
+          )
+        );
+      } else {
+        throw new Error("request failed");
+      }
+    } catch (e) {
+      alert(
+        t(
+          "Не вдалося подати запит. Спробуйте пізніше.",
+          "Не удалось отправить запрос. Попробуйте позже."
+        )
+      );
+    }
+  };
+
   const handleDownloadCert = () => {
     if (!user?.id) return;
-    // бекенд-ендпойнт для генерації/видачі сертифіката
     const url = `${BACKEND}/api/cert/generate?user_id=${user.id}`;
-    // Відкриваємо у новій вкладці (щоб не блокував попап-блокер — дія з кнопки)
     window.open(url, "_blank", "noopener,noreferrer");
   };
 
+  /* === Рендер === */
   return (
     <div
       className={`min-h-[calc(100vh-8rem)] flex flex-col justify-between ${
@@ -227,10 +279,25 @@ export default function DashboardSection({
                 </h3>
                 <p className="text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5">
                   {t(
-                    "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 - новий рівень! Виконуйте домашні завдання - отримуйте бонусні 10 одиниць майстерності.",
-                    "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 - новый уровень! Выполняйте домашние задания - бонус 10 единиц мастерства."
+                    "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 — новий рівень! Виконуйте домашні завдання — бонусні 10 одиниць.",
+                    "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 — новый уровень! Выполняйте домашние задания — бонусные 10 единиц."
                   )}
                 </p>
+
+                {/* 🆕 Пояснення про сертифікати з таймером тут */}
+                {certStatus.unlock_at && !unlocked && (
+                  <div className="mt-4 text-sm">
+                    <p className="font-semibold mb-1">
+                      {t(
+                        "Доступ до сторінки з сертифікатами буде доступний через:",
+                        "Доступ к странице с сертификатами будет доступен через:"
+                      )}
+                    </p>
+                    <p className="font-mono text-lg">
+                      {countdownStr}
+                    </p>
+                  </div>
+                )}
               </div>
             </div>
           </div>
@@ -282,7 +349,7 @@ export default function DashboardSection({
             </div>
           </div>
 
-          {/* 🎓 Сертифікат (блок з відліком 4 тижні) */}
+          {/* 🎓 Сертифікат */}
           <div
             className={`relative p-6 rounded-2xl border shadow-md transition overflow-hidden ${
               darkMode ? "bg-[#0f0016]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
@@ -305,10 +372,15 @@ export default function DashboardSection({
               >
                 <p className="font-semibold mb-1">{t("Доступ до сертифікату", "Доступ к сертификату")}</p>
                 <p className="opacity-80 leading-relaxed">
-                  {t(
-                    "Тут з’явиться кнопка для завантаження іменного сертифіката. Блок відкриється через 4 тижні після вашого першого входу.",
-                    "Здесь появится кнопка для скачивания именного сертификата. Блок откроется через 4 недели после вашего первого входа."
-                  )}
+                  {unlocked
+                    ? t(
+                        "Ви можете подати запит на іменний сертифікат, після підтвердження в адмінці з’явиться кнопка завантаження.",
+                        "Вы можете отправить заявку на именной сертификат, после подтверждения в админке появится кнопка скачивания."
+                      )
+                    : t(
+                        "Сторінка із сертифікатами відкриється через встановлений період після першого входу. Нижче вказано дату відкриття.",
+                        "Страница с сертификатами откроется через установленный период после первого входа. Ниже указана дата открытия."
+                      )}
                 </p>
               </div>
             )}
@@ -321,21 +393,40 @@ export default function DashboardSection({
 
               <p className={`text-sm mb-4 ${darkMode ? "text-fuchsia-100/80" : "text-gray-600"}`}>
                 {t(
-                  "Після відкриття ви зможете завантажити іменний сертифікат про проходження курсу.",
-                  "После открытия вы сможете скачать именной сертификат о прохождении курса."
+                  "Після схвалення запиту ви зможете завантажити іменний сертифікат про проходження курсу.",
+                  "После одобрения заявки вы сможете скачать именной сертификат о прохождении курса."
                 )}
               </p>
 
-              <button
-                onClick={handleDownloadCert}
-                className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
-              >
-                <FileDown className="w-5 h-5" />
-                {t("Завантажити сертифікат", "Скачать сертификат")}
-              </button>
+              {/* Кнопки за статусом */}
+              {unlocked && !certStatus.approved && !certStatus.requested && (
+                <button
+                  onClick={handleRequestCert}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
+                >
+                  <Send className="w-5 h-5" />
+                  {t("Подати запит на сертифікат", "Отправить запрос на сертификат")}
+                </button>
+              )}
+
+              {unlocked && certStatus.requested && !certStatus.approved && (
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                  ⏳ {t("Запит відправлено — очікує підтвердження", "Запрос отправлен — ждёт подтверждения")}
+                </span>
+              )}
+
+              {unlocked && certStatus.approved && (
+                <button
+                  onClick={handleDownloadCert}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
+                >
+                  <FileDown className="w-5 h-5" />
+                  {t("Завантажити сертифікат", "Скачать сертификат")}
+                </button>
+              )}
             </div>
 
-            {/* Оверлей блокування з таймером */}
+            {/* Оверлей блокування: БЕЗ таймера, тільки дата */}
             {!unlocked && (
               <div
                 className={`absolute inset-0 z-10 flex flex-col items-center justify-center
@@ -343,20 +434,10 @@ export default function DashboardSection({
               >
                 <div className="flex flex-col items-center text-center px-6">
                   <Lock className="w-10 h-10 mb-2 text-pink-500" />
-                  <p className="text-base font-semibold mb-1">
-                    {t("Розблокування через", "Разблокирование через")}
-                  </p>
-                  <p
-                    className={`text-2xl font-mono tracking-wider ${
-                      darkMode ? "text-fuchsia-100" : "text-pink-600"
-                    }`}
-                  >
-                    {countdownStr}
-                  </p>
-                  {unlockAt && (
-                    <p className="text-xs mt-2 opacity-75">
+                  {certStatus.unlock_at && (
+                    <p className="text-sm opacity-85">
                       {t("Дата відкриття", "Дата открытия")}:{" "}
-                      {new Date(unlockAt).toLocaleDateString()}
+                      {new Date(certStatus.unlock_at).toLocaleDateString()}
                     </p>
                   )}
                 </div>
