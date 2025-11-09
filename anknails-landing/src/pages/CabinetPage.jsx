@@ -651,38 +651,45 @@ export default function CabinetPage() {
     }
   };
 
-  // ✅ Ручне завершення уроку
-  const markLessonComplete = async () => {
-    if (!user?.id || !selectedLesson?.id) return;
-    try {
-      await fetch(`${BACKEND}/api/progress/update`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: user.id,
-          lesson_id: selectedLesson.id,
-          completed: true,
-          watched_seconds: Math.max(progSelected.watched_seconds ?? 0, progSelected.total_seconds ?? 0),
-          total_seconds: progSelected.total_seconds ?? 0,
-          homework_done: progSelected.homework_done ?? false,
-        }),
-      });
+// ✅ Ручне завершення уроку (фікс: ставимо безумовно 100%)
+const markLessonComplete = async () => {
+  if (!user?.id || !selectedLesson?.id) return;
 
-      setProgress((prev) => ({
-        ...prev,
-        [selectedLesson.id]: {
-          ...(prev[selectedLesson.id] || {}),
-          completed: true,
-          watched_seconds: Math.max(progSelected.watched_seconds ?? 0, progSelected.total_seconds ?? 0),
-        },
-      }));
+  const total = progSelected.total_seconds ?? 0;
+  const watched = progSelected.watched_seconds ?? 0;
+  const safeTotal = total > 0 ? total : watched > 0 ? watched : 1; // ← мінімум 1с
 
-      await refreshAfterLessonComplete();
-    } catch (e) {
-      console.warn("markLessonComplete failed", e);
-      alert(t("Не вдалося позначити урок завершеним", "Не удалось отметить урок завершенным"));
-    }
-  };
+  try {
+    await fetch(`${BACKEND}/api/progress/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user.id,
+        lesson_id: selectedLesson.id,
+        completed: true,
+        watched_seconds: safeTotal,
+        total_seconds: safeTotal,
+        homework_done: progSelected.homework_done ?? false,
+      }),
+    });
+
+    // локально одразу 100%
+    setProgress((prev) => ({
+      ...prev,
+      [selectedLesson.id]: {
+        ...(prev[selectedLesson.id] || {}),
+        completed: true,
+        watched_seconds: safeTotal,
+        total_seconds: safeTotal,
+      },
+    }));
+
+    await refreshAfterLessonComplete();
+  } catch (e) {
+    console.warn("markLessonComplete failed", e);
+    alert(t("Не вдалося позначити урок завершеним", "Не удалось отметить урок завершенным"));
+  }
+};
 
   if (!user) return null;
 
@@ -781,11 +788,12 @@ export default function CabinetPage() {
                     <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
                       {lessons[mod.id]?.map((l) => {
                         const prog = progress[l.id];
-                        const percent =
-                          prog && prog.total_seconds > 0
-                            ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
-                            : 0;
                         const done = !!prog?.completed;
+const percent = done
+  ? 100
+  : (prog && prog.total_seconds > 0
+      ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
+      : 0);
                         const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
                         return (
