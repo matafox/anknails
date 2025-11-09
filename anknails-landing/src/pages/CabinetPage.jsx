@@ -746,6 +746,21 @@ export default function CabinetPage() {
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
+
+      {showWelcome && (
+  <WelcomeModal
+    open={showWelcome}
+    onClose={() => setShowWelcome(false)}
+    onStart={() => {
+      setShowWelcome(false);
+      setView("modules"); // одразу ведемо в «Мої модулі»
+    }}
+    t={t}
+    darkMode={darkMode}
+    user={user}
+  />
+)}
+      
       {/* HEADER */}
       <header
         className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-30 rounded-b-[6px] ${
@@ -1130,20 +1145,6 @@ export default function CabinetPage() {
                 </p>
               )}
             </div>
-
-            {showWelcome && (
-  <WelcomeModal
-    open={showWelcome}
-    onClose={() => setShowWelcome(false)}
-    onStart={() => {
-      setShowWelcome(false);
-      setView("modules"); // одразу ведемо в «Мої модулі»
-    }}
-    t={t}
-    darkMode={darkMode}
-    user={user}
-  />
-)}
 
             {/* Відео + прогрес */}
             <SafeVideo
