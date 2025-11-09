@@ -456,16 +456,7 @@ export default function SettingsTab({ i18n, darkMode }) {
                               : "bg-white/70 border-pink-200 focus:border-pink-500"
                           }`}
                         />
-                        {cs.file_url ? (
-                          <a
-                            href={cs.file_url}
-                            target="_blank"
-                            rel="noreferrer"
-                            className="text-pink-600 text-sm underline"
-                          >
-                            {i18n.language === "ru" ? "Открыть" : "Відкрити"}
-                          </a>
-                        ) : null}
+                        null
                       </div>
                     </td>
 
