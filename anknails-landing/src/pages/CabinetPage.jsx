@@ -401,12 +401,13 @@ export default function CabinetPage() {
 
   const [showWelcome, setShowWelcome] = useState(false);
 
+  const WELCOME_VER = 2; 
+
   useEffect(() => {
   if (!user?.id) return;
-  const key = `welcome_seen_v1_${user.id}`;
+  const key = `welcome_seen_v${WELCOME_VER}_${user.id}`;
   if (!localStorage.getItem(key)) {
     setShowWelcome(true);
-    // позначимо як показаний одразу, щоб не дратувати при оновленнях
     localStorage.setItem(key, "1");
   }
 }, [user?.id]);
