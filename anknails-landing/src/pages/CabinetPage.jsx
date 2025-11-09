@@ -772,251 +772,257 @@ const markLessonComplete = async () => {
         </button>
       </header>
 
-      {/* SIDEBAR */}
-      <aside
-        className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
-          menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-        } ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"} md:pt-0 pt-16`}
-      >
-        <div className="flex flex-col items-center text-center mb-4 select-none">
-  {/* Прихований інпут для вибору файлу */}
-  <input
-    ref={avatarInputRef}
-    type="file"
-    accept="image/*"
-    className="hidden"
-    onChange={onAvatarSelected}
-  />
+{/* SIDEBAR */}
+<aside
+  className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
+    menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+  } ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"} md:pt-0 pt-16`}
+>
+  {/* ЄДИНА коренева обгортка всередині aside */}
+  <div className="flex flex-col h-full">
+    {/* Верхня прокручувана частина */}
+    <div className="p-6 flex-1 overflow-y-auto">
+      <div className="flex flex-col items-center text-center mb-4 select-none">
+        {/* Прихований інпут для вибору файлу */}
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onAvatarSelected}
+        />
 
-  {/* Кругла аватарка */}
-  <button
-    onClick={handleChooseAvatar}
-    title={t("Змінити аватар", "Сменить аватар")}
-    className="relative group"
-  >
-    {user.avatar_url ? (
-      <img
-        src={user.avatar_url}
-        alt="Avatar"
-        className="w-20 h-20 rounded-full object-cover ring-2 ring-pink-300 shadow-md group-hover:scale-105 transition"
-        referrerPolicy="no-referrer"
-      />
-    ) : (
-      <div
-        className={`w-20 h-20 rounded-full flex items-center justify-center ring-2 shadow-md group-hover:scale-105 transition
-          ${darkMode ? "ring-fuchsia-800/50 bg-[#15001f]" : "ring-pink-300 bg-pink-50"}`}
-      >
-        <SquareUserRound className="w-10 h-10 text-pink-500" />
-      </div>
-    )}
-
-    {/* бейдж "Змінити" при ховері */}
-    <span
-      className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold
-        opacity-0 group-hover:opacity-100 pointer-events-none
-        ${darkMode ? "bg-fuchsia-700 text-white" : "bg-pink-500 text-white"}`}
-    >
-      {t("Змінити", "Сменить")}
-    </span>
-  </button>
-
-  <h2 className="mt-3 font-bold text-lg">
-    {user.name || user.email.split("@")[0]}
-  </h2>
-
-  <div className="mt-1">
-    {user.package === "pro" ? (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
-        PRO
-      </span>
-    ) : (
-      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
-        {t("Самостійний", "Самостоятельный")}
-      </span>
-    )}
-  </div>
-
-  <p className="text-sm opacity-70">
-    {t("Доступ до", "Доступ до")}: {user.expires_at}
-  </p>
-</div>
-
-          {/* Загальний прогрес курсу */}
-          <div className="mb-4 px-3">
-            <p className="text-xs text-center font-medium text-pink-600">
-              {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
-            </p>
-            <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
-                style={{ width: `${overallProgress}%` }}
-              />
-            </div>
-          </div>
-
-          {/* MODULES */}
-          {modules.length === 0 ? (
-            <p className="text-center text-sm opacity-70">
-              {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
-            </p>
+        {/* Кругла аватарка (клік — завантажити нову в Imgur) */}
+        <button
+          onClick={handleChooseAvatar}
+          title={t("Змінити аватар", "Сменить аватар")}
+          className="relative group"
+        >
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt="Avatar"
+              className="w-20 h-20 rounded-full object-cover ring-2 ring-pink-300 shadow-md group-hover:scale-105 transition"
+              referrerPolicy="no-referrer"
+            />
           ) : (
-            <div className="space-y-2">
-              {modules.map((mod) => (
-                <div key={mod.id} className="mb-2">
-                  <button
-                    onClick={() => toggleModule(mod.id)}
-                    className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
-                  >
-                    <span className="flex items-center gap-2">
-                      <BookOpen className="w-4 h-4" /> {mod.title}
-                    </span>
-                    <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
-                      {typeof mod.lessons === "number" ? mod.lessons : (lessons[mod.id]?.length ?? 0)}
-                    </span>
-                    {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                  </button>
-
-                  {mod.description && (
-                    <p className={`text-xs mt-1 ml-8 pr-4 leading-snug ${darkMode ? "text-fuchsia-200/70" : "text-gray-600"}`}>
-                      {mod.description}
-                    </p>
-                  )}
-
-                  {expanded === mod.id && (
-                    <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
-                      {lessons[mod.id]?.map((l) => {
-                        const prog = progress[l.id];
-                        const done = !!prog?.completed;
-const percent = done
-  ? 100
-  : (prog && prog.total_seconds > 0
-      ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
-      : 0);
-                        const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-                        return (
-                          <div
-                            key={l.id}
-                            onClick={() => {
-                              setSelectedLesson(l);
-                              localStorage.setItem("last_lesson", JSON.stringify(l));
-                              localStorage.setItem("last_view", "lesson");
-                              setMenuOpen(false);
-                            }}
-                            className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
-                              selectedLesson?.id === l.id
-                                ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
-                                : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
-                            }`}
-                          >
-                            <div className="flex items-center gap-2">
-                              {done ? (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <circle cx="12" cy="12" r="10" />
-                                  <path d="M9 12l2 2 4-4" />
-                                </svg>
-                              ) : (
-                                <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                  <circle cx="12" cy="12" r="10" />
-                                </svg>
-                              )}
-                              <span className="flex-1 truncate">{l.title}</span>
-                              {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
-                              {percent > 0 && (
-                                <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
-                                  {percent}%
-                                </span>
-                              )}
-                            </div>
-                            <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
-                              <div
-                                className={`h-full ${done ? "bg-green-400" : percent > 0 ? "bg-gradient-to-r from-pink-400 to-rose-500" : "bg-transparent"}`}
-                                style={{ width: `${percent}%`, transition: "width 0.7s ease-out", willChange: "width" }}
-                              />
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              ))}
+            <div
+              className={`w-20 h-20 rounded-full flex items-center justify-center ring-2 shadow-md group-hover:scale-105 transition ${
+                darkMode ? "ring-fuchsia-800/50 bg-[#15001f]" : "ring-pink-300 bg-pink-50"
+              }`}
+            >
+              <SquareUserRound className="w-10 h-10 text-pink-500" />
             </div>
           )}
 
-          {/* 🆕 ПІДТРИМКА — блок над футером сайдбару */}
-          <div className="mt-6">
-            <a
-              href="https://t.me/m/cE5yXCdSZTAy"
-              className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
-                darkMode
-                  ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
-                  : "border-pink-200 bg-white/70 hover:bg-white"
-              }`}
-              title={t("Звернутися у підтримку", "Обратиться в поддержку")}
-            >
-              <HelpCircle className="w-4 h-4 text-pink-600" />
-              <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
-            </a>
-          </div>
-        </div>
-
-        {/* FOOTER OF SIDEBAR */}
-        <div className="p-6 border-t border-pink-200/30 space-y-6 mt-auto">
-          {/* Темна тема */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Moon className="w-4 h-4 text-pink-500" />
-              <span>{t("Темна тема", "Тёмная тема")}</span>
-            </div>
-            <button
-              onClick={() => {
-                const newMode = !darkMode;
-                setDarkMode(newMode);
-                document.documentElement.classList.toggle("dark", newMode);
-                localStorage.setItem("theme", newMode ? "dark" : "light");
-              }}
-              className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
-                darkMode ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" : "bg-pink-200"
-              }`}
-            >
-              <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${darkMode ? "translate-x-6" : "translate-x-0"}`}></span>
-            </button>
-          </div>
-
-          {/* Мова */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Globe className="w-4 h-4 text-pink-500" />
-              <span>{t("Мова", "Язык")}</span>
-            </div>
-            <div className="flex gap-2">
-              {["ru", "uk"].map((lang) => (
-                <button
-                  key={lang}
-                  onClick={() => {
-                    i18n.changeLanguage(lang);
-                    localStorage.setItem("lang", lang);
-                  }}
-                  className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
-                    i18n.language === lang ? "bg-pink-500 text-white border-pink-500" : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
-                  }`}
-                >
-                  {lang.toUpperCase()}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Вихід */}
-          <button
-            onClick={handleLogout}
-            className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
+          {/* бейдж "Змінити" при ховері */}
+          <span
+            className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none ${
+              darkMode ? "bg-fuchsia-700 text-white" : "bg-pink-500 text-white"
+            }`}
           >
-            <LogOut className="w-4 h-4" /> {t("Вийти", "Выйти")}
-          </button>
+            {t("Змінити", "Сменить")}
+          </span>
+        </button>
+
+        <h2 className="mt-3 font-bold text-lg">
+          {user.name || user.email.split("@")[0]}
+        </h2>
+
+        <div className="mt-1">
+          {user.package === "pro" ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
+              PRO
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
+              {t("Самостійний", "Самостоятельный")}
+            </span>
+          )}
         </div>
-      </aside>
+
+        <p className="text-sm opacity-70">
+          {t("Доступ до", "Доступ до")}: {user.expires_at}
+        </p>
+      </div>
+
+      {/* Загальний прогрес курсу */}
+      <div className="mb-4 px-3">
+        <p className="text-xs text-center font-medium text-pink-600">
+          {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
+        </p>
+        <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
+            style={{ width: `${overallProgress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* MODULES */}
+      {modules.length === 0 ? (
+        <p className="text-center text-sm opacity-70">
+          {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {modules.map((mod) => (
+            <div key={mod.id} className="mb-2">
+              <button
+                onClick={() => toggleModule(mod.id)}
+                className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
+              >
+                <span className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" /> {mod.title}
+                </span>
+                <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
+                  {typeof mod.lessons === "number" ? mod.lessons : (lessons[mod.id]?.length ?? 0)}
+                </span>
+                {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {mod.description && (
+                <p className={`text-xs mt-1 ml-8 pr-4 leading-snug ${darkMode ? "text-fuchsia-200/70" : "text-gray-600"}`}>
+                  {mod.description}
+                </p>
+              )}
+
+              {expanded === mod.id && (
+                <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
+                  {lessons[mod.id]?.map((l) => {
+                    const prog = progress[l.id];
+                    const done = !!prog?.completed;
+                    const percent = done
+                      ? 100
+                      : (prog && prog.total_seconds > 0
+                          ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
+                          : 0);
+                    const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+                    return (
+                      <div
+                        key={l.id}
+                        onClick={() => {
+                          setSelectedLesson(l);
+                          localStorage.setItem("last_lesson", JSON.stringify(l));
+                          localStorage.setItem("last_view", "lesson");
+                          setMenuOpen(false);
+                        }}
+                        className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
+                          selectedLesson?.id === l.id
+                            ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
+                            : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {done ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M9 12l2 2 4-4" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                            </svg>
+                          )}
+                          <span className="flex-1 truncate">{l.title}</span>
+                          {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
+                          {percent > 0 && (
+                            <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
+                              {percent}%
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${done ? "bg-green-400" : percent > 0 ? "bg-gradient-to-r from-pink-400 to-rose-500" : "bg-transparent"}`}
+                            style={{ width: `${percent}%`, transition: "width 0.7s ease-out", willChange: "width" }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ПІДТРИМКА — над футером сайдбару */}
+      <div className="mt-6">
+        <a
+          href="https://t.me/m/cE5yXCdSZTAy"
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+            darkMode
+              ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+              : "border-pink-200 bg-white/70 hover:bg-white"
+          }`}
+          title={t("Звернутися у підтримку", "Обратиться в поддержку")}
+        >
+          <HelpCircle className="w-4 h-4 text-pink-600" />
+          <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
+        </a>
+      </div>
+    </div>
+
+    {/* Нижній футер сайдбару */}
+    <div className="p-6 border-t border-pink-200/30 space-y-6">
+      {/* Темна тема */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Moon className="w-4 h-4 text-pink-500" />
+          <span>{t("Темна тема", "Тёмная тема")}</span>
+        </div>
+        <button
+          onClick={() => {
+            const newMode = !darkMode;
+            setDarkMode(newMode);
+            document.documentElement.classList.toggle("dark", newMode);
+            localStorage.setItem("theme", newMode ? "dark" : "light");
+          }}
+          className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
+            darkMode ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" : "bg-pink-200"
+          }`}
+        >
+          <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${darkMode ? "translate-x-6" : "translate-x-0"}`}></span>
+        </button>
+      </div>
+
+      {/* Мова */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-pink-500" />
+          <span>{t("Мова", "Язык")}</span>
+        </div>
+        <div className="flex gap-2">
+          {["ru", "uk"].map((lang) => (
+            <button
+              key={lang}
+              onClick={() => {
+                i18n.changeLanguage(lang);
+                localStorage.setItem("lang", lang);
+              }}
+              className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
+                i18n.language === lang ? "bg-pink-500 text-white border-pink-500" : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
+              }`}
+            >
+              {lang.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Вихід */}
+      <button
+        onClick={handleLogout}
+        className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
+      >
+        <LogOut className="w-4 h-4" /> {t("Вийти", "Выйти")}
+      </button>
+    </div>
+  </div>
+</aside>
 
       {/* Контент */}
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
