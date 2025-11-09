@@ -89,7 +89,7 @@ export default function WelcomeModal({
                 ? "bg-white/10 hover:bg-white/15 text-fuchsia-100"
                 : "bg-pink-50 hover:bg-pink-100 text-pink-700 border border-pink-200"}`}
           >
-            {t("На дашборд", "На дашборд")}
+            {t("На дашборд", "На главную")}
           </button>
           <button
             onClick={onStart}
