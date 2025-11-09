@@ -425,9 +425,9 @@ export default function DashboardSection({
                   <>
                     <p className="text-sm md:text-base font-medium leading-relaxed mb-4">
                       {t(
-                        "Сторінка із сертифікатами відкриється після встановленого періоду від вашого першого входу.",
-                        "Страница с сертификатами откроется по истечении установленного периода с вашего первого входа."
-                      )}
+  "Доступ до завантаження сертифіката відкриється через 4 тижні.",
+  "Доступ к загрузке сертификата откроется через 4 недели."
+)}
                     </p>
                     
                   </>
@@ -472,7 +472,7 @@ export default function DashboardSection({
 
               {unlocked && !certInfoOpen && certStatus.requested && !certStatus.approved && (
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                  ⏳ {t("Запит відправлено — очікує підтвердження", "Запрос отправлен — ждёт подтверждения")}
+                  ⏳ {t("Запит відправлено - очікує підтвердження", "Запрос отправлен - ждёт подтверждения")}
                 </span>
               )}
 
