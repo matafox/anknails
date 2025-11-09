@@ -9,34 +9,34 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
   const [lessonsMap, setLessonsMap] = useState({});
   const [loadingMap, setLoadingMap] = useState({});
 
-  // 🎨 Градієнти для модулів
+  // 🎨 Прості, «чисті» градієнти однієї палітри
   const GRADIENTS_LIGHT = [
-    "from-pink-100 via-rose-100 to-amber-100",
-    "from-rose-100 via-orange-100 to-pink-100",
-    "from-fuchsia-100 via-pink-100 to-rose-100",
-    "from-amber-100 via-pink-100 to-rose-100",
-    "from-teal-100 via-emerald-100 to-amber-100",
+    "from-pink-200 to-pink-50",
+    "from-violet-200 to-violet-50",
+    "from-amber-200 to-amber-50",
+    "from-emerald-200 to-emerald-50",
+    "from-sky-200 to-sky-50",
   ];
   const BORDERS_LIGHT = [
-    "border-pink-200",
-    "border-rose-200",
-    "border-fuchsia-200",
-    "border-amber-200",
-    "border-emerald-200",
+    "border-pink-300",
+    "border-violet-300",
+    "border-amber-300",
+    "border-emerald-300",
+    "border-sky-300",
   ];
   const GRADIENTS_DARK = [
-    "from-[#190026] via-[#260a30] to-[#190026]",
-    "from-[#1f0a20] via-[#2a1028] to-[#1f0a20]",
-    "from-[#12001c] via-[#200a2a] to-[#12001c]",
-    "from-[#1f0a14] via-[#2b0f1c] to-[#1f0a14]",
-    "from-[#0d1b1b] via-[#102422] to-[#0d1b1b]",
+    "from-[#1e0b2a] to-[#14051d]",   // фуксія
+    "from-[#170f2e] to-[#0f0a22]",   // фіолет
+    "from-[#2b1a08] to-[#1c1106]",   // бурштин
+    "from-[#0f2a20] to-[#0a1d16]",   // смарагд
+    "from-[#0b1f2b] to-[#071521]",   // синій
   ];
   const BORDERS_DARK = [
-    "border-fuchsia-900/40",
-    "border-rose-900/40",
-    "border-purple-900/40",
-    "border-amber-900/40",
-    "border-emerald-900/40",
+    "border-fuchsia-800/40",
+    "border-violet-800/40",
+    "border-amber-800/40",
+    "border-emerald-800/40",
+    "border-sky-800/40",
   ];
 
   const getGrad = (i) =>
@@ -76,7 +76,7 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
     window.location.reload();
   };
 
-  // утиліта для відсотків прогресу
+  // % прогресу
   const getPercent = (l) => {
     const p = progress[l.id];
     if (!p) return 0;
@@ -96,8 +96,8 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
       }`}
     >
       <div className="max-w-5xl mx-auto">
-        {/* 🔙 Назад + Заголовок в ОДНОМУ рядку зліва */}
-        <div className="flex items-center gap-3 mb-8">
+        {/* 🔙 Назад (ліворуч) + Заголовок справа в одному рядку */}
+        <div className="flex items-center justify-between mb-8">
           <button
             onClick={onBack}
             className="flex items-center gap-2 text-pink-500 hover:text-rose-500 transition font-medium"
@@ -105,7 +105,8 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
             <ChevronLeft className="w-5 h-5" />
             {t("Назад до дашборду", "Назад на главную")}
           </button>
-          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent text-right">
             {t("Мої модулі", "Мои модули")}
           </h1>
         </div>
@@ -116,7 +117,7 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
             {t("Модулів поки що немає", "Модулей пока нет")}
           </p>
         ) : (
-          <div className="space-y-6">
+          <div className="space-y-5">
             {modules.map((mod, i) => {
               const isOpen = expanded === mod.id;
               const lessons = lessonsMap[mod.id] || [];
@@ -124,56 +125,32 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
               return (
                 <div
                   key={mod.id}
-                  className={`relative p-6 rounded-2xl shadow-lg border overflow-hidden transition transform hover:scale-[1.01] ${getGrad(
-                    i
-                  )}`}
+                  className={`p-5 rounded-2xl border transition ${getGrad(i)} ${
+                    darkMode ? "shadow-none" : "shadow-sm"
+                  }`}
                 >
-                  {/* декоративний косий відблиск */}
-                  <div
-                    aria-hidden
-                    className="pointer-events-none absolute -top-16 -right-16 w-64 h-64 rounded-full blur-3xl opacity-30
-                               bg-gradient-to-br from-white/30 to-transparent"
-                  />
-
+                  {/* Шапка модуля — максимально просто */}
                   <button
                     onClick={() => toggleModule(mod.id)}
-                    className="w-full text-left flex items-center justify-between gap-3"
+                    className="w-full text-left flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <div
-                        className={`flex items-center justify-center w-10 h-10 rounded-xl shadow
-                          ${darkMode ? "bg-[#14001d]/60 ring-1 ring-fuchsia-800/40" : "bg-white/70 ring-1 ring-white/60"}`}
-                      >
-                        <BookOpen className="w-5 h-5 text-pink-600" />
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${darkMode ? "bg-black/20" : "bg-white/60"}`}>
+                        <BookOpen className="w-5 h-5 text-pink-700" />
                       </div>
                       <div>
-                        <h2 className="text-xl font-semibold">{mod.title}</h2>
-                        {mod.description && (
-                          <p className={`text-sm opacity-80 leading-relaxed ${darkMode ? "text-fuchsia-100/80" : "text-gray-700"}`}>
-                            {mod.description}
-                          </p>
-                        )}
-                        <p className="mt-1 text-xs font-medium text-pink-700/80">
+                        <h2 className="text-lg font-semibold">{mod.title}</h2>
+                        <p className="text-xs opacity-80">
                           {(mod.lessons || 0)} {t("уроків", "уроков")}
                         </p>
                       </div>
                     </div>
-
-                    <div
-                      className={`flex items-center justify-center w-8 h-8 rounded-full
-                        ${darkMode ? "bg-[#14001d]/60 ring-1 ring-fuchsia-800/40" : "bg-white/70 ring-1 ring-white/60"}`}
-                    >
-                      {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
-                    </div>
+                    {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                   </button>
 
-                  {/* Список уроків */}
+                  {/* Список уроків — мінімалістичні картки */}
                   {isOpen && (
-                    <div
-                      className={`mt-4 border-t pt-4 ${
-                        darkMode ? "border-fuchsia-900/40" : "border-white/60"
-                      }`}
-                    >
+                    <div className={`mt-4 pt-3 ${darkMode ? "border-t border-white/10" : "border-t border-black/10"}`}>
                       {loadingMap[mod.id] ? (
                         <div className="text-sm opacity-80">
                           {t("Завантаження уроків...", "Загрузка уроков...")}
@@ -183,7 +160,7 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
                           {t("У цьому модулі поки немає уроків", "В этом модуле пока нет уроков")}
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
                           {lessons.map((l) => {
                             const percent = getPercent(l);
                             const done = percent === 100;
@@ -191,60 +168,36 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
                               <button
                                 key={l.id}
                                 onClick={() => openLesson(l)}
-                                className={`group text-left p-3 rounded-xl border transition
-                                  ${darkMode
-                                    ? "bg-[#15001f]/50 border-fuchsia-900/40 hover:border-pink-500/40 hover:bg-[#1a0526]/60"
-                                    : "bg-white/70 border-pink-100 hover:border-pink-300 hover:bg-white"}`}
+                                className={`text-left rounded-xl p-0 hover:opacity-95 transition`}
                               >
-                                <div className="flex items-start gap-2">
-                                  <div
-                                    className={`mt-0.5 flex items-center justify-center w-8 h-8 rounded-md
-                                      ${darkMode ? "bg-[#1f0a2a]" : "bg-pink-50"}`}
-                                  >
-                                    <PlayCircle className="w-4 h-4 text-pink-600" />
-                                  </div>
-                                  <div className="min-w-0 w-full">
-                                    <div className="font-semibold truncate">{l.title}</div>
-
-                                    {/* бейдж типу уроку */}
-                                    {l.type && (
-                                      <div className="mt-0.5">
-                                        {l.type === "theory" && (
-                                          <span className="inline-flex items-center text-[11px] px-2 py-[2px] rounded-full border
-                                            border-pink-200 bg-pink-50 text-pink-600">
-                                            {t("Теорія", "Теория")}
-                                          </span>
-                                        )}
-                                        {l.type === "practice" && (
-                                          <span className="inline-flex items-center text-[11px] px-2 py-[2px] rounded-full border
-                                            border-rose-200 bg-rose-50 text-rose-600">
-                                            {t("Практика", "Практика")}
-                                          </span>
-                                        )}
-                                      </div>
-                                    )}
-
-                                    {/* прогрес під уроком */}
-                                    <div className="mt-2">
-                                      <div className="flex items-center justify-between text-[11px] mb-1">
-                                        <span className={`${done ? "text-emerald-600" : "text-pink-600"} font-medium`}>
-                                          {done ? t("Завершено", "Завершено") : t("Прогрес", "Прогресс")}
-                                        </span>
-                                        <span className={`${done ? "text-emerald-600" : "text-pink-600"} font-semibold`}>
-                                          {percent}%
-                                        </span>
-                                      </div>
-                                      <div className={`${darkMode ? "bg-fuchsia-950/50" : "bg-pink-100"} h-1.5 rounded-full overflow-hidden`}>
-                                        <div
-                                          className={`h-full transition-all duration-700 ease-out ${
-                                            done ? "bg-emerald-400" : "bg-gradient-to-r from-pink-400 to-rose-500"
-                                          }`}
-                                          style={{ width: `${percent}%` }}
-                                        />
-                                      </div>
-                                    </div>
-                                  </div>
+                                {/* Заголовок уроку в один рядок */}
+                                <div className="flex items-center gap-2 mb-2">
+                                  <PlayCircle className="w-4 h-4 text-pink-600 shrink-0" />
+                                  <div className="font-medium truncate">{l.title}</div>
                                 </div>
+
+                                {/* Прогрес — простий */}
+                                <div className="flex items-center justify-between text-[11px] mb-1">
+                                  <span className={`${done ? "text-emerald-600" : "text-pink-700"} font-medium`}>
+                                    {done ? t("Завершено", "Завершено") : t("Прогрес", "Прогресс")}
+                                  </span>
+                                  <span className={`${done ? "text-emerald-600" : "text-pink-700"} font-semibold`}>
+                                    {percent}%
+                                  </span>
+                                </div>
+                                <div className={`${darkMode ? "bg-white/10" : "bg-pink-100"} h-2 rounded-full overflow-hidden`}>
+                                  <div
+                                    className={`h-full ${done ? "bg-emerald-400" : "bg-pink-500"} transition-all`}
+                                    style={{ width: `${percent}%` }}
+                                  />
+                                </div>
+
+                                {/* Тип уроку — дрібний підпис */}
+                                {l.type && (
+                                  <div className="mt-2 text-[11px] opacity-70">
+                                    {l.type === "theory" ? t("Теорія", "Теория") : t("Практика", "Практика")}
+                                  </div>
+                                )}
                               </button>
                             );
                           })}
