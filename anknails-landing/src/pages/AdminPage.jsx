@@ -131,51 +131,42 @@ export default function AdminPage() {
             )}
 
             <nav className="space-y-2 mb-6">
-              {tabs.map(({ id, label, icon: Icon, badge }) => (
-                <button
-                  key={id}
-                  onClick={() => {
-                    setActiveTab(id);
-                    setMenuOpen(false);
-                  }}
-                  className={`relative flex items-center ${collapsed ? "justify-center" : "gap-3"} w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${
-                    activeTab === id
-                      ? darkMode
-                        ? "bg-pink-500/30 text-fuchsia-100 border border-pink-400/40"
-                        : "bg-pink-100 text-pink-700 border border-pink-300"
-                      : darkMode
-                      ? "hover:bg-fuchsia-900/20 text-fuchsia-200"
-                      : "hover:bg-pink-50 text-gray-700"
-                  }`}
-                  title={collapsed ? label : ""}
-                >
-                  {/* Бейдж NEW для трафіка */}
-                  {badge && (
-                    <span
-                      className={`absolute right-3 top-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide
-                        ${darkMode ? "bg-fuchsia-600/90 text-white" : "bg-pink-500 text-white"}`}
-                    >
-                      {badge}
-                    </span>
-                  )}
-                  <Icon className="w-4 h-4" />
-                  {!collapsed && (
-                    <span className="flex items-center gap-2">
-                      {label}
-                      {/* дублювати бейдж біля тексту, коли меню не згорнуте */}
-                      {badge && (
-                        <span
-                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide
-                            ${darkMode ? "bg-fuchsia-600/90 text-white" : "bg-pink-500 text-white"}`}
-                        >
-                          {badge}
-                        </span>
-                      )}
-                    </span>
-                  )}
-                </button>
-              ))}
-            </nav>
+  {tabs.map(({ id, label, icon: Icon, badge }) => (
+    <button
+      key={id}
+      onClick={() => {
+        setActiveTab(id);
+        setMenuOpen(false);
+      }}
+      className={`relative flex items-center ${collapsed ? "justify-center" : "gap-3"} w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+        activeTab === id
+          ? darkMode
+            ? "bg-pink-500/30 text-fuchsia-100 border border-pink-400/40"
+            : "bg-pink-100 text-pink-700 border border-pink-300"
+          : darkMode
+          ? "hover:bg-fuchsia-900/20 text-fuchsia-200"
+          : "hover:bg-pink-50 text-gray-700"
+      }`}
+      title={collapsed ? label : ""}
+    >
+      {/* ✅ ЗАЛИШАЄМО ЛИШЕ ЦЕЙ БЕЙДЖ */}
+      {badge && (
+        <span
+          className={`absolute right-3 top-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide
+          ${darkMode ? "bg-fuchsia-600/90 text-white" : "bg-pink-500 text-white"}`}
+        >
+          {badge}
+        </span>
+      )}
+
+      <Icon className="w-4 h-4" />
+      {!collapsed && (
+        // ❌ БЕЗ внутрішнього дублювання бейджа
+        <span>{label}</span>
+      )}
+    </button>
+  ))}
+</nav>
 
             <button
               onClick={toggleTheme}
