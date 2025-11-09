@@ -9,7 +9,7 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
   const [lessonsMap, setLessonsMap] = useState({});
   const [loadingMap, setLoadingMap] = useState({});
 
-  // 🎨 Світлі градієнти: більше білого, колір — лише легкий відтінок
+  // 🎨 Світлі градієнти: більше білого
   const GRADIENTS_LIGHT = [
     "from-white via-white to-pink-50",
     "from-white via-white to-violet-50",
@@ -25,7 +25,7 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
     "border-sky-200/60",
   ];
 
-  // 🌚 Темна тема — делікатні градієнти
+  // 🌚 Темні делікатні
   const GRADIENTS_DARK = [
     "from-[#12081a] via-[#12081a] to-[#190a22]",
     "from-[#0f0a18] via-[#0f0a18] to-[#17112a]",
@@ -82,16 +82,16 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
 
   return (
     <div
-      className={`min-h-screen flex flex-col p-6 md:p-10 transition-colors ${
+      className={`min-h-screen flex flex-col transition-colors ${
         darkMode
           ? "bg-gradient-to-br from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
-      {/* ===== Контент (розтягується), футер внизу ===== */}
-      <div className="flex-1">
+      {/* Контент (додаємо нижній відступ під «липкий» футер) */}
+      <div className="flex-1 p-6 md:p-10 pb-24">
         <div className="max-w-5xl mx-auto">
-          {/* 🔙 Назад (ліворуч) + Заголовок справа в одному рядку */}
+          {/* 🔙 Назад зліва + Заголовок справа в одному рядку */}
           <div className="flex items-center justify-between mb-8">
             <button
               onClick={onBack}
@@ -214,15 +214,19 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
         </div>
       </div>
 
-      {/* ===== Футер (аналогічний дашборду) ===== */}
+      {/* ===== Липкий футер (у межах скрол-контейнера main) ===== */}
       <footer
-        className={`mt-8 text-center py-6 text-sm border-t
-          ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}
+        className={`sticky bottom-0 z-10 px-6 md:px-10 py-5 text-sm border-t backdrop-blur supports-[backdrop-filter]:bg-white/70
+          ${darkMode
+            ? "border-fuchsia-900/30 bg-[#12081a]/70 text-fuchsia-100/80"
+            : "border-pink-200 bg-white/80 text-gray-600"}`}
       >
-        <p className="font-medium">
-          © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
-          {t("Усі права захищені.", "Все права защищены.")}
-        </p>
+        <div className="max-w-5xl mx-auto text-center">
+          <p className="font-medium">
+            © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
+            {t("Усі права захищені.", "Все права защищены.")}
+          </p>
+        </div>
       </footer>
     </div>
   );
