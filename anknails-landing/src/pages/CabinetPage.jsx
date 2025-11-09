@@ -15,6 +15,7 @@ import {
   Globe,
   Flame,
   Check,
+  HelpCircle, // 🆕 підтримка
 } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
@@ -58,10 +59,13 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     []
   );
 
-  // коли вперше з’явився duration — одразу насіння прогресу в БД + локальне оновлення
+  // коли вперше з’явився duration — насіваємо прогрес тільки якщо є хоч трохи перегляду
   const seededRef = useRef(false);
   useEffect(() => {
     if (!userId || !lesson?.id || !duration || seededRef.current) return;
+    // ❗ Не затираємо існуючий прогрес нулем: чекаємо мінімального перегляду
+    if ((current || 0) <= 0) return;
+
     seededRef.current = true;
 
     onProgressTick?.({
@@ -111,6 +115,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     setCurrent(0);
     setShowNext(false);
     lastBucketRef.current = -1;
+    seededRef.current = false; // 🆕 ресет насіння при зміні уроку
   }, [lesson?.id]);
 
   /// підписаний iframe URL
@@ -247,10 +252,13 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     };
   }, [videoUrl, duration, onCompleted]);
 
-  // локальні тики кожні ~10с
+  // локальні тики кожні ~10с — ❗ лише коли знаємо тривалість і є перегляд
   useEffect(() => {
     const total = duration || 0;
     const watched = total ? Math.min(current, total) : current;
+
+    // 🔒 не шлемо тики поки немає total або перегляду
+    if (total <= 0 || watched <= 0) return;
 
     const bucket = Math.floor((watched || 0) / 10);
     if (bucket !== lastBucketRef.current) {
@@ -274,7 +282,8 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     if (!userId || !lesson?.id) return;
 
     const save = async () => {
-      if (!duration) return;
+      // ❗ не шлемо в бекенд поки немає total або перегляду
+      if (!duration || current <= 0) return;
       await postProgress({
         user_id: userId,
         lesson_id: lesson.id,
@@ -571,6 +580,8 @@ export default function CabinetPage() {
   // локальне оновлення від SafeVideo
   const handleProgressTick = ({ lessonId, watched_seconds, total_seconds, completed }) => {
     if (!lessonId) return;
+    // Не затираємо прогрес нулями (страхуємося вдруг що)
+    if ((total_seconds || 0) <= 0 || (watched_seconds || 0) <= 0) return;
     setProgress((prev) => ({
       ...prev,
       [lessonId]: {
@@ -826,6 +837,22 @@ export default function CabinetPage() {
               ))}
             </div>
           )}
+
+          {/* 🆕 ПІДТРИМКА — блок над футером сайдбару */}
+          <div className="mt-6">
+            <a
+              href="mailto:ankstudio.online@gmail.com"
+              className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+                darkMode
+                  ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+                  : "border-pink-200 bg-white/70 hover:bg-white"
+              }`}
+              title={t("Звернутися у підтримку", "Обратиться в поддержку")}
+            >
+              <HelpCircle className="w-4 h-4 text-pink-600" />
+              <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
+            </a>
+          </div>
         </div>
 
         {/* FOOTER OF SIDEBAR */}
