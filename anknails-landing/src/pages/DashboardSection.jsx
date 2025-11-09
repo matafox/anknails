@@ -1,4 +1,3 @@
-// src/pages/DashboardSection.jsx
 import { useEffect, useMemo, useState } from "react";
 import {
   CheckSquare,
@@ -201,7 +200,6 @@ export default function DashboardSection({
   const handleDownloadCert = () => {
     if (!user?.id) return;
     const url = `${BACKEND}/api/cert/generate?user_id=${user.id}`;
-    // відкриваємо у новій вкладці; якщо бекенд не готовий — буде видно в консолі
     const w = window.open(url, "_blank", "noopener,noreferrer");
     if (!w) {
       alert(
@@ -267,7 +265,7 @@ export default function DashboardSection({
           <div
             className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 bg-gradient-to-br ${stageColor}`}
           >
-            {/* ℹ️ Кнопка інформації */}
+            {/* ℹ️ кнопка (зовнішня) */}
             <button
               onClick={() => setShowInfo(!showInfo)}
               className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-30"
@@ -313,6 +311,15 @@ export default function DashboardSection({
               }`}
             >
               <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40" />
+              {/* ✅ Хрестик всередині вікна */}
+              <button
+                onClick={() => setShowInfo(false)}
+                className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 transition"
+                aria-label="close info"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
               <div className="relative z-10">
                 <h3 className="text-lg md:text-xl font-bold mb-2 leading-tight tracking-tight break-words px-2">
                   {t("Як розвивати майстерність", "Как развивать мастерство")}
@@ -335,7 +342,7 @@ export default function DashboardSection({
           >
             <h3 className="text-xl font-bold mb-3 text-pink-600">{t("Прогрес курсу", "Прогресс курса")}</h3>
             <div className="text-center">
-              <p className="text-5xl font-extrabold text-pink-500 mb-2">{overallProgress}%</p>
+              <p className="text-5xl font-extrabолд text-pink-500 mb-2">{overallProgress}%</p>
               <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-3">
                 <div className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700" style={{ width: `${overallProgress}%` }} />
               </div>
@@ -380,7 +387,7 @@ export default function DashboardSection({
               darkMode ? "bg-[#0f0016]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
             }`}
           >
-            {/* Кнопка інформації (повноекранне вікно) */}
+            {/* Кнопка інформації (зовнішня) */}
             <button
               onClick={() => setCertInfoOpen((v) => !v)}
               className="absolute top-3 right-3 z-40 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
@@ -389,7 +396,7 @@ export default function DashboardSection({
               {certInfoOpen ? <X className="w-5 h-5 text-pink-500" /> : <Info className="w-5 h-5 text-pink-500" />}
             </button>
 
-            {/* ПОВНОЕКРАННЕ інфо-вікно (поверх замка) */}
+            {/* ПОВНОЕКРАННЕ інфо-вікно */}
             <div
               className={`absolute inset-0 z-50 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
@@ -400,6 +407,15 @@ export default function DashboardSection({
                   darkMode ? "bg-[#1a0a1f]/80 border-fuchsia-900/40" : "bg-white/80 border-pink-200"
                 }`}
               />
+              {/* ✅ Хрестик всередині вікна */}
+              <button
+                onClick={() => setCertInfoOpen(false)}
+                className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+                aria-label="close certificate info"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
               <div className="relative z-50 max-w-md">
                 <h3 className="text-lg md:text-xl font-bold mb-2">
                   {t("Доступ до сертифікатів", "Доступ к сертификатам")}
@@ -413,18 +429,7 @@ export default function DashboardSection({
                         "Страница с сертификатами откроется по истечении установленного периода с вашего первого входа."
                       )}
                     </p>
-                    {certStatus.unlock_at && (
-                      <div className="mt-1">
-                        <p className="text-sm opacity-80 mb-1">
-                          {t("Буде доступно через:", "Будет доступно через:")}
-                        </p>
-                        <p className="font-mono text-xl">{countdownStr}</p>
-                        <p className="text-xs opacity-75 mt-2">
-                          {t("Дата відкриття", "Дата открытия")}:{" "}
-                          {new Date(certStatus.unlock_at).toLocaleDateString()}
-                        </p>
-                      </div>
-                    )}
+                    
                   </>
                 ) : (
                   <>
@@ -434,13 +439,13 @@ export default function DashboardSection({
                         "Отправьте запрос на именной сертификат в блоке ниже. После одобрения появится кнопка скачивания."
                       )}
                     </p>
-                    {/* За твоїм проханням — БЕЗ кнопки «Подати запит…» у вікні */}
+                    {/* за вимогою: кнопки в інфо-вікні немає */}
                   </>
                 )}
               </div>
             </div>
 
-            {/* Контент картки (розмиваємо, якщо заблоковано) */}
+            {/* Контент картки */}
             <div className={`${!unlocked ? "blur-[2px] select-none pointer-events-none" : ""}`}>
               <h3 className="text-xl font-bold mb-3 text-pink-600 flex items-center gap-2">
                 <GraduationCap className="w-5 h-5 text-pink-500" />
@@ -454,7 +459,7 @@ export default function DashboardSection({
                 )}
               </p>
 
-              {/* Кнопки за статусом — ТІЛЬКИ тут (не в інфо-вікні) */}
+              {/* Кнопки статусу — тільки тут */}
               {unlocked && !certInfoOpen && !certStatus.approved && !certStatus.requested && (
                 <button
                   onClick={handleRequestCert}
@@ -482,8 +487,7 @@ export default function DashboardSection({
               )}
             </div>
 
-            {/* Оверлей блокування: БЕЗ таймера, тільки дата
-                (ховаємо, коли відкрито інфо-вікно, щоб воно не перекривало інфо) */}
+            {/* Оверлей блокування (без таймера) */}
             {!unlocked && !certInfoOpen && (
               <div
                 className={`absolute inset-0 z-30 flex flex-col items-center justify-center
