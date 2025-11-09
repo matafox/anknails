@@ -1062,6 +1062,7 @@ const markLessonComplete = async () => {
       setSelectedLesson(lesson);
       setView("dashboard");
     }}
+    progress={progress}
   />
 )}
           </>
