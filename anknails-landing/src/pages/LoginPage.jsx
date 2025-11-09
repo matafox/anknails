@@ -70,9 +70,6 @@ export default function LoginPage() {
               <div className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-pink-100 to-rose-100 text-pink-600 border border-pink-200">
                 {t("Ласкаво просимо", "Добро пожаловать")}
               </div>
-              <h1 className="mt-3 text-2xl font-extrabold tracking-tight bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
-                ANK Studio Online
-              </h1>
               <p className="mt-2 text-sm opacity-75">
                 {t("Увійдіть, щоб продовжити навчання", "Войдите, чтобы продолжить обучение")}
               </p>
