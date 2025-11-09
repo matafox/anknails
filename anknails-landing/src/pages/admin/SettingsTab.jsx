@@ -34,14 +34,14 @@ export default function SettingsTab({ i18n, darkMode }) {
               u.id,
               {
                 unlocked: !!j.unlocked,
-                unlock_at: j.unlock_at ?? ,
+                unlock_at: j.unlock_at ?? null,
                 requested: !!j.requested,
                 approved: !!j.approved,
-                file_url: j.file_url ?? , // ← бек віддає, див. app.py нижче
+                file_url: j.file_url ?? null, // ← бек віддає, див. app.py нижче
               },
             ];
           } catch {
-            return [u.id, { unlocked: false, unlock_at: , requested: false, approved: false, file_url:  }];
+            return [u.id, { unlocked: false, unlock_at: null, requested: false, approved: false, file_url: null }];
           }
         })
       );
@@ -75,7 +75,7 @@ export default function SettingsTab({ i18n, darkMode }) {
     const rawDays = e.target.days.value;
     const days = Number.isFinite(parseInt(rawDays, 10)) ? parseInt(rawDays, 10) : 7;
     const rawCourse = e.target.course.value;
-    const course_id = rawCourse === "" ?  : Number(rawCourse);
+    const course_id = rawCourse === "" ? null : Number(rawCourse);
     const packageValue = e.target.package.value;
 
     if (!email) return alert(i18n.language === "ru" ? "Введите email" : "Введіть email");
@@ -456,6 +456,7 @@ export default function SettingsTab({ i18n, darkMode }) {
                               : "bg-white/70 border-pink-200 focus:border-pink-500"
                           }`}
                         />
+                        null
                       </div>
                     </td>
 
