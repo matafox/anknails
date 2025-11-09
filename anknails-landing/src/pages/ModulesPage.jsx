@@ -91,7 +91,7 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
       className={`min-h-screen p-6 md:p-10 transition-colors ${
         darkMode
           ? "bg-gradient-to-br from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
-          : "bg-gradient-to-br from-white via-white to-rose-50 text-gray-800"
+          : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
       <div className="max-w-5xl mx-auto">
