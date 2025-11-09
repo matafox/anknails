@@ -205,7 +205,7 @@ export default function LoginPage() {
         }`}
       >
         <span className="text-xs md:text-sm opacity-70">
-          © {new Date().getFullYear()} ANK Studio
+          © {new Date().getFullYear()} ANK Studio LMS
         </span>
 
         <a
