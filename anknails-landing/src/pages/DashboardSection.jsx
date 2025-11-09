@@ -32,36 +32,6 @@ const STAGE_COLORS_DARK = {
   5: "from-[#2a210a] to-[#120a06] border-amber-800/40 text-amber-200",
 };
 
-/* ========== СКЕЛЕТОНИ (шіммери) ========== */
-function Shimmer({ className = "" }) {
-  return (
-    <div
-      className={`animate-pulse rounded-md bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%] ${className} dark:from-fuchsia-950/40 dark:via-fuchsia-900/30 dark:to-fuchsia-950/40`}
-    />
-  );
-}
-const SkeletonTitle = () => <Shimmer className="h-6 w-40 mb-4 rounded-lg" />;
-const SkeletonText = ({ w = "w-3/4" }) => <Shimmer className={`h-4 ${w} mb-2`} />;
-const SkeletonBar = ({ w = "w-full", h = "h-2" }) => <Shimmer className={`${h} ${w} rounded-full`} />;
-const SkeletonPill = ({ w = "w-20" }) => <Shimmer className={`h-5 ${w} rounded-full`} />;
-const SkeletonListItem = () => (
-  <div className="flex items-center justify-between px-3 py-2 rounded-lg">
-    <SkeletonText w="w-2/3" />
-    <SkeletonPill w="w-16" />
-  </div>
-);
-const CardShell = ({ dark, children, hoverable = false }) => (
-  <div
-    className={`relative p-6 rounded-2xl border shadow-md transition ${hoverable ? "hover:scale-[1.02]" : ""} ${
-      dark ? "bg-[#1a0a1f]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
-    }`}
-  >
-    {children}
-  </div>
-);
-
-/* ========================================= */
-
 export default function DashboardSection({
   modules,
   lessons,
@@ -71,8 +41,6 @@ export default function DashboardSection({
   t,
   user,
   onOpenModules,
-  /** опційно: примусовий скелетон */
-  isLoading: isLoadingProp = false,
 }) {
   const [showInfo, setShowInfo] = useState(false);
   const [skills, setSkills] = useState(user?.xp || 0);
@@ -80,16 +48,16 @@ export default function DashboardSection({
   const [localLessons, setLocalLessons] = useState(lessons || {});
 
   /* ====== Сертифікат: статус із бекенду ====== */
-  const [certInfoOpen, setCertInfoOpen] = useState(false);
+  const [certInfoOpen, setCertInfoOpen] = useState(false); // повноекранне інфо-вікно
   const [certStatus, setCertStatus] = useState({
     unlocked: false,
-    unlock_at: null,
+    unlock_at: null, // ISO
     seconds_left: 0,
     requested: false,
     approved: false,
   });
 
-  // таймер для рахунку (як було)
+  // таймер для рахунку в інфо-вікні
   const [nowTs, setNowTs] = useState(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNowTs(Date.now()), 1000);
@@ -129,7 +97,7 @@ export default function DashboardSection({
       .catch(() => {});
   }, [user?.id]);
 
-  // 🧠 К-сть уроків у модулях (префетч)
+  // 🧠 К-сть уроків у модулях
   useEffect(() => {
     if (!modules?.length) return;
     (async () => {
@@ -145,7 +113,7 @@ export default function DashboardSection({
     })();
   }, [modules]);
 
-  // 🧾 Статус сертифіката
+  // 🧾 Статус сертифіката з бекенду
   const loadCertStatus = async () => {
     if (!user?.id) return;
     try {
@@ -162,12 +130,13 @@ export default function DashboardSection({
       console.error("cert/status error:", e);
     }
   };
+
   useEffect(() => {
     loadCertStatus();
   }, [user?.id]);
 
   // 🧮 Обчислення рівня
-  const completedLessons = Object.values(progress || {}).filter((p) => p.completed).length;
+  const completedLessons = Object.values(progress).filter((p) => p.completed).length;
   const realSkills = skills ?? completedLessons * 20;
   const realStage = Math.min(stage ?? Math.floor(realSkills / 100) + 1, 5);
   const nextStageSkills = 100 * realStage;
@@ -187,6 +156,9 @@ export default function DashboardSection({
   const handleRequestCert = async () => {
     if (!user?.id) return alert(t("Немає user_id", "Нет user_id"));
     const session_token = getSessionToken();
+    if (!session_token) {
+      console.warn("session_token is empty");
+    }
     try {
       const res = await fetch(`${BACKEND}/api/cert/request`, {
         method: "POST",
@@ -202,6 +174,7 @@ export default function DashboardSection({
       }
 
       if (!res.ok || !j?.success) {
+        console.error("cert/request fail:", res.status, j);
         alert(
           t(
             `Помилка запиту сертифіката: ${j?.detail || j?.error || res.status}`,
@@ -220,29 +193,24 @@ export default function DashboardSection({
         )
       );
     } catch (e) {
+      console.error("cert/request exception:", e);
       alert(t("Не вдалося подати запит. Спробуйте пізніше.", "Не удалось отправить запрос. Попробуйте позже."));
     }
   };
 
-  const handleDownloadCert = () => {
-    if (!user?.id) {
-      return alert(t("Немає user_id", "Нет user_id"));
-    }
-    window.open(`${BACKEND}/api/cert/open?user_id=${user.id}`, "_blank");
-  };
+ const handleDownloadCert = () => {
+  if (!user?.id) {
+    return alert(t("Немає user_id", "Нет user_id"));
+  }
+  window.open(`${BACKEND}/api/cert/open?user_id=${user.id}`, "_blank");
+};
 
-  /* ====== Визначення «завантаження» для скелетонів ====== */
-  const derivedLoading =
-    (!modules || modules.length === 0) &&
-    (!progress || Object.keys(progress).length === 0) &&
-    (!overallProgress || overallProgress === 0);
 
-  const isLoading = isLoadingProp || derivedLoading;
 
   /* === Рендер === */
   return (
     <div
-      className={`min-h[calc(100vh-8rem)] flex flex-col justify-between ${
+      className={`min-h-[calc(100vh-8rem)] flex flex-col justify-between ${
         darkMode ? "text-fuchsia-100" : "text-gray-800"
       }`}
     >
@@ -251,10 +219,12 @@ export default function DashboardSection({
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 📦 Модулі */}
           <div
-            onClick={() => !isLoading && onOpenModules && onOpenModules()}
-            className={`relative p-6 rounded-2xl border shadow-md transition overflow-y-auto max-h-[400px] ${
-              !isLoading ? "cursor-pointer hover:scale-[1.02]" : "cursor-default"
-            } ${darkMode ? "bg-[#1a0a1f]/70 border-fuchsia-900/30" : "bg-white border-pink-200"}`}
+            onClick={() => onOpenModules && onOpenModules()}
+            className={`relative p-6 rounded-2xl border shadow-md transition overflow-y-auto max-h-[400px] cursor-pointer hover:scale-[1.02] ${
+              darkMode
+                ? "bg-[#1a0a1f]/70 border-fuchsia-900/30 hover:border-pink-500/40"
+                : "bg-white border-pink-200 hover:border-pink-400/70"
+            }`}
           >
             <h3 className="text-xl font-bold mb-3 text-pink-600 flex justify-between items-center">
               <span>{t("Мої модулі", "Мои модули")}</span>
@@ -264,14 +234,7 @@ export default function DashboardSection({
               </span>
             </h3>
 
-            {isLoading ? (
-              <div className="space-y-2">
-                <SkeletonListItem />
-                <SkeletonListItem />
-                <SkeletonListItem />
-                <SkeletonListItem />
-              </div>
-            ) : modules.length === 0 ? (
+            {modules.length === 0 ? (
               <p className="text-sm opacity-70">
                 {t("Модулів поки що немає", "Модулей пока нет")}
               </p>
@@ -296,158 +259,123 @@ export default function DashboardSection({
 
           {/* 💅 Моя майстерність */}
           <div
-            className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 bg-gradient-to-br ${
-              (darkMode ? STAGE_COLORS_DARK : STAGE_COLORS)[
-                Math.max(1, Math.min(5, stage || 1))
-              ]
-            }`}
+            className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 bg-gradient-to-br ${stageColor}`}
           >
-            {isLoading ? (
-              <>
-                <SkeletonTitle />
-                <div className="text-center">
-                  <Shimmer className="h-10 w-28 mx-auto rounded-xl mb-3" />
-                  <SkeletonText w="w-1/2 mx-auto" />
-                  <div className="mt-2">
-                    <SkeletonBar />
-                  </div>
-                  <SkeletonText w="w-2/3 mx-auto" />
+            {/* ℹ️ кнопка (зовнішня) */}
+            <button
+              onClick={() => setShowInfo(!showInfo)}
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-30"
+              title={t("Як підвищити майстерність", "Как развивать мастерство")}
+            >
+              {showInfo ? <X className="w-5 h-5 text-yellow-500" /> : <Info className="w-5 h-5" />}
+            </button>
+
+            {/* контент */}
+            <div className={`transition-all duration-700 ${showInfo ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
+              <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2">
+                <Award className="w-5 h-5 text-yellow-500" />
+                {t("Моя майстерність", "Моё мастерство")}
+              </h3>
+
+              <div className="text-center">
+                <p className="text-5xl font-extrabold mb-1">
+                  {t("Рівень", "Уровень")} {realStage}
+                </p>
+
+                <p className="text-sm opacity-80 mb-3">
+                  {realSkills} {t("навичок", "навыков")} / {nextStageSkills} {t("навичок", "навыков")}
+                </p>
+
+                <div className="h-2 w-full bg-white/30 rounded-full overflow-hidden mb-2">
+                  <div
+                    className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-700"
+                    style={{ width: `${progressToNext}%` }}
+                  />
                 </div>
-              </>
-            ) : (
-              <>
-                <button
-                  onClick={() => setShowInfo(!showInfo)}
-                  className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-30"
-                  title={t("Як підвищити майстерність", "Как развивать мастерство")}
-                >
-                  {showInfo ? <X className="w-5 h-5 text-yellow-500" /> : <Info className="w-5 h-5" />}
-                </button>
 
-                <div className={`transition-all duration-700 ${showInfo ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
-                  <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2">
-                    <Award className="w-5 h-5 text-yellow-500" />
-                    {t("Моя майстерність", "Моё мастерство")}
-                  </h3>
-
-                  <div className="text-center">
-                    <p className="text-5xl font-extrabold mb-1">
-                      {t("Рівень", "Уровень")} {Math.max(1, Math.min(5, stage || 1))}
-                    </p>
-
-                    <p className="text-sm opacity-80 mb-3">
-                      {skills ?? 0} {t("навичок", "навыков")} / {100 * Math.max(1, Math.min(5, stage || 1))} {t("навичок", "навыков")}
-                    </p>
-
-                    <div className="h-2 w-full bg-white/30 rounded-full overflow-hidden mb-2">
-                      <div
-                        className="h-full bg-gradient-to-r from-yellow-400 to-pink-500 transition-all duration-700"
-                        style={{ width: `${((skills ?? 0) % 100) || 0}%` }}
-                      />
-                    </div>
-
-                    <p className="text-xs opacity-80">
-                      {t("До наступного рівня залишилось", "До следующего уровня осталось")} {100 - ((skills ?? 0) % 100)}{" "}
-                      {t("навичок", "навыков")}
-                    </p>
-                  </div>
-                </div>
-              </>
-            )}
-
-            {/* інфо-вікно поверх — тільки коли не loading */}
-            {!isLoading && (
-              <div
-                className={`absolute inset-0 z-40 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
-                  showInfo ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
-                }`}
-              >
-                <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40" />
-                <button
-                  onClick={() => setShowInfo(false)}
-                  className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-                <div className="relative z-10 max-w-md">
-                  <h3 className="text-lg md:text-xl font-bold mb-2">
-                    {t("Як розвивати майстерність", "Как развивать мастерство")}
-                  </h3>
-                  <p className="text-sm md:text-base font-medium leading-relaxed">
-                    {t(
-                      "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 - новий рівень! Виконуйте домашні завдання - бонусні 10 одиниць.",
-                      "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 - новый уровень! Выполняйте домашние задания - бонусные 10 единиц."
-                    )}
-                  </p>
-                </div>
+                <p className="text-xs opacity-80">
+                  {t("До наступного рівня залишилось", "До следующего уровня осталось")} {100 - (realSkills % 100)}{" "}
+                  {t("навичок", "навыков")}
+                </p>
               </div>
-            )}
+            </div>
+
+            {/* інфо-вікно (поверх усього) */}
+            <div
+              className={`absolute inset-0 z-40 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+                showInfo ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+              }`}
+            >
+              <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40" />
+              {/* ✅ Хрестик всередині вікна */}
+              <button
+                onClick={() => setShowInfo(false)}
+                className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 transition"
+                aria-label="close info"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="relative z-10">
+                <h3 className="text-lg md:text-xl font-bold mb-2 leading-tight tracking-tight break-words px-2">
+                  {t("Як розвивати майстерність", "Как развивать мастерство")}
+                </h3>
+                <p className="text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5">
+                  {t(
+                    "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 - новий рівень! Виконуйте домашні завдання - бонусні 10 одиниць.",
+                    "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 - новый уровень! Выполняйте домашние задания - бонусные 10 единиц."
+                  )}
+                </p>
+              </div>
+            </div>
           </div>
 
           {/* 📈 Прогрес курсу */}
-          <CardShell dark={darkMode}>
-            <h3 className="text-xl font-bold mb-3 text-pink-600">
-              {t("Прогрес курсу", "Прогресс курса")}
-            </h3>
-
-            {isLoading ? (
-              <div className="text-center">
-                <Shimmer className="h-12 w-24 mx-auto rounded-xl mb-3" />
-                <div className="mb-3">
-                  <SkeletonBar />
-                </div>
-                <SkeletonText w="w-2/3 mx-auto" />
+          <div
+            className={`p-6 rounded-2xl border shadow-md transition ${
+              darkMode ? "bg-[#1a0a1f]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
+            }`}
+          >
+            <h3 className="text-xl font-bold mb-3 text-pink-600">{t("Прогрес курсу", "Прогресс курса")}</h3>
+            <div className="text-center">
+              <p className="text-5xl font-extrabолд text-pink-500 mb-2">{overallProgress}%</p>
+              <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-3">
+                <div className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700" style={{ width: `${overallProgress}%` }} />
               </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-5xl font-extrabold text-pink-500 mb-2">{overallProgress}%</p>
-                <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-3">
-                  <div
-                    className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700"
-                    style={{ width: `${overallProgress}%` }}
-                  />
-                </div>
-                <p className="text-sm opacity-70">
-                  {t("Ви переглянули", "Вы просмотрели")} {completedLessons} {t("уроків з", "уроков из")}{" "}
-                  {Object.values(progress || {}).length}
-                </p>
-              </div>
-            )}
-          </CardShell>
+              <p className="text-sm opacity-70">
+                {t("Ви переглянули", "Вы просмотрели")} {completedLessons} {t("уроків з", "уроков из")}{" "}
+                {Object.values(progress).length}
+              </p>
+            </div>
+          </div>
 
           {/* 🧾 Домашні завдання */}
-          <CardShell dark={darkMode}>
+          <div
+            className={`p-6 rounded-2xl border shadow-md transition ${
+              darkMode ? "bg-[#1a0a1f]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
+            }`}
+          >
             <h3 className="text-xl font-bold mb-3 text-pink-600 flex items-center gap-2">
               <CheckSquare className="w-5 h-5 text-pink-500" />
               {t("Домашні завдання", "Домашние задания")}
             </h3>
-
-            {isLoading ? (
-              <>
-                <SkeletonText w="w-48" />
-                <SkeletonBar />
-              </>
-            ) : (
-              <>
-                <p className="text-sm opacity-80 mb-2">
-                  {t("Виконано завдань:", "Выполнено заданий:")}{" "}
-                  {Object.values(progress || {}).filter((p) => p.homework_done).length}
-                </p>
-                <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-700"
-                    style={{
-                      width: `${
-                        (Object.values(progress || {}).filter((p) => p.homework_done).length /
-                          Math.max(Object.values(progress || {}).length, 1)) *
-                        100
-                      }%`,
-                    }}
-                  />
-                </div>
-              </>
-            )}
-          </CardShell>
+            <p className="text-sm opacity-80 mb-2">
+              {t("Виконано завдань:", "Выполнено заданий:")}{" "}
+              {Object.values(progress).filter((p) => p.homework_done).length}
+            </p>
+            <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-green-400 to-emerald-500 transition-all duration-700"
+                style={{
+                  width: `${
+                    (Object.values(progress).filter((p) => p.homework_done).length /
+                      Math.max(Object.values(progress).length, 1)) *
+                    100
+                  }%`,
+                }}
+              />
+            </div>
+          </div>
 
           {/* 🎓 Сертифікат */}
           <div
@@ -455,126 +383,119 @@ export default function DashboardSection({
               darkMode ? "bg-[#0f0016]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
             }`}
           >
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xl font-bold text-pink-600 flex items-center gap-2">
-                <GraduationCap className="w-5 h-5 text-pink-500" />
-                {t("Мій сертифікат", "Мой сертификат")}
-              </h3>
+            {/* Кнопка інформації (зовнішня) */}
+            <button
+              onClick={() => setCertInfoOpen((v) => !v)}
+              className="absolute top-3 right-3 z-40 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+              title={t("Інформація про сертифікат", "Информация о сертификате")}
+            >
+              {certInfoOpen ? <X className="w-5 h-5 text-pink-500" /> : <Info className="w-5 h-5 text-pink-500" />}
+            </button>
 
-              {!isLoading && (
-                <button
-                  onClick={() => setCertInfoOpen((v) => !v)}
-                  className="p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
-                  title={t("Інформація про сертифікат", "Информация о сертификате")}
-                >
-                  {certInfoOpen ? <X className="w-5 h-5 text-pink-500" /> : <Info className="w-5 h-5 text-pink-500" />}
-                </button>
-              )}
-            </div>
-
-            {isLoading ? (
-              <>
-                <SkeletonText w="w-3/4" />
-                <div className="mt-4 flex items-center gap-3">
-                  <Shimmer className="h-10 w-48 rounded-xl" />
-                  <Shimmer className="h-10 w-40 rounded-xl" />
-                </div>
-              </>
-            ) : (
-              <>
-                <p className={`text-sm mb-4 ${darkMode ? "text-fuchsia-100/80" : "text-gray-600"}`}>
-                  {t(
-                    "Після схвалення запиту ви зможете завантажити іменний сертифікат про проходження курсу.",
-                    "После одобрения заявки вы сможете скачать именной сертификат о прохождении курса."
-                  )}
-                </p>
-
-                {/* Кнопки статусу — тільки коли не loading */}
-                {unlocked && !certInfoOpen && !certStatus.approved && !certStatus.requested && (
-                  <button
-                    onClick={handleRequestCert}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
-                  >
-                    <Send className="w-5 h-5" />
-                    {t("Подати запит на сертифікат", "Отправить запрос на сертификат")}
-                  </button>
-                )}
-
-                {unlocked && !certInfoOpen && certStatus.requested && !certStatus.approved && (
-                  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {t("Запит відправлено - очікує підтвердження", "Запрос отправлен - ждёт подтверждения")}
-                  </span>
-                )}
-
-                {unlocked && !certInfoOpen && certStatus.approved && (
-                  <button
-                    onClick={handleDownloadCert}
-                    className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
-                  >
-                    <FileDown className="w-5 h-5" />
-                    {t("Завантажити сертифікат", "Скачать сертификат")}
-                  </button>
-                )}
-
-                {/* Оверлей блокування (без таймера) */}
-                {!unlocked && !certInfoOpen && (
-                  <div
-                    className={`absolute inset-0 z-30 flex flex-col items-center justify-center ${
-                      darkMode ? "bg-black/40" : "bg-white/60"
-                    } backdrop-blur-md`}
-                  >
-                    <div className="flex flex-col items-center text-center px-6">
-                      <Lock className="w-10 h-10 mb-2 text-pink-500" />
-                      {certStatus.unlock_at && (
-                        <p className="text-sm opacity-85">
-                          {t("Дата відкриття", "Дата открытия")}:{" "}
-                          {new Date(certStatus.unlock_at).toLocaleDateString()}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </>
-            )}
-
-            {/* Повноекранне інфо-вікно — лише коли не loading */}
-            {!isLoading && (
+            {/* ПОВНОЕКРАННЕ інфо-вікно */}
+            <div
+              className={`absolute inset-0 z-50 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+                certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+              }`}
+            >
               <div
-                className={`absolute inset-0 z-50 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
-                  certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
+                className={`absolute inset-0 rounded-2xl backdrop-blur-md border ${
+                  darkMode ? "bg-[#1a0a1f]/80 border-fuchsia-900/40" : "bg-white/80 border-pink-200"
                 }`}
+              />
+              {/* ✅ Хрестик всередині вікна */}
+              <button
+                onClick={() => setCertInfoOpen(false)}
+                className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+                aria-label="close certificate info"
               >
-                <div
-                  className={`absolute inset-0 rounded-2xl backdrop-blur-md border ${
-                    darkMode ? "bg-[#1a0a1f]/80 border-fuchsia-900/40" : "bg-white/80 border-pink-200"
-                  }`}
-                />
-                <button
-                  onClick={() => setCertInfoOpen(false)}
-                  className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
-                >
-                  <X className="w-5 h-5" />
-                </button>
+                <X className="w-5 h-5" />
+              </button>
 
-                <div className="relative z-50 max-w-md">
-                  <h3 className="text-lg md:text-xl font-bold mb-2">
-                    {t("Доступ до сертифікатів", "Доступ к сертификатам")}
-                  </h3>
+              <div className="relative z-50 max-w-md">
+                <h3 className="text-lg md:text-xl font-bold mb-2">
+                  {t("Доступ до сертифікатів", "Доступ к сертификатам")}
+                </h3>
 
-                  {!unlocked ? (
+                {!unlocked ? (
+                  <>
                     <p className="text-sm md:text-base font-medium leading-relaxed mb-4">
                       {t(
-                        "Доступ до завантаження сертифіката відкриється через 4 тижні.",
-                        "Доступ к загрузке сертификата откроется через 4 недели."
-                      )}
+  "Доступ до завантаження сертифіката відкриється через 4 тижні.",
+  "Доступ к загрузке сертификата откроется через 4 недели."
+)}
                     </p>
-                  ) : (
+                    
+                  </>
+                ) : (
+                  <>
                     <p className="text-sm md:text-base font-medium leading-relaxed mb-2">
                       {t(
                         "Подайте запит на іменний сертифікат у блоці нижче. Після схвалення зʼявиться кнопка завантаження.",
                         "Отправьте запрос на именной сертификат в блоке ниже. После одобрения появится кнопка скачивания."
                       )}
+                    </p>
+                    {/* за вимогою: кнопки в інфо-вікні немає */}
+                  </>
+                )}
+              </div>
+            </div>
+
+            {/* Контент картки */}
+            <div className={`${!unlocked ? "blur-[2px] select-none pointer-events-none" : ""}`}>
+              <h3 className="text-xl font-bold mb-3 text-pink-600 flex items-center gap-2">
+                <GraduationCap className="w-5 h-5 text-pink-500" />
+                {t("Мій сертифікат", "Мой сертификат")}
+              </h3>
+
+              <p className={`text-sm mb-4 ${darkMode ? "text-fuchsia-100/80" : "text-gray-600"}`}>
+                {t(
+                  "Після схвалення запиту ви зможете завантажити іменний сертифікат про проходження курсу.",
+                  "После одобрения заявки вы сможете скачать именной сертификат о прохождении курса."
+                )}
+              </p>
+
+              {/* Кнопки статусу — тільки тут */}
+              {unlocked && !certInfoOpen && !certStatus.approved && !certStatus.requested && (
+                <button
+                  onClick={handleRequestCert}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
+                >
+                  <Send className="w-5 h-5" />
+                  {t("Подати запит на сертифікат", "Отправить запрос на сертификат")}
+                </button>
+              )}
+
+              {unlocked && !certInfoOpen && certStatus.requested && !certStatus.approved && (
+  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
+    <Loader2 className="w-4 h-4 animate-spin" />
+    {t("Запит відправлено - очікує підтвердження", "Запрос отправлен - ждёт подтверждения")}
+  </span>
+)}
+
+              {unlocked && !certInfoOpen && certStatus.approved && (
+                <button
+                  onClick={handleDownloadCert}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
+                >
+                  <FileDown className="w-5 h-5" />
+                  {t("Завантажити сертифікат", "Скачать сертификат")}
+                </button>
+              )}
+            </div>
+
+            {/* Оверлей блокування (без таймера) */}
+            {!unlocked && !certInfoOpen && (
+              <div
+                className={`absolute inset-0 z-30 flex flex-col items-center justify-center
+                ${darkMode ? "bg-black/40" : "bg-white/60"} backdrop-blur-md`}
+              >
+                <div className="flex flex-col items-center text-center px-6">
+                  <Lock className="w-10 h-10 mb-2 text-pink-500" />
+                  {certStatus.unlock_at && (
+                    <p className="text-sm opacity-85">
+                      {t("Дата відкриття", "Дата открытия")}:{" "}
+                      {new Date(certStatus.unlock_at).toLocaleDateString()}
                     </p>
                   )}
                 </div>
