@@ -197,9 +197,21 @@ export default function DashboardSection({
     }
   };
 
-  const handleDownloadCert = () => {
-    if (!user?.id) return;
-    const url = `${BACKEND}/api/cert/generate?user_id=${user.id}`;
+ const handleDownloadCert = async () => {
+  if (!user?.id) return alert(t("Немає user_id", "Нет user_id"));
+  try {
+    const res = await fetch(`${BACKEND}/api/cert/generate?user_id=${user.id}`, {
+      method: "GET",
+      credentials: "include",
+    });
+
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      const msg = err?.detail || `HTTP ${res.status}`;
+      throw new Error(msg);
+    }
+
+    const { url } = await res.json();
     const w = window.open(url, "_blank", "noopener,noreferrer");
     if (!w) {
       alert(
@@ -209,7 +221,10 @@ export default function DashboardSection({
         )
       );
     }
-  };
+  } catch (e) {
+    alert(t(`Не вдалося відкрити сертифікат: ${e.message}`, `Не удалось открыть сертификат: ${e.message}`));
+  }
+};
 
   /* === Рендер === */
   return (
