@@ -215,8 +215,112 @@ export default function SettingsTab({ i18n, darkMode }) {
 
   return (
     <section>
-      {/* Створення користувача (без змін)... */}
-      {/* ...код форми створення як у тебе вище... */}
+      {/* 🧾 Створення користувача */}
+      <div
+        className={`max-w-md space-y-5 p-6 rounded-2xl shadow-lg border ${
+          darkMode
+            ? "bg-[#1a0a1f]/60 border-fuchsia-900/30"
+            : "bg-white/70 border-pink-200"
+        }`}
+      >
+        <h3 className="text-xl font-semibold mb-4">
+          {i18n.language === "ru"
+            ? "Создать временный аккаунт"
+            : "Створити тимчасовий акаунт"}
+        </h3>
+
+        <form onSubmit={handleCreate} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {i18n.language === "ru" ? "Имя пользователя" : "Ім’я користувача"}
+            </label>
+            <input
+              name="name"
+              type="text"
+              placeholder="Анна Осипова"
+              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">Email</label>
+            <input
+              name="email"
+              type="email"
+              required
+              placeholder="user@example.com"
+              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {i18n.language === "ru"
+                ? "Дней доступа"
+                : "Кількість днів доступу"}
+            </label>
+            <input
+              name="days"
+              type="number"
+              defaultValue="7"
+              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
+            />
+          </div>
+
+          {/* 🎓 Курс */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {i18n.language === "ru" ? "Курс" : "Курс"}
+            </label>
+            <select
+              name="course"
+              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 outline-none"
+            >
+              <option value="">
+                {i18n.language === "ru" ? "Без курса" : "Без курсу"}
+              </option>
+              {courses.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.title}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 🧩 Пакет */}
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              {i18n.language === "ru" ? "Пакет" : "Пакет"}
+            </label>
+            <select
+              name="package"
+              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 outline-none"
+              defaultValue="solo"
+            >
+              <option value="solo">
+                {i18n.language === "ru" ? "Самостоятельный" : "Самостійний"}
+              </option>
+              <option value="pro">Pro</option>
+            </select>
+          </div>
+
+          <button
+            type="submit"
+            disabled={saving}
+            className={`w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all ${
+              saving ? "opacity-70 cursor-not-allowed" : ""
+            }`}
+          >
+            {saving
+              ? i18n.language === "ru"
+                ? "Сохраняем..."
+                : "Зберігаємо..."
+              : i18n.language === "ru"
+              ? "Создать"
+              : "Створити"}
+          </button>
+        </form>
+      </div>
 
       {/* 📋 Таблиця користувачів */}
       <div className="mt-10 overflow-x-auto">
