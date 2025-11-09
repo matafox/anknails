@@ -922,11 +922,11 @@ const percent = done
 
 {/* Контент */}
 <main
-  className={`flex-1 flex flex-col mt-16 md:mt-0 p-5 md:p-10 overflow-y-auto
-              pb-16 md:pb-20 [padding-bottom:env(safe-area-inset-bottom)]`}
+  className={`flex-1 flex flex-col min-h-dvh mt-16 md:mt-0
+              p-5 md:p-10 [padding-bottom:env(safe-area-inset-bottom)]`}
 >
-  {/* Вміст сторінки */}
-  <div className="flex-1">
+  {/* Вміст сторінки зі скролом */}
+  <div className="flex-1 overflow-y-auto">
     {banner && banner.active && (
       <div className="flex flex-col md:flex-row gap-4 mb-8">
         {/* 🖼 Основний банер */}
@@ -1052,7 +1052,6 @@ const percent = done
 
         {/* Домашка + Матеріали */}
         <div className="mt-6 space-y-4">
-          {/* Домашка */}
           {selectedLesson.homework && (
             <div
               className={`p-4 rounded-xl border relative ${
@@ -1061,7 +1060,6 @@ const percent = done
                   : "bg-gray-50 border-gray-200 text-gray-800"
               }`}
             >
-              {/* 🔖 Бейдж у правому верхньому куті */}
               {!progSelected.homework_done ? (
                 <button
                   onClick={() => toggleHomeworkDone(true)}
@@ -1090,7 +1088,6 @@ const percent = done
             </div>
           )}
 
-          {/* Матеріали */}
           {selectedLesson.materials && (
             <div
               className={`p-4 rounded-xl border ${
@@ -1117,31 +1114,18 @@ const percent = done
     )}
   </div>
 
-  {/* Footer — тільки на дашборді, прилипає до низу */}
+  {/* Footer — лише на дашборді; завжди внизу завдяки mt-auto */}
   {!selectedLesson && view === "dashboard" && (
     <footer
-      className={`sticky bottom-0 left-0 right-0 z-10 text-center py-6 text-sm backdrop-blur
+      className={`mt-auto text-center py-6 text-sm border-t
                   ${darkMode
-                    ? "border-t border-fuchsia-900/30 text-fuchsia-100/80 bg-[#0c0016]/60"
-                    : "border-t border-pink-200 text-gray-600 bg-white/70"}`}
+                    ? "border-fuchsia-900/30 text-fuchsia-100/80"
+                    : "border-pink-200 text-gray-600"}`}
     >
       <p className="font-medium">
         © {new Date().getFullYear()}{" "}
         <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
         {t("Усі права захищені.", "Все права защищены.")}
-      </p>
-      <p className="mt-1 text-xs opacity-80 flex items-center justify-center gap-2">
-        <span>•</span>
-        {t("Зроблено з", "Сделано с")} <span aria-hidden>❤️</span>{" "}
-        {t("від", "от")}{" "}
-        <a
-          href="https://t.me/mosaert"
-          target="_blank"
-          rel="noreferrer"
-          className="font-semibold text-pink-500"
-        >
-          @mosaert
-        </a>
       </p>
     </footer>
   )}
