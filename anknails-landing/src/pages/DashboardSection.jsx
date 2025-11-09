@@ -199,12 +199,20 @@ export default function DashboardSection({
 
  const handleDownloadCert = async () => {
   if (!user?.id) return alert(t("Немає user_id", "Нет user_id"));
+
+  // відкриваємо попап синхронно — щоб не заблокувало
+  const popup = window.open("", "_blank", "noopener,noreferrer");
+
   try {
     const res = await fetch(`${BACKEND}/api/cert/generate?user_id=${user.id}`, {
       method: "GET",
-      credentials: "include",
+      // ВАЖЛИВО: без credentials!
+      // credentials: "omit", // можна явно так, або просто не вказувати
+      headers: { Accept: "application/json" },
+      mode: "cors",
     });
 
+    // якщо бекенд повернув 4xx/5xx — покажемо детальну помилку
     if (!res.ok) {
       const err = await res.json().catch(() => ({}));
       const msg = err?.detail || `HTTP ${res.status}`;
@@ -212,19 +220,32 @@ export default function DashboardSection({
     }
 
     const { url } = await res.json();
-    const w = window.open(url, "_blank", "noopener,noreferrer");
-    if (!w) {
-      alert(
-        t(
-          "Браузер заблокував відкриття вікна. Дозвольте pop-ups і спробуйте ще раз.",
-          "Браузер заблокировал открытие окна. Разрешите pop-ups и попробуйте ещё раз."
-        )
-      );
+
+    if (!url || !/^https?:\/\//i.test(url)) {
+      throw new Error("Invalid URL from backend");
+    }
+
+    if (popup) {
+      // мінімізує ризик блокування попапів
+      popup.location.href = url;
+    } else {
+      // запасний варіант
+      const w = window.open(url, "_blank", "noopener,noreferrer");
+      if (!w) {
+        alert(
+          t(
+            "Браузер заблокував відкриття вікна. Дозвольте pop-ups і спробуйте ще раз.",
+            "Браузер заблокировал открытие окна. Разрешите pop-ups и попробуйте ещё раз."
+          )
+        );
+      }
     }
   } catch (e) {
+    if (popup) popup.close();
     alert(t(`Не вдалося відкрити сертифікат: ${e.message}`, `Не удалось открыть сертификат: ${e.message}`));
   }
 };
+
 
   /* === Рендер === */
   return (
