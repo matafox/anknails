@@ -760,6 +760,7 @@ export default function CabinetPage() {
     fixed md:static inset-x-0 top-0
     w-full md:w-72
     h-[85vh] md:h-screen
+    md:h-auto
     transition-transform duration-300
     z-30 md:z-auto
     border-b md:border-b-0 md:border-r
@@ -829,8 +830,8 @@ export default function CabinetPage() {
           {user.name || user.email.split("@")[0]}
         </h2>
 
-        {/* 🔖 ТАРИФ + ДОСТУП ДО — на одному рядку (переноситься на вузьких екранах) */}
-        <div className="mt-2 flex items-center flex-wrap justify-center gap-x-2 gap-y-1">
+        {/* 🔖 ТАРИФ: [бейдж] */}
+        <div className="mt-1 flex items-center gap-2">
           <span className={`text-xs font-medium ${darkMode ? "text-fuchsia-200/80" : "text-gray-600"}`}>
             {t("Тариф:", "Тариф:")}
           </span>
@@ -844,16 +845,11 @@ export default function CabinetPage() {
               {t("Самостійний", "Самостоятельный")}
             </span>
           )}
-
-          <span className={`text-xs ${darkMode ? "text-fuchsia-200/60" : "text-gray-400"}`}>•</span>
-
-          <span className={`text-xs ${darkMode ? "text-fuchsia-200/80" : "text-gray-600"}`}>
-            {t("Доступ до", "Доступ до")}:{" "}
-            <span className={`${darkMode ? "text-fuchsia-100" : "text-gray-800"} font-semibold`}>
-              {user.expires_at}
-            </span>
-          </span>
         </div>
+
+        <p className="text-sm opacity-70">
+          {t("Доступ до", "Доступ до")}: {user.expires_at}
+        </p>
       </div>
 
       {/* Загальний прогрес курсу */}
@@ -958,6 +954,7 @@ export default function CabinetPage() {
           ))}
         </div>
       )}
+      
       {/* ПІДТРИМКА — над футером сайдбару */}
       <div className="mt-6">
         <a
