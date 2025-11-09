@@ -167,12 +167,11 @@ export default function Header({ onMenuToggle }) {
           {/* 🔐 Авторизація */}
 {!isAdmin ? (
   <a
-    href="/login"
-    className="flex items-center justify-center gap-3 w-full py-4 mt-3 text-lg font-semibold rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
-  >
-    <LogIn className="w-5 h-5" />
-    {i18n.language === "ru" ? "Войти" : "Увійти"}
-  </a>
+  href="/login"
+  className="flex items-center justify-center w-full py-4 mt-3 text-lg font-semibold rounded-2xl bg-gray-400 text-white hover:bg-gray-500 transition-all duration-300"
+>
+  {i18n.language === "ru" ? "Доступ к платформе" : "Доступ до платформи"}
+</a>
 ) : (
   <>
     <a
