@@ -9,34 +9,36 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
   const [lessonsMap, setLessonsMap] = useState({});
   const [loadingMap, setLoadingMap] = useState({});
 
-  // 🎨 Прості, «чисті» градієнти однієї палітри
+  // 🎨 Світлі градієнти: більше білого, колір — лише легкий відтінок
   const GRADIENTS_LIGHT = [
-    "from-pink-200 to-pink-50",
-    "from-violet-200 to-violet-50",
-    "from-amber-200 to-amber-50",
-    "from-emerald-200 to-emerald-50",
-    "from-sky-200 to-sky-50",
+    "from-white via-white to-pink-50",
+    "from-white via-white to-violet-50",
+    "from-white via-white to-amber-50",
+    "from-white via-white to-emerald-50",
+    "from-white via-white to-sky-50",
   ];
   const BORDERS_LIGHT = [
-    "border-pink-300",
-    "border-violet-300",
-    "border-amber-300",
-    "border-emerald-300",
-    "border-sky-300",
+    "border-pink-200/60",
+    "border-violet-200/60",
+    "border-amber-200/60",
+    "border-emerald-200/60",
+    "border-sky-200/60",
   ];
+
+  // Темна тема — також максимально делікатна
   const GRADIENTS_DARK = [
-    "from-[#1e0b2a] to-[#14051d]",   // фуксія
-    "from-[#170f2e] to-[#0f0a22]",   // фіолет
-    "from-[#2b1a08] to-[#1c1106]",   // бурштин
-    "from-[#0f2a20] to-[#0a1d16]",   // смарагд
-    "from-[#0b1f2b] to-[#071521]",   // синій
+    "from-[#12081a] via-[#12081a] to-[#190a22]",
+    "from-[#0f0a18] via-[#0f0a18] to-[#17112a]",
+    "from-[#130f08] via-[#130f08] to-[#1b150c]",
+    "from-[#0b1612] via-[#0b1612] to-[#10201a]",
+    "from-[#0a1218] via-[#0a1218] to-[#0f1b24]",
   ];
   const BORDERS_DARK = [
-    "border-fuchsia-800/40",
-    "border-violet-800/40",
-    "border-amber-800/40",
-    "border-emerald-800/40",
-    "border-sky-800/40",
+    "border-white/10",
+    "border-white/10",
+    "border-white/10",
+    "border-white/10",
+    "border-white/10",
   ];
 
   const getGrad = (i) =>
@@ -65,10 +67,7 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
   };
 
   const openLesson = (lesson) => {
-    if (onOpenLesson) {
-      onOpenLesson(lesson);
-      return;
-    }
+    if (onOpenLesson) return onOpenLesson(lesson);
     try {
       localStorage.setItem("last_lesson", JSON.stringify(lesson));
       localStorage.setItem("last_view", "lesson");
@@ -92,7 +91,7 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
       className={`min-h-screen p-6 md:p-10 transition-colors ${
         darkMode
           ? "bg-gradient-to-br from-[#0c0016] via-[#1a0a1f] to-[#0c0016] text-fuchsia-100"
-          : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
+          : "bg-gradient-to-br from-white via-white to-rose-50 text-gray-800"
       }`}
     >
       <div className="max-w-5xl mx-auto">
@@ -125,22 +124,22 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
               return (
                 <div
                   key={mod.id}
-                  className={`p-5 rounded-2xl border transition ${getGrad(i)} ${
-                    darkMode ? "shadow-none" : "shadow-sm"
+                  className={`p-5 rounded-2xl border ${getGrad(i)} ${
+                    darkMode ? "shadow-none" : "shadow-[0_2px_12px_rgba(0,0,0,0.04)]"
                   }`}
                 >
-                  {/* Шапка модуля — максимально просто */}
+                  {/* Шапка модуля */}
                   <button
                     onClick={() => toggleModule(mod.id)}
                     className="w-full text-left flex items-center justify-between"
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${darkMode ? "bg-black/20" : "bg-white/60"}`}>
+                      <div className={`w-9 h-9 rounded-lg flex items-center justify-center ${darkMode ? "bg-white/5" : "bg-white"}`}>
                         <BookOpen className="w-5 h-5 text-pink-700" />
                       </div>
                       <div>
                         <h2 className="text-lg font-semibold">{mod.title}</h2>
-                        <p className="text-xs opacity-80">
+                        <p className="text-xs opacity-70">
                           {(mod.lessons || 0)} {t("уроків", "уроков")}
                         </p>
                       </div>
@@ -148,19 +147,19 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
                     {isOpen ? <ChevronUp className="w-5 h-5" /> : <ChevronDown className="w-5 h-5" />}
                   </button>
 
-                  {/* Список уроків — мінімалістичні картки */}
+                  {/* Список уроків — максимально світлий і простий */}
                   {isOpen && (
-                    <div className={`mt-4 pt-3 ${darkMode ? "border-t border-white/10" : "border-t border-black/10"}`}>
+                    <div className={`mt-4 pt-3 ${darkMode ? "border-t border-white/10" : "border-t border-black/5"}`}>
                       {loadingMap[mod.id] ? (
-                        <div className="text-sm opacity-80">
+                        <div className="text-sm opacity-70">
                           {t("Завантаження уроків...", "Загрузка уроков...")}
                         </div>
                       ) : lessons.length === 0 ? (
-                        <div className="text-sm opacity-80">
+                        <div className="text-sm opacity-70">
                           {t("У цьому модулі поки немає уроків", "В этом модуле пока нет уроков")}
                         </div>
                       ) : (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-10">
                           {lessons.map((l) => {
                             const percent = getPercent(l);
                             const done = percent === 100;
@@ -168,15 +167,17 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
                               <button
                                 key={l.id}
                                 onClick={() => openLesson(l)}
-                                className={`text-left rounded-xl p-0 hover:opacity-95 transition`}
+                                className={`text-left rounded-xl transition focus:outline-none focus:ring-2 focus:ring-pink-300/60 ${
+                                  darkMode ? "bg-white/5 hover:bg-white/10" : "bg-white hover:bg-white"
+                                } p-0`}
                               >
-                                {/* Заголовок уроку в один рядок */}
+                                {/* Заголовок уроку */}
                                 <div className="flex items-center gap-2 mb-2">
                                   <PlayCircle className="w-4 h-4 text-pink-600 shrink-0" />
                                   <div className="font-medium truncate">{l.title}</div>
                                 </div>
 
-                                {/* Прогрес — простий */}
+                                {/* Прогрес */}
                                 <div className="flex items-center justify-between text-[11px] mb-1">
                                   <span className={`${done ? "text-emerald-600" : "text-pink-700"} font-medium`}>
                                     {done ? t("Завершено", "Завершено") : t("Прогрес", "Прогресс")}
@@ -185,16 +186,16 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
                                     {percent}%
                                   </span>
                                 </div>
-                                <div className={`${darkMode ? "bg-white/10" : "bg-pink-100"} h-2 rounded-full overflow-hidden`}>
+                                <div className={`${darkMode ? "bg-white/10" : "bg-pink-100"} h-[6px] rounded-full overflow-hidden`}>
                                   <div
                                     className={`h-full ${done ? "bg-emerald-400" : "bg-pink-500"} transition-all`}
                                     style={{ width: `${percent}%` }}
                                   />
                                 </div>
 
-                                {/* Тип уроку — дрібний підпис */}
+                                {/* Тип уроку */}
                                 {l.type && (
-                                  <div className="mt-2 text-[11px] opacity-70">
+                                  <div className="mt-2 text-[11px] opacity-60">
                                     {l.type === "theory" ? t("Теорія", "Теория") : t("Практика", "Практика")}
                                   </div>
                                 )}
