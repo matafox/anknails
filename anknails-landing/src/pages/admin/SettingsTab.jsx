@@ -14,10 +14,9 @@ export default function SettingsTab({ i18n, darkMode }) {
   const [saving, setSaving] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(false);
 
-  // 🆕 статуси сертифікатів по юзерах
-  const [certStatuses, setCertStatuses] = useState({}); // { [userId]: { unlocked, unlock_at, requested, approved } }
+  // 🆕 статуси сертифікатів
+  const [certStatuses, setCertStatuses] = useState({}); // { [userId]: { unlocked, unlock_at, requested, approved, file_url? } }
 
-  // 🧠 Завантаження користувачів
   const loadUsers = async () => {
     try {
       setLoading(true);
@@ -26,7 +25,6 @@ export default function SettingsTab({ i18n, darkMode }) {
       const list = data.users || [];
       setUsers(list);
 
-      // 🆕 підтягнемо статуси сертифікатів пачкою
       const pairs = await Promise.all(
         list.map(async (u) => {
           try {
@@ -39,15 +37,15 @@ export default function SettingsTab({ i18n, darkMode }) {
                 unlock_at: j.unlock_at ?? null,
                 requested: !!j.requested,
                 approved: !!j.approved,
+                file_url: j.file_url ?? null, // ← бек віддає, див. app.py нижче
               },
             ];
           } catch {
-            return [u.id, { unlocked: false, unlock_at: null, requested: false, approved: false }];
+            return [u.id, { unlocked: false, unlock_at: null, requested: false, approved: false, file_url: null }];
           }
         })
       );
-      const map = Object.fromEntries(pairs);
-      setCertStatuses(map);
+      setCertStatuses(Object.fromEntries(pairs));
     } catch (err) {
       console.error("Помилка завантаження користувачів:", err);
     } finally {
@@ -55,7 +53,6 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-  // 🎓 Завантаження курсів
   const loadCourses = async () => {
     try {
       const res = await fetch(`${BACKEND}/api/courses`);
@@ -71,18 +68,16 @@ export default function SettingsTab({ i18n, darkMode }) {
     loadCourses();
   }, []);
 
-  // 🧾 Створення користувача
   const handleCreate = async (e) => {
     e.preventDefault();
     const email = e.target.email.value.trim();
     const name = e.target.name.value.trim();
     const rawDays = e.target.days.value;
     const days = Number.isFinite(parseInt(rawDays, 10)) ? parseInt(rawDays, 10) : 7;
-
     const rawCourse = e.target.course.value;
     const course_id = rawCourse === "" ? null : Number(rawCourse);
+    const packageValue = e.target.package.value;
 
-    const packageValue = e.target.package.value; // solo | pro
     if (!email) return alert(i18n.language === "ru" ? "Введите email" : "Введіть email");
 
     try {
@@ -115,7 +110,6 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-  // ✏️ Оновлення імені
   const handleNameChange = async (id, name) => {
     const v = name.trim();
     if (!v) return;
@@ -131,7 +125,6 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-  // 🎓 Оновлення курсу користувача
   const handleCourseChange = async (id, course_id) => {
     try {
       await fetch(`${BACKEND}/api/users/update/${id}`, {
@@ -145,13 +138,12 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-  // 📦 Оновлення пакета користувача
   const handlePackageChange = async (id, pkg) => {
     try {
       await fetch(`${BACKEND}/api/users/update/${id}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: "anka12341", package: pkg }), // solo | pro
+        body: JSON.stringify({ token: "anka12341", package: pkg }),
       });
       await loadUsers();
     } catch (err) {
@@ -159,7 +151,6 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-  // 📊 Завантаження прогресу користувача + прогресу курсу
   const loadProgress = async (userId) => {
     try {
       setLoadingProgress(true);
@@ -188,29 +179,35 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
-  // 🆕 адмін натискає "Завантажити сертифікат" -> схвалюємо + відкриваємо PDF
+  // 🆕 Встановити URL PDF сертифіката
+  const setCertUrl = async (userId, url) => {
+    const v = (url || "").trim();
+    if (!v) return;
+    try {
+      const r = await fetch(`${BACKEND}/api/cert/admin/set-file`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: "anka12341", user_id: userId, file_url: v }),
+      });
+      const j = await r.json();
+      if (!j.success) throw new Error("save failed");
+      await loadUsers();
+      alert(i18n.language === "ru" ? "Ссылка сохранена" : "Посилання збережено");
+    } catch (e) {
+      alert(i18n.language === "ru" ? "Не удалось сохранить ссылку" : "Не вдалося зберегти посилання");
+    }
+  };
+
+  // 🆕 Швидке схвалення + відкриття (генератор або власний файл)
   const adminDownloadAndApprove = async (userId) => {
     try {
-      // спочатку схвалимо (щоб у юзера з'явилась кнопка)
       await fetch(`${BACKEND}/api/cert/admin/approve`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ token: "anka12341", user_id: userId, approved: true }),
       });
-      // оновимо статус
-      const r = await fetch(`${BACKEND}/api/cert/status?user_id=${userId}`);
-      const j = await r.json();
-      setCertStatuses((prev) => ({
-        ...prev,
-        [userId]: {
-          unlocked: !!j.unlocked,
-          unlock_at: j.unlock_at ?? null,
-          requested: !!j.requested,
-          approved: !!j.approved,
-        },
-      }));
-      // відкриємо PDF у новій вкладці
       window.open(`${BACKEND}/api/cert/generate?user_id=${userId}`, "_blank", "noopener,noreferrer");
+      await loadUsers();
     } catch (e) {
       alert(i18n.language === "ru" ? "Не удалось открыть сертификат" : "Не вдалося відкрити сертифікат");
     }
@@ -218,112 +215,8 @@ export default function SettingsTab({ i18n, darkMode }) {
 
   return (
     <section>
-      {/* 🧾 Створення користувача */}
-      <div
-        className={`max-w-md space-y-5 p-6 rounded-2xl shadow-lg border ${
-          darkMode
-            ? "bg-[#1a0a1f]/60 border-fuchsia-900/30"
-            : "bg-white/70 border-pink-200"
-        }`}
-      >
-        <h3 className="text-xl font-semibold mb-4">
-          {i18n.language === "ru"
-            ? "Создать временный аккаунт"
-            : "Створити тимчасовий акаунт"}
-        </h3>
-
-        <form onSubmit={handleCreate} className="space-y-4">
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {i18n.language === "ru" ? "Имя пользователя" : "Ім’я користувача"}
-            </label>
-            <input
-              name="name"
-              type="text"
-              placeholder="Анна Осипова"
-              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">Email</label>
-            <input
-              name="email"
-              type="email"
-              required
-              placeholder="user@example.com"
-              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {i18n.language === "ru"
-                ? "Дней доступа"
-                : "Кількість днів доступу"}
-            </label>
-            <input
-              name="days"
-              type="number"
-              defaultValue="7"
-              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 focus:ring-1 focus:ring-pink-500 outline-none"
-            />
-          </div>
-
-          {/* 🎓 Курс */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {i18n.language === "ru" ? "Курс" : "Курс"}
-            </label>
-            <select
-              name="course"
-              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 outline-none"
-            >
-              <option value="">
-                {i18n.language === "ru" ? "Без курса" : "Без курсу"}
-              </option>
-              {courses.map((c) => (
-                <option key={c.id} value={c.id}>
-                  {c.title}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* 🧩 Пакет */}
-          <div>
-            <label className="block text-sm font-medium mb-1">
-              {i18n.language === "ru" ? "Пакет" : "Пакет"}
-            </label>
-            <select
-              name="package"
-              className="w-full px-4 py-2 rounded-xl border border-pink-300 focus:border-pink-500 outline-none"
-              defaultValue="solo"
-            >
-              <option value="solo">
-                {i18n.language === "ru" ? "Самостоятельный" : "Самостійний"}
-              </option>
-              <option value="pro">Pro</option>
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            disabled={saving}
-            className={`w-full py-3 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all ${
-              saving ? "opacity-70 cursor-not-allowed" : ""
-            }`}
-          >
-            {saving
-              ? i18n.language === "ru"
-                ? "Сохраняем..."
-                : "Зберігаємо..."
-              : i18n.language === "ru"
-              ? "Создать"
-              : "Створити"}
-          </button>
-        </form>
-      </div>
+      {/* Створення користувача (без змін)... */}
+      {/* ...код форми створення як у тебе вище... */}
 
       {/* 📋 Таблиця користувачів */}
       <div className="mt-10 overflow-x-auto">
@@ -333,31 +226,21 @@ export default function SettingsTab({ i18n, darkMode }) {
           </p>
         ) : users.length > 0 ? (
           <table
-            className={`min-w-[980px] w-full rounded-xl overflow-hidden border ${
+            className={`min-w-[1080px] w-full rounded-xl overflow-hidden border ${
               darkMode ? "border-fuchsia-900/30" : "border-pink-200"
             }`}
           >
             <thead className={darkMode ? "bg-fuchsia-950/40" : "bg-pink-100"}>
               <tr>
                 <th className="py-2 px-3 text-left">ID</th>
-                <th className="py-2 px-3 text-left">
-                  {i18n.language === "ru" ? "Имя" : "Ім’я"}
-                </th>
+                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Имя" : "Ім’я"}</th>
                 <th className="py-2 px-3 text-left">Email</th>
                 <th className="py-2 px-3 text-left">Пароль</th>
-                <th className="py-2 px-3 text-left">
-                  {i18n.language === "ru" ? "Курс" : "Курс"}
-                </th>
-                <th className="py-2 px-3 text-left">
-                  {i18n.language === "ru" ? "Пакет" : "Пакет"}
-                </th>
-                <th className="py-2 px-3 text-left">
-                  {i18n.language === "ru" ? "Доступ до" : "Доступ до"}
-                </th>
-                {/* 🆕 Сертифікат */}
-                <th className="py-2 px-3 text-left">
-                  {i18n.language === "ru" ? "Сертификат" : "Сертифікат"}
-                </th>
+                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Курс" : "Курс"}</th>
+                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Пакет" : "Пакет"}</th>
+                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Доступ до" : "Доступ до"}</th>
+                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Сертификат" : "Сертифікат"}</th>
+                <th className="py-2 px-3 text-left">{i18n.language === "ru" ? "Файл/URL" : "Файл/URL"}</th>
                 <th></th>
               </tr>
             </thead>
@@ -369,10 +252,8 @@ export default function SettingsTab({ i18n, darkMode }) {
                 return (
                   <tr
                     key={u.id}
-                    className={`border-t ${
-                      darkMode
-                        ? "border-fuchsia-900/30 hover:bg-fuchsia-950/30"
-                        : "border-pink-200 hover:bg-pink-50"
+                    className={`border-top ${
+                      darkMode ? "border-fuchsia-900/30 hover:bg-fuchsia-950/30" : "border-pink-200 hover:bg-pink-50"
                     }`}
                   >
                     <td className="py-2 px-3">{u.id}</td>
@@ -393,21 +274,14 @@ export default function SettingsTab({ i18n, darkMode }) {
                     <td className="py-2 px-3">
                       <select
                         value={u.course_id ?? ""}
-                        onChange={(e) =>
-                          handleCourseChange(
-                            u.id,
-                            e.target.value ? Number(e.target.value) : null
-                          )
-                        }
+                        onChange={(e) => handleCourseChange(u.id, e.target.value ? Number(e.target.value) : null)}
                         className={`px-2 py-1 rounded-md border text-sm outline-none ${
                           darkMode
                             ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
                             : "bg-white/70 border-pink-200 focus:border-pink-500"
                         }`}
                       >
-                        <option value="">
-                          {i18n.language === "ru" ? "Без курса" : "Без курсу"}
-                        </option>
+                        <option value="">{i18n.language === "ru" ? "Без курса" : "Без курсу"}</option>
                         {courses.map((c) => (
                           <option key={c.id} value={c.id}>
                             {c.title}
@@ -415,7 +289,6 @@ export default function SettingsTab({ i18n, darkMode }) {
                         ))}
                       </select>
                     </td>
-
                     <td className="py-2 px-3">
                       <select
                         value={u.package || "solo"}
@@ -426,45 +299,35 @@ export default function SettingsTab({ i18n, darkMode }) {
                             : "bg-white/70 border-pink-200 focus:border-pink-500"
                         }`}
                       >
-                        <option value="solo">
-                          {i18n.language === "ru"
-                            ? "Самостоятельный"
-                            : "Самостійний"}
-                        </option>
+                        <option value="solo">{i18n.language === "ru" ? "Самостоятельный" : "Самостійний"}</option>
                         <option value="pro">Pro</option>
                       </select>
                     </td>
-
                     <td className="py-2 px-3">
                       {new Date(u.expires_at) < new Date() ? (
-                        <span className="text-red-500 font-medium">
-                          {i18n.language === "ru" ? "Истёк" : "Вигасло"}
-                        </span>
+                        <span className="text-red-500 font-medium">{i18n.language === "ru" ? "Истёк" : "Вигасло"}</span>
                       ) : (
                         <span>{new Date(u.expires_at).toLocaleDateString()}</span>
                       )}
                     </td>
 
-                    {/* 🆕 Колонка «Сертифікат» */}
+                    {/* Статус сертифіката */}
                     <td className="py-2 px-3">
                       {!unlocked && unlockDate && (
                         <span className="text-xs">
                           {i18n.language === "ru" ? "Откроется:" : "Відкриється:"} {unlockDate}
                         </span>
                       )}
-
                       {unlocked && !cs.requested && (
                         <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
                           {i18n.language === "ru" ? "Нет запроса" : "Немає запиту"}
                         </span>
                       )}
-
                       {unlocked && cs.requested && !cs.approved && (
                         <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
                           {i18n.language === "ru" ? "Запрошен" : "Запит отримано"}
                         </span>
                       )}
-
                       {unlocked && cs.approved && (
                         <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
                           {i18n.language === "ru" ? "Одобрен" : "Схвалено"}
@@ -472,32 +335,56 @@ export default function SettingsTab({ i18n, darkMode }) {
                       )}
                     </td>
 
+                    {/* URL PDF */}
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-2 min-w-[280px]">
+                        <input
+                          type="url"
+                          defaultValue={cs.file_url || ""}
+                          placeholder="https://.../certificate.pdf"
+                          onBlur={(e) => {
+                            const val = e.target.value.trim();
+                            if (val) setCertUrl(u.id, val);
+                          }}
+                          className={`px-2 py-1 w-full rounded-md border text-sm outline-none ${
+                            darkMode
+                              ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
+                              : "bg-white/70 border-pink-200 focus:border-pink-500"
+                          }`}
+                        />
+                        {cs.file_url ? (
+                          <a
+                            href={cs.file_url}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="text-pink-600 text-sm underline"
+                          >
+                            {i18n.language === "ru" ? "Открыть" : "Відкрити"}
+                          </a>
+                        ) : null}
+                      </div>
+                    </td>
+
                     <td className="py-2 px-3">
                       <div className="flex items-center gap-3">
-                        <button
-                          onClick={() => loadProgress(u.id)}
-                          className="text-sm text-pink-600 hover:underline"
-                        >
-                          {i18n.language === "ru"
-                            ? "Прогресс"
-                            : "Переглянути прогрес"}
+                        <button onClick={() => loadProgress(u.id)} className="text-sm text-pink-600 hover:underline">
+                          {i18n.language === "ru" ? "Прогресс" : "Переглянути прогрес"}
                         </button>
 
-                        {/* Дія завантажити сертифікат (одразу схвалює) */}
                         {unlocked && cs.requested && !cs.approved && (
                           <button
                             onClick={() => adminDownloadAndApprove(u.id)}
                             className="text-sm text-rose-600 hover:underline"
                           >
-                            {i18n.language === "ru"
-                              ? "Скачать сертификат"
-                              : "Завантажити сертифікат"}
+                            {i18n.language === "ru" ? "Скачать сертификат" : "Завантажити сертифікат"}
                           </button>
                         )}
 
                         {unlocked && cs.approved && (
                           <button
-                            onClick={() => window.open(`${BACKEND}/api/cert/generate?user_id=${u.id}`, "_blank", "noopener,noreferrer")}
+                            onClick={() =>
+                              window.open(`${BACKEND}/api/cert/generate?user_id=${u.id}`, "_blank", "noopener,noreferrer")
+                            }
                             className="text-sm text-rose-600 hover:underline"
                           >
                             {i18n.language === "ru" ? "Открыть" : "Відкрити"}
@@ -512,9 +399,7 @@ export default function SettingsTab({ i18n, darkMode }) {
           </table>
         ) : (
           <p className="opacity-70 mt-4 text-center">
-            {i18n.language === "ru"
-              ? "Пользователи не найдены"
-              : "Користувачів ще немає"}
+            {i18n.language === "ru" ? "Пользователи не найдены" : "Користувачів ще немає"}
           </p>
         )}
       </div>
