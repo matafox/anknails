@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
+import WelcomeModal from "./WelcomeModal";
 import DashboardSection from "./DashboardSection";
 import ModulesPage from "./ModulesPage";
 import { useTranslation } from "react-i18next";
@@ -398,6 +399,18 @@ export default function CabinetPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const [showWelcome, setShowWelcome] = useState(false);
+
+  useEffect(() => {
+  if (!user?.id) return;
+  const key = `welcome_seen_v1_${user.id}`;
+  if (!localStorage.getItem(key)) {
+    setShowWelcome(true);
+    // позначимо як показаний одразу, щоб не дратувати при оновленнях
+    localStorage.setItem(key, "1");
+  }
+}, [user?.id]);
+  
   const IMGUR_CLIENT_ID = "8f3cb6e4c248b26"; // як у BannerTab
 
   async function uploadToImgur(file) {
@@ -1116,6 +1129,20 @@ export default function CabinetPage() {
                 </p>
               )}
             </div>
+
+            {showWelcome && (
+  <WelcomeModal
+    open={showWelcome}
+    onClose={() => setShowWelcome(false)}
+    onStart={() => {
+      setShowWelcome(false);
+      setView("modules"); // одразу ведемо в «Мої модулі»
+    }}
+    t={t}
+    darkMode={darkMode}
+    user={user}
+  />
+)}
 
             {/* Відео + прогрес */}
             <SafeVideo
