@@ -920,218 +920,176 @@ const percent = done
         </div>
       </aside>
 
-{/* Контент */}
-<main
-  className={`mt-16 md:mt-0 p-5 md:p-10
-              grid grid-rows-[auto_1fr_auto] min-h-dvh min-h-0
-              [padding-bottom:env(safe-area-inset-bottom)]`}
->
-  {/* row 1: банер/кнопка */}
-  {banner && banner.active && (
-    <div className="flex flex-col md:flex-row gap-4 mb-8">
-      {/* 🖼 Основний банер */}
-      <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-        {banner.image_url && (
-          <img
-            src={banner.image_url}
-            alt="Banner"
-            className="w-full h-48 md:h-64 object-cover"
-          />
-        )}
-        <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
-          {banner.title}
-        </div>
-      </div>
-
-      {/* 💅 Перехід на дашборд */}
-      <div
-        onClick={() => {
-          setSelectedLesson(null);
-          setMenuOpen(false);
-          localStorage.setItem("last_view", "dashboard");
-        }}
-        className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]
-                   bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center
-                   text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform
-                   hover:scale-[1.03] active:scale-[0.98]"
-        title={t("Перейти до дашборду", "Перейти на главную")}
-      >
-        ANK Studio Online
-      </div>
-    </div>
-  )}
-
-  {/* row 2: контент (скролиться) */}
-  <section className="min-h-0 overflow-y-auto">
-    {!selectedLesson ? (
-      <>
-        {view === "dashboard" && (
-          <DashboardSection
-            key={user?.xp}
-            modules={modules}
-            lessons={lessons}
-            progress={progress}
-            overallProgress={overallProgress}
-            darkMode={darkMode}
-            t={t}
-            user={user}
-            onOpenModules={() => setView("modules")}
-          />
-        )}
-
-        {view === "modules" && (
-          <ModulesPage
-            modules={modules}
-            darkMode={darkMode}
-            t={t}
-            onBack={() => setView("dashboard")}
-          />
-        )}
-      </>
-    ) : (
-      <div
-        className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
-          darkMode
-            ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
-            : "bg-white/80 border border-pink-200"
-        }`}
-      >
-        {/* Заголовок + тип */}
-        <div className="mb-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3 flex-wrap">
-              <h2 className="text-2xl font-bold text-pink-600">
-                {selectedLesson.title}
-              </h2>
-              {selectedLesson.type === "theory" && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
-                  {t("Теорія", "Теория")}
-                </span>
-              )}
-              {selectedLesson.type === "practice" && (
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
-                  {t("Практика", "Практика")}
-                </span>
-              )}
+      {/* Контент */}
+      <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
+        {banner && banner.active && (
+          <div className="flex flex-col md:flex-row gap-4 mb-8">
+            {/* 🖼 Основний банер */}
+            <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+              {banner.image_url && <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />}
+              <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
+                {banner.title}
+              </div>
             </div>
-          </div>
-          {selectedLesson.description && (
-            <p
-              className={`mt-2 text-sm leading-relaxed ${
-                darkMode ? "text-gray-300" : "text-gray-600"
-              }`}
-            >
-              {selectedLesson.description}
-            </p>
-          )}
-        </div>
 
-        {/* Відео + прогрес */}
-        <SafeVideo
-          lesson={selectedLesson}
-          t={t}
-          userId={user?.id}
-          onProgressTick={handleProgressTick}
-          onCompleted={refreshAfterLessonComplete}
-          getNextLesson={(id) => {
-            const allLessons = Object.values(lessons).flat();
-            const idx = allLessons.findIndex((l) => l.id === id);
-            return allLessons[idx + 1] || null;
-          }}
-        />
-
-        {/* Ручне завершення уроку */}
-        {!progSelected.completed && (
-          <div className="mt-4">
-            <button
-              onClick={markLessonComplete}
-              className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold hover:scale-[1.02] transition"
+            {/* 💅 Перехід на дашборд */}
+            <div
+              onClick={() => {
+                setSelectedLesson(null);
+                setMenuOpen(false);
+                localStorage.setItem("last_view", "dashboard");
+              }}
+              className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
+              title={t("Перейти до дашборду", "Перейти на главную")}
             >
-              {t("Позначити урок пройденим", "Отметить урок пройденным")}
-            </button>
+              ANK Studio Online
+            </div>
           </div>
         )}
 
-        {/* Домашка + Матеріали */}
-        <div className="mt-6 space-y-4">
-          {selectedLesson.homework && (
-            <div
-              className={`p-4 rounded-xl border relative ${
-                darkMode
-                  ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
-                  : "bg-gray-50 border-gray-200 text-gray-800"
-              }`}
-            >
-              {!progSelected.homework_done ? (
+        {!selectedLesson ? (
+          <>
+            {view === "dashboard" && (
+              <DashboardSection
+                key={user?.xp}
+                modules={modules}
+                lessons={lessons}
+                progress={progress}
+                overallProgress={overallProgress}
+                darkMode={darkMode}
+                t={t}
+                user={user}
+                onOpenModules={() => setView("modules")}
+              />
+            )}
+
+            {view === "modules" && (
+              <ModulesPage modules={modules} darkMode={darkMode} t={t} onBack={() => setView("dashboard")} />
+            )}
+          </>
+        ) : (
+          <div
+            className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
+              darkMode ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40" : "bg-white/80 border border-pink-200"
+            }`}
+          >
+            {/* Заголовок + тип */}
+            <div className="mb-4">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-3 flex-wrap">
+                  <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
+                  {selectedLesson.type === "theory" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
+                      {t("Теорія", "Теория")}
+                    </span>
+                  )}
+                  {selectedLesson.type === "practice" && (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-rose-200 bg-rose-50 text-rose-600">
+                      {t("Практика", "Практика")}
+                    </span>
+                  )}
+                </div>
+              </div>
+              {selectedLesson.description && (
+                <p className={`mt-2 text-sm leading-relaxed ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
+                  {selectedLesson.description}
+                </p>
+              )}
+            </div>
+
+            {/* Відео + прогрес */}
+            <SafeVideo
+              lesson={selectedLesson}
+              t={t}
+              userId={user?.id}
+              onProgressTick={handleProgressTick}
+              onCompleted={refreshAfterLessonComplete}
+              getNextLesson={(id) => {
+                const allLessons = Object.values(lessons).flat();
+                const idx = allLessons.findIndex((l) => l.id === id);
+                return allLessons[idx + 1] || null;
+              }}
+            />
+
+            {/* Ручне завершення уроку */}
+            {!progSelected.completed && (
+              <div className="mt-4">
                 <button
-                  onClick={() => toggleHomeworkDone(true)}
-                  className="absolute top-3 right-3 text-[11px] font-medium opacity-70 hover:opacity-100 underline-offset-2 hover:underline text-gray-500 dark:text-gray-300"
-                  title={t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")}
+                  onClick={markLessonComplete}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold hover:scale-[1.02] transition"
                 >
-                  {t("Виконано?", "Выполнено?")}
+                  {t("Позначити урок пройденим", "Отметить урок пройденным")}
                 </button>
-              ) : (
-                <button
-                  onClick={() => toggleHomeworkDone(false)}
-                  className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200"
-                  title={t("Скасувати позначку ДЗ", "Снять отметку ДЗ")}
+              </div>
+            )}
+
+            {/* Домашка + Матеріали */}
+            <div className="mt-6 space-y-4">
+              {/* Домашка */}
+              {selectedLesson.homework && (
+                <div
+                  className={`p-4 rounded-xl border relative ${
+                    darkMode
+                      ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
+                      : "bg-gray-50 border-gray-200 text-gray-800"
+                  }`}
                 >
-                  <Check className="w-3.5 h-3.5" />
-                  {t("Виконано", "Выполнено")}
-                </button>
+                  {/* 🔖 Бейдж у правому верхньому куті */}
+                  {!progSelected.homework_done ? (
+                    <button
+                      onClick={() => toggleHomeworkDone(true)}
+                      className="absolute top-3 right-3 text-[11px] font-medium opacity-70 hover:opacity-100 underline-offset-2 hover:underline text-gray-500 dark:text-gray-300"
+                      title={t("Позначити ДЗ виконаним", "Отметить ДЗ выполненным")}
+                    >
+                      {t("Виконано?", "Выполнено?")}
+                    </button>
+                  ) : (
+                    <button
+                      onClick={() => toggleHomeworkDone(false)}
+                      className="absolute top-3 right-3 inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-700 border border-emerald-200"
+                      title={t("Скасувати позначку ДЗ", "Снять отметку ДЗ")}
+                    >
+                      <Check className="w-3.5 h-3.5" />
+                      {t("Виконано", "Выполнено")}
+                    </button>
+                  )}
+
+                  <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
+                    {t("Домашнє завдання", "Домашнее задание")}
+                  </h3>
+                  <p className="text-sm leading-relaxed whitespace-pre-wrap">
+                    {selectedLesson.homework}
+                  </p>
+                </div>
               )}
 
-              <h3 className="font-semibold mb-2 text-pink-600 dark:text-fuchsia-300">
-                {t("Домашнє завдання", "Домашнее задание")}
-              </h3>
-              <p className="text-sm leading-relaxed whitespace-pre-wrap">
-                {selectedLesson.homework}
-              </p>
+              {/* Матеріали */}
+              {selectedLesson.materials && (
+                <div
+                  className={`p-4 rounded-xl border ${
+                    darkMode
+                      ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
+                      : "bg-gray-50 border-gray-200 text-gray-800"
+                  }`}
+                >
+                  <h3 className="font-semibold mb-2 text-gray-700 dark:text-green-200">
+                    {t("Матеріали", "Материалы")}
+                  </h3>
+                  <a
+                    href={selectedLesson.materials}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-block text-sm font-medium hover:underline"
+                  >
+                    {t("Відкрити посилання", "Открыть ссылку")}
+                  </a>
+                </div>
+              )}
             </div>
-          )}
+          </div>
+        )}
 
-          {selectedLesson.materials && (
-            <div
-              className={`p-4 rounded-xl border ${
-                darkMode
-                  ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-gray-100"
-                  : "bg-gray-50 border-gray-200 text-gray-800"
-              }`}
-            >
-              <h3 className="font-semibold mb-2 text-gray-700 dark:text-green-200">
-                {t("Матеріали", "Материалы")}
-              </h3>
-              <a
-                href={selectedLesson.materials}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block text-sm font-medium hover:underline"
-              >
-                {t("Відкрити посилання", "Открыть ссылку")}
-              </a>
-            </div>
-          )}
-        </div>
-      </div>
-    )}
-  </section>
-
-  {/* row 3: футер — лише на дашборді, завжди видимий */}
-  {!selectedLesson && view === "dashboard" && (
-    <footer
-      className={`text-center py-6 text-sm border-t
-                  ${darkMode
-                    ? "border-fuchsia-900/30 text-fuchsia-100/80 bg-[#0c0016]/60 backdrop-blur"
-                    : "border-pink-200 text-gray-600 bg-white/70 backdrop-blur"}`}
-    >
-      <p className="font-medium">
-        © {new Date().getFullYear()}{" "}
-        <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
-        {t("Усі права захищені.", "Все права защищены.")}
-      </p>
-    </footer>
-  )}
-</main>
+      </main>
     </div>
   );
 }
