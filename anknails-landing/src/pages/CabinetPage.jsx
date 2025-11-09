@@ -63,7 +63,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
   const seededRef = useRef(false);
   useEffect(() => {
     if (!userId || !lesson?.id || !duration || seededRef.current) return;
-    // ❗ Не затираємо існуючий прогрес нулем: чекаємо мінімального перегляду
     if ((current || 0) <= 0) return;
 
     seededRef.current = true;
@@ -115,7 +114,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     setCurrent(0);
     setShowNext(false);
     lastBucketRef.current = -1;
-    seededRef.current = false; // 🆕 ресет насіння при зміні уроку
+    seededRef.current = false;
   }, [lesson?.id]);
 
   /// підписаний iframe URL
@@ -257,7 +256,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     const total = duration || 0;
     const watched = total ? Math.min(current, total) : current;
 
-    // 🔒 не шлемо тики поки немає total або перегляду
     if (total <= 0 || watched <= 0) return;
 
     const bucket = Math.floor((watched || 0) / 10);
@@ -282,7 +280,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
     if (!userId || !lesson?.id) return;
 
     const save = async () => {
-      // ❗ не шлемо в бекенд поки немає total або перегляду
       if (!duration || current <= 0) return;
       await postProgress({
         user_id: userId,
@@ -403,18 +400,18 @@ export default function CabinetPage() {
 
   const IMGUR_CLIENT_ID = "8f3cb6e4c248b26"; // як у BannerTab
 
-async function uploadToImgur(file) {
-  const form = new FormData();
-  form.append("image", file);
-  const res = await fetch("https://api.imgur.com/3/image", {
-    method: "POST",
-    headers: { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` },
-    body: form,
-  });
-  const j = await res.json();
-  if (!res.ok || !j?.data?.link) throw new Error(j?.data?.error || "Imgur upload failed");
-  return j.data.link;
-}
+  async function uploadToImgur(file) {
+    const form = new FormData();
+    form.append("image", file);
+    const res = await fetch("https://api.imgur.com/3/image", {
+      method: "POST",
+      headers: { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` },
+      body: form,
+    });
+    const j = await res.json();
+    if (!res.ok || !j?.data?.link) throw new Error(j?.data?.error || "Imgur upload failed");
+    return j.data.link;
+  }
 
   const refreshAfterLessonComplete = async () => {
     if (!user?.id) return;
@@ -443,44 +440,40 @@ async function uploadToImgur(file) {
 
   const avatarInputRef = useRef(null);
 
-const handleChooseAvatar = () => {
-  avatarInputRef.current?.click();
-};
+  const handleChooseAvatar = () => {
+    avatarInputRef.current?.click();
+  };
 
-const onAvatarSelected = async (e) => {
-  const file = e.target.files?.[0];
-  if (!file) return;
-  try {
-    // 1) завантажуємо в Imgur
-    const link = await uploadToImgur(file);
+  const onAvatarSelected = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    try {
+      const link = await uploadToImgur(file);
 
-    // 2) зберігаємо в бекенд по session_token
-    const sessionToken = localStorage.getItem("session_token");
-    const r = await fetch(`${BACKEND}/api/users/avatar`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user.id,
-        session_token: sessionToken,
-        avatar_url: link,
-      }),
-    });
-    if (!r.ok) {
-      const txt = await r.text().catch(() => "");
-      throw new Error(`save avatar failed: ${r.status} ${txt}`);
+      const sessionToken = localStorage.getItem("session_token");
+      const r = await fetch(`${BACKEND}/api/users/avatar`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          session_token: sessionToken,
+          avatar_url: link,
+        }),
+      });
+      if (!r.ok) {
+        const txt = await r.text().catch(() => "");
+        throw new Error(`save avatar failed: ${r.status} ${txt}`);
+      }
+      const j = await r.json();
+
+      setUser((prev) => (prev ? { ...prev, avatar_url: j.avatar_url } : prev));
+    } catch (err) {
+      alert(t("Не вдалося оновити аватар", "Не удалось обновить аватар"));
+      console.warn(err);
+    } finally {
+      if (avatarInputRef.current) avatarInputRef.current.value = "";
     }
-    const j = await r.json();
-
-    // 3) локально оновлюємо
-    setUser((prev) => (prev ? { ...prev, avatar_url: j.avatar_url } : prev));
-  } catch (err) {
-    alert(t("Не вдалося оновити аватар", "Не удалось обновить аватар"));
-    console.warn(err);
-  } finally {
-    // очищаємо value, щоб можна було вибрати той же файл ще раз
-    if (avatarInputRef.current) avatarInputRef.current.value = "";
-  }
-};
+  };
 
   const [progress, setProgress] = useState({});
   const [overallProgress, setOverallProgress] = useState(0);
@@ -622,7 +615,6 @@ const onAvatarSelected = async (e) => {
   // локальне оновлення від SafeVideo
   const handleProgressTick = ({ lessonId, watched_seconds, total_seconds, completed }) => {
     if (!lessonId) return;
-    // Не затираємо прогрес нулями (страхуємося вдруг що)
     if ((total_seconds || 0) <= 0 || (watched_seconds || 0) <= 0) return;
     setProgress((prev) => ({
       ...prev,
@@ -659,10 +651,8 @@ const onAvatarSelected = async (e) => {
     window.location.href = "/login";
   };
 
-  // поточний прогрес по вибраному уроку
   const progSelected = selectedLesson ? (progress[selectedLesson.id] || {}) : {};
 
-  // 🔘 Позначити / скасувати виконання домашки (пише у бекенд)
   const toggleHomeworkDone = async (done) => {
     if (!user?.id || !selectedLesson?.id) return;
     try {
@@ -693,45 +683,44 @@ const onAvatarSelected = async (e) => {
     }
   };
 
-// ✅ Ручне завершення уроку (фікс: ставимо безумовно 100%)
-const markLessonComplete = async () => {
-  if (!user?.id || !selectedLesson?.id) return;
+  // ✅ Ручне завершення уроку (фікс: ставимо безумовно 100%)
+  const markLessonComplete = async () => {
+    if (!user?.id || !selectedLesson?.id) return;
 
-  const total = progSelected.total_seconds ?? 0;
-  const watched = progSelected.watched_seconds ?? 0;
-  const safeTotal = total > 0 ? total : watched > 0 ? watched : 1; // ← мінімум 1с
+    const total = progSelected.total_seconds ?? 0;
+    const watched = progSelected.watched_seconds ?? 0;
+    const safeTotal = total > 0 ? total : watched > 0 ? watched : 1;
 
-  try {
-    await fetch(`${BACKEND}/api/progress/update`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        user_id: user.id,
-        lesson_id: selectedLesson.id,
-        completed: true,
-        watched_seconds: safeTotal,
-        total_seconds: safeTotal,
-        homework_done: progSelected.homework_done ?? false,
-      }),
-    });
+    try {
+      await fetch(`${BACKEND}/api/progress/update`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: user.id,
+          lesson_id: selectedLesson.id,
+          completed: true,
+          watched_seconds: safeTotal,
+          total_seconds: safeTotal,
+          homework_done: progSelected.homework_done ?? false,
+        }),
+      });
 
-    // локально одразу 100%
-    setProgress((prev) => ({
-      ...prev,
-      [selectedLesson.id]: {
-        ...(prev[selectedLesson.id] || {}),
-        completed: true,
-        watched_seconds: safeTotal,
-        total_seconds: safeTotal,
-      },
-    }));
+      setProgress((prev) => ({
+        ...prev,
+        [selectedLesson.id]: {
+          ...(prev[selectedLesson.id] || {}),
+          completed: true,
+          watched_seconds: safeTotal,
+          total_seconds: safeTotal,
+        },
+      }));
 
-    await refreshAfterLessonComplete();
-  } catch (e) {
-    console.warn("markLessonComplete failed", e);
-    alert(t("Не вдалося позначити урок завершеним", "Не удалось отметить урок завершенным"));
-  }
-};
+      await refreshAfterLessonComplete();
+    } catch (e) {
+      console.warn("markLessonComplete failed", e);
+      alert(t("Не вдалося позначити урок завершеним", "Не удалось отметить урок завершенным"));
+    }
+  };
 
   if (!user) return null;
 
@@ -745,7 +734,7 @@ const markLessonComplete = async () => {
     >
       {/* HEADER */}
       <header
-        className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-20 rounded-b-[6px] ${
+        className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-30 rounded-b-[6px] ${
           darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/70"
         }`}
       >
@@ -757,257 +746,284 @@ const markLessonComplete = async () => {
         </button>
       </header>
 
-{/* SIDEBAR */}
-<aside
-  className={`w-72 flex flex-col fixed md:static top-0 h-screen transition-transform duration-300 z-10 border-r backdrop-blur-xl ${
-    menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
-  } ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"} md:pt-0 pt-16`}
->
-  {/* ЄДИНА коренева обгортка всередині aside */}
-  <div className="flex flex-col h-full">
-    {/* Верхня прокручувана частина */}
-    <div className="p-6 flex-1 overflow-y-auto">
-      <div className="flex flex-col items-center text-center mb-4">
-        {/* Прихований інпут для вибору файлу */}
-        <input
-          ref={avatarInputRef}
-          type="file"
-          accept="image/*"
-          className="hidden"
-          onChange={onAvatarSelected}
+      {/* 🔲 Оверлей під сайдбаром (мобайл) */}
+      {menuOpen && (
+        <div
+          className="md:hidden fixed inset-0 z-20 bg-black/40"
+          onClick={() => setMenuOpen(false)}
         />
-
-        {/* Кругла аватарка (клік — завантажити нову в Imgur) */}
-        <button
-          onClick={handleChooseAvatar}
-          title={t("Змінити аватар", "Сменить аватар")}
-          className="relative group"
-        >
-          {user.avatar_url ? (
-            <img
-              src={user.avatar_url}
-              alt="Avatar"
-              className="w-20 h-20 rounded-full object-cover ring-2 ring-pink-300 shadow-md group-hover:scale-105 transition"
-              referrerPolicy="no-referrer"
-            />
-          ) : (
-            <div
-              className={`w-20 h-20 rounded-full flex items-center justify-center ring-2 shadow-md group-hover:scale-105 transition ${
-                darkMode ? "ring-fuchsia-800/50 bg-[#15001f]" : "ring-pink-300 bg-pink-50"
-              }`}
-            >
-              <SquareUserRound className="w-10 h-10 text-pink-500" />
-            </div>
-          )}
-
-          {/* бейдж "Змінити" при ховері */}
-          <span
-            className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none ${
-              darkMode ? "bg-fuchsia-700 text-white" : "bg-pink-500 text-white"
-            }`}
-          >
-            {t("Змінити", "Сменить")}
-          </span>
-        </button>
-
-        <h2 className="mt-3 font-bold text-lg">
-          {user.name || user.email.split("@")[0]}
-        </h2>
-
-        <div className="mt-1">
-          {user.package === "pro" ? (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
-              PRO
-            </span>
-          ) : (
-            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
-              {t("Самостійний", "Самостоятельный")}
-            </span>
-          )}
-        </div>
-
-        <p className="text-sm opacity-70">
-          {t("Доступ до", "Доступ до")}: {user.expires_at}
-        </p>
-      </div>
-
-      {/* Загальний прогрес курсу */}
-      <div className="mb-4 px-3">
-        <p className="text-xs text-center font-medium text-pink-600">
-          {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
-        </p>
-        <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
-          <div
-            className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
-            style={{ width: `${overallProgress}%` }}
-          />
-        </div>
-      </div>
-
-      {/* MODULES */}
-      {modules.length === 0 ? (
-        <p className="text-center text-sm opacity-70">
-          {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
-        </p>
-      ) : (
-        <div className="space-y-2">
-          {modules.map((mod) => (
-            <div key={mod.id} className="mb-2">
-              <button
-                onClick={() => toggleModule(mod.id)}
-                className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
-              >
-                <span className="flex items-center gap-2">
-                  <BookOpen className="w-4 h-4" /> {mod.title}
-                </span>
-                <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
-                  {typeof mod.lessons === "number" ? mod.lessons : (lessons[mod.id]?.length ?? 0)}
-                </span>
-                {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-              </button>
-
-              {mod.description && (
-                <p className={`text-xs mt-1 ml-8 pr-4 leading-snug ${darkMode ? "text-fuchsia-200/70" : "text-gray-600"}`}>
-                  {mod.description}
-                </p>
-              )}
-
-              {expanded === mod.id && (
-                <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
-                  {lessons[mod.id]?.map((l) => {
-                    const prog = progress[l.id];
-                    const done = !!prog?.completed;
-                    const percent = done
-                      ? 100
-                      : (prog && prog.total_seconds > 0
-                          ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
-                          : 0);
-                    const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-                    return (
-                      <div
-                        key={l.id}
-                        onClick={() => {
-                          setSelectedLesson(l);
-                          localStorage.setItem("last_lesson", JSON.stringify(l));
-                          localStorage.setItem("last_view", "lesson");
-                          setMenuOpen(false);
-                        }}
-                        className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
-                          selectedLesson?.id === l.id
-                            ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
-                            : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
-                        }`}
-                      >
-                        <div className="flex items-center gap-2">
-                          {done ? (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10" />
-                              <path d="M9 12l2 2 4-4" />
-                            </svg>
-                          ) : (
-                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                              <circle cx="12" cy="12" r="10" />
-                            </svg>
-                          )}
-                          <span className="flex-1 truncate">{l.title}</span>
-                          {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
-                          {percent > 0 && (
-                            <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
-                              {percent}%
-                            </span>
-                          )}
-                        </div>
-                        <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
-                          <div
-                            className={`h-full ${done ? "bg-green-400" : percent > 0 ? "bg-gradient-to-r from-pink-400 to-rose-500" : "bg-transparent"}`}
-                            style={{ width: `${percent}%`, transition: "width 0.7s ease-out", willChange: "width" }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
       )}
 
-      {/* ПІДТРИМКА — над футером сайдбару */}
-      <div className="mt-6">
-        <a
-          href="https://t.me/m/cE5yXCdSZTAy"
-          className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
-            darkMode
-              ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
-              : "border-pink-200 bg-white/70 hover:bg-white"
-          }`}
-          title={t("Звернутися у підтримку", "Обратиться в поддержку")}
-        >
-          <HelpCircle className="w-4 h-4 text-pink-600" />
-          <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
-        </a>
-      </div>
-    </div>
-
-    {/* Нижній футер сайдбару */}
-    <div className="p-6 border-t border-pink-200/30 space-y-6">
-      {/* Темна тема */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Moon className="w-4 h-4 text-pink-500" />
-          <span>{t("Темна тема", "Тёмная тема")}</span>
-        </div>
-        <button
-          onClick={() => {
-            const newMode = !darkMode;
-            setDarkMode(newMode);
-            document.documentElement.classList.toggle("dark", newMode);
-            localStorage.setItem("theme", newMode ? "dark" : "light");
-          }}
-          className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
-            darkMode ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" : "bg-pink-200"
-          }`}
-        >
-          <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${darkMode ? "translate-x-6" : "translate-x-0"}`}></span>
-        </button>
-      </div>
-
-      {/* Мова */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <Globe className="w-4 h-4 text-pink-500" />
-          <span>{t("Мова", "Язык")}</span>
-        </div>
-        <div className="flex gap-2">
-          {["ru", "uk"].map((lang) => (
-            <button
-              key={lang}
-              onClick={() => {
-                i18n.changeLanguage(lang);
-                localStorage.setItem("lang", lang);
-              }}
-              className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
-                i18n.language === lang ? "bg-pink-500 text-white border-pink-500" : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
-              }`}
-            >
-              {lang.toUpperCase()}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Вихід */}
-      <button
-        onClick={handleLogout}
-        className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
+      {/* SIDEBAR — мобілка: випадає згори; десктоп: ліворуч як завжди */}
+      <aside
+        className={`
+          fixed md:static inset-x-0 top-0
+          w-full md:w-72
+          h-[85vh] md:h-screen
+          md:h-auto
+          transition-transform duration-300
+          z-30 md:z-auto
+          border-b md:border-b-0 md:border-r
+          backdrop-blur-xl
+          ${menuOpen ? "translate-y-0" : "-translate-y-full md:translate-y-0"}
+          ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"}
+          pt-16 md:pt-0
+        `}
       >
-        <LogOut className="w-4 h-4" /> {t("Вийти", "Выйти")}
-      </button>
-    </div>
-  </div>
-</aside>
+        {/* Кнопка закриття в самому меню (моб) */}
+        <button
+          onClick={() => setMenuOpen(false)}
+          className="md:hidden absolute top-4 right-4 p-2 rounded-full bg-white/70 text-pink-600 shadow"
+          aria-label="Close menu"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        {/* ЄДИНА коренева обгортка всередині aside */}
+        <div className="flex flex-col h-full">
+          {/* Верхня прокручувана частина */}
+          <div className="p-6 flex-1 overflow-y-auto">
+            <div className="flex flex-col items-center text-center mb-4">
+              {/* Прихований інпут для вибору файлу */}
+              <input
+                ref={avatarInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={onAvatarSelected}
+              />
+
+              {/* Кругла аватарка (клік — завантажити нову в Imgur) */}
+              <button
+                onClick={handleChooseAvatar}
+                title={t("Змінити аватар", "Сменить аватар")}
+                className="relative group"
+              >
+                {user.avatar_url ? (
+                  <img
+                    src={user.avatar_url}
+                    alt="Avatar"
+                    className="w-20 h-20 rounded-full object-cover ring-2 ring-pink-300 shadow-md group-hover:scale-105 transition"
+                    referrerPolicy="no-referrer"
+                  />
+                ) : (
+                  <div
+                    className={`w-20 h-20 rounded-full flex items-center justify-center ring-2 shadow-md group-hover:scale-105 transition ${
+                      darkMode ? "ring-fuchsia-800/50 bg-[#15001f]" : "ring-pink-300 bg-pink-50"
+                    }`}
+                  >
+                    <SquareUserRound className="w-10 h-10 text-pink-500" />
+                  </div>
+                )}
+
+                {/* бейдж "Змінити" при ховері */}
+                <span
+                  className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none ${
+                    darkMode ? "bg-fuchsia-700 text-white" : "bg-pink-500 text-white"
+                  }`}
+                >
+                  {t("Змінити", "Сменить")}
+                </span>
+              </button>
+
+              <h2 className="mt-3 font-bold text-lg">
+                {user.name || user.email.split("@")[0]}
+              </h2>
+
+              <div className="mt-1">
+                {user.package === "pro" ? (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
+                    PRO
+                  </span>
+                ) : (
+                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
+                    {t("Самостійний", "Самостоятельный")}
+                  </span>
+                )}
+              </div>
+
+              <p className="text-sm opacity-70">
+                {t("Доступ до", "Доступ до")}: {user.expires_at}
+              </p>
+            </div>
+
+            {/* Загальний прогрес курсу */}
+            <div className="mb-4 px-3">
+              <p className="text-xs text-center font-medium text-pink-600">
+                {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
+              </p>
+              <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
+                  style={{ width: `${overallProgress}%` }}
+                />
+              </div>
+            </div>
+
+            {/* MODULES */}
+            {modules.length === 0 ? (
+              <p className="text-center text-sm opacity-70">
+                {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {modules.map((mod) => (
+                  <div key={mod.id} className="mb-2">
+                    <button
+                      onClick={() => toggleModule(mod.id)}
+                      className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
+                    >
+                      <span className="flex items-center gap-2">
+                        <BookOpen className="w-4 h-4" /> {mod.title}
+                      </span>
+                      <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
+                        {typeof mod.lessons === "number" ? mod.lessons : (lessons[mod.id]?.length ?? 0)}
+                      </span>
+                      {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+                    </button>
+
+                    {mod.description && (
+                      <p className={`text-xs mt-1 ml-8 pr-4 leading-snug ${darkMode ? "text-fuchsia-200/70" : "text-gray-600"}`}>
+                        {mod.description}
+                      </p>
+                    )}
+
+                    {expanded === mod.id && (
+                      <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
+                        {lessons[mod.id]?.map((l) => {
+                          const prog = progress[l.id];
+                          const done = !!prog?.completed;
+                          const percent = done
+                            ? 100
+                            : (prog && prog.total_seconds > 0
+                                ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
+                                : 0);
+                          const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+                          return (
+                            <div
+                              key={l.id}
+                              onClick={() => {
+                                setSelectedLesson(l);
+                                localStorage.setItem("last_lesson", JSON.stringify(l));
+                                localStorage.setItem("last_view", "lesson");
+                                setMenuOpen(false);
+                              }}
+                              className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
+                                selectedLesson?.id === l.id
+                                  ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
+                                  : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
+                              }`}
+                            >
+                              <div className="flex items-center gap-2">
+                                {done ? (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M9 12l2 2 4-4" />
+                                  </svg>
+                                ) : (
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <circle cx="12" cy="12" r="10" />
+                                  </svg>
+                                )}
+                                <span className="flex-1 truncate">{l.title}</span>
+                                {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
+                                {percent > 0 && (
+                                  <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
+                                    {percent}%
+                                  </span>
+                                )}
+                              </div>
+                              <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
+                                <div
+                                  className={`h-full ${done ? "bg-green-400" : percent > 0 ? "bg-gradient-to-r from-pink-400 to-rose-500" : "bg-transparent"}`}
+                                  style={{ width: `${percent}%`, transition: "width 0.7s ease-out", willChange: "width" }}
+                                />
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* ПІДТРИМКА — над футером сайдбару */}
+            <div className="mt-6">
+              <a
+                href="https://t.me/m/cE5yXCdSZTAy"
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+                  darkMode
+                    ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+                    : "border-pink-200 bg-white/70 hover:bg-white"
+                }`}
+                title={t("Звернутися у підтримку", "Обратиться в поддержку")}
+              >
+                <HelpCircle className="w-4 h-4 text-pink-600" />
+                <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
+              </a>
+            </div>
+          </div>
+
+          {/* Нижній футер сайдбару */}
+          <div className="p-6 border-t border-pink-200/30 space-y-6">
+            {/* Темна тема */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Moon className="w-4 h-4 text-pink-500" />
+                <span>{t("Темна тема", "Тёмная тема")}</span>
+              </div>
+              <button
+                onClick={() => {
+                  const newMode = !darkMode;
+                  setDarkMode(newMode);
+                  document.documentElement.classList.toggle("dark", newMode);
+                  localStorage.setItem("theme", newMode ? "dark" : "light");
+                }}
+                className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
+                  darkMode ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" : "bg-pink-200"
+                }`}
+              >
+                <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${darkMode ? "translate-x-6" : "translate-x-0"}`}></span>
+              </button>
+            </div>
+
+            {/* Мова */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Globe className="w-4 h-4 text-pink-500" />
+                <span>{t("Мова", "Язык")}</span>
+              </div>
+              <div className="flex gap-2">
+                {["ru", "uk"].map((lang) => (
+                  <button
+                    key={lang}
+                    onClick={() => {
+                      i18n.changeLanguage(lang);
+                      localStorage.setItem("lang", lang);
+                    }}
+                    className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
+                      i18n.language === lang ? "bg-pink-500 text-white border-pink-500" : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
+                    }`}
+                  >
+                    {lang.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Вихід */}
+            <button
+              onClick={handleLogout}
+              className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
+            >
+              <LogOut className="w-4 h-4" /> {t("Вийти", "Выйти")}
+            </button>
+          </div>
+        </div>
+      </aside>
 
       {/* Контент */}
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
@@ -1053,18 +1069,18 @@ const markLessonComplete = async () => {
             )}
 
             {view === "modules" && (
-  <ModulesPage
-    modules={modules}
-    darkMode={darkMode}
-    t={t}
-    onBack={() => setView("dashboard")}
-    onOpenLesson={(lesson) => {
-      setSelectedLesson(lesson);
-      setView("dashboard");
-    }}
-    progress={progress}
-  />
-)}
+              <ModulesPage
+                modules={modules}
+                darkMode={darkMode}
+                t={t}
+                onBack={() => setView("dashboard")}
+                onOpenLesson={(lesson) => {
+                  setSelectedLesson(lesson);
+                  setView("dashboard");
+                }}
+                progress={progress}
+              />
+            )}
           </>
         ) : (
           <div
@@ -1175,22 +1191,19 @@ const markLessonComplete = async () => {
                     {t("Матеріали", "Материалы")}
                   </h3>
                   <a
-  href={selectedLesson.materials}
-  target="_blank"
-  rel="noopener noreferrer"
-  className={`inline-block text-sm font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded
-    ${darkMode
-      ? "text-emerald-300 hover:text-emerald-200"
-      : "text-emerald-600 hover:text-emerald-700"}`}
->
-  {t("Відкрити посилання", "Открыть ссылку")}
-</a>
+                    href={selectedLesson.materials}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-block text-sm font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded
+                      ${darkMode ? "text-emerald-300 hover:text-emerald-200" : "text-emerald-600 hover:text-emerald-700"}`}
+                  >
+                    {t("Відкрити посилання", "Открыть ссылку")}
+                  </a>
                 </div>
               )}
             </div>
           </div>
         )}
-
       </main>
     </div>
   );
