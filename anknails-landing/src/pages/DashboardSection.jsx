@@ -13,7 +13,7 @@ const STAGE_COLORS = {
   5: "from-yellow-100 to-amber-50 border-yellow-300 text-yellow-700",
 };
 
-/* 🌚 Кольори (dark) — більш насичені, без «молочних» фонових */
+/* 🌚 Кольори (dark) */
 const STAGE_COLORS_DARK = {
   1: "from-[#2a0f2a] to-[#1a0a1f] border-fuchsia-800/40 text-pink-200",
   2: "from-[#2a0f1c] to-[#14080e] border-rose-800/40 text-rose-200",
@@ -85,6 +85,7 @@ export default function DashboardSection({
         darkMode ? "text-fuchsia-100" : "text-gray-800"
       }`}
     >
+      {/* ====== Контент дашборду ====== */}
       <div className="flex-1">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* 📦 Модулі */}
@@ -131,25 +132,17 @@ export default function DashboardSection({
           <div
             className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 bg-gradient-to-br ${stageColor}`}
           >
-            {/* ℹ️ Кнопка інформації — z нижче за header */}
+            {/* ℹ️ Кнопка інформації */}
             <button
               onClick={() => setShowInfo(!showInfo)}
               className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-10"
               title={t("Як підвищити майстерність", "Как развивать мастерство")}
             >
-              {showInfo ? (
-                <X className="w-5 h-5 text-yellow-500" />
-              ) : (
-                <Info className="w-5 h-5" />
-              )}
+              {showInfo ? <X className="w-5 h-5 text-yellow-500" /> : <Info className="w-5 h-5" />}
             </button>
 
             {/* контент */}
-            <div
-              className={`transition-all duration-700 ${
-                showInfo ? "opacity-0 scale-95" : "opacity-100 scale-100"
-              }`}
-            >
+            <div className={`transition-all duration-700 ${showInfo ? "opacity-0 scale-95" : "opacity-100 scale-100"}`}>
               <h3 className="text-xl font-bold mb-4 flex items-center justify-center gap-2">
                 <Award className="w-5 h-5 text-yellow-500" />
                 {t("Моя майстерність", "Моё мастерство")}
@@ -172,34 +165,32 @@ export default function DashboardSection({
                 </div>
 
                 <p className="text-xs opacity-80">
-                  {t("До наступного рівня залишилось", "До следующего уровня осталось")}{" "}
-                  {100 - (realSkills % 100)} {t("навичок", "навыков")}
+                  {t("До наступного рівня залишилось", "До следующего уровня осталось")} {100 - (realSkills % 100)}{" "}
+                  {t("навичок", "навыков")}
                 </p>
               </div>
             </div>
 
-          {/* інфо-вікно */}
-<div
-  className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
-    showInfo ? "opacity-100 scale-100" : "opacity-0 scale-95"
-  }`}
->
-  <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40"></div>
-  <div className="relative z-0">
-    {/* ↓ зменшений і «щільніший» заголовок + кращі переноси */}
-    <h3 className="text-lg md:text-xl font-bold mb-2 leading-tight tracking-tight break-words px-2">
-      {t("Як розвивати майстерність", "Как развивать мастерство")}
-    </h3>
-
-    <p className="text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5">
-      {t(
-        "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 - новий рівень! Виконуйте домашні завдання - отримуйте бонусні 10 одиниць майстерності.",
-        "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 - новый уровень! Выполняйте домашние задания - бонус 10 единиц мастерства."
-      )}
-    </p>
-  </div>
-</div>
-   </div>         
+            {/* інфо-вікно */}
+            <div
+              className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+                showInfo ? "opacity-100 scale-100" : "opacity-0 scale-95"
+              }`}
+            >
+              <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40"></div>
+              <div className="relative z-0">
+                <h3 className="text-lg md:text-xl font-bold mb-2 leading-tight tracking-tight break-words px-2">
+                  {t("Як розвивати майстерність", "Как развивать мастерство")}
+                </h3>
+                <p className="text-sm md:text-base font-medium leading-relaxed max-w-md mx-auto mb-5">
+                  {t(
+                    "Проходьте уроки, щоб розвивати свої навички. Кожен завершений урок додає 20 одиниць майстерності. Кожні 100 - новий рівень! Виконуйте домашні завдання - отримуйте бонусні 10 одиниць майстерності.",
+                    "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 - новый уровень! Выполняйте домашние задания - бонус 10 единиц мастерства."
+                  )}
+                </p>
+              </div>
+            </div>
+          </div>
 
           {/* 📈 Прогрес курсу */}
           <div
@@ -207,16 +198,11 @@ export default function DashboardSection({
               darkMode ? "bg-[#1a0a1f]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
             }`}
           >
-            <h3 className="text-xl font-bold mb-3 text-pink-600">
-              {t("Прогрес курсу", "Прогресс курса")}
-            </h3>
+            <h3 className="text-xl font-bold mb-3 text-pink-600">{t("Прогрес курсу", "Прогресс курса")}</h3>
             <div className="text-center">
               <p className="text-5xl font-extrabold text-pink-500 mb-2">{overallProgress}%</p>
               <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-3">
-                <div
-                  className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700"
-                  style={{ width: `${overallProgress}%` }}
-                />
+                <div className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700" style={{ width: `${overallProgress}%` }} />
               </div>
               <p className="text-sm opacity-70">
                 {t("Ви переглянули", "Вы просмотрели")} {completedLessons} {t("уроків з", "уроков из")}{" "}
@@ -254,6 +240,17 @@ export default function DashboardSection({
           </div>
         </div>
       </div>
+
+      {/* ====== Футер дашборду (сюди перенесли) ====== */}
+      <footer
+        className={`mt-8 text-center py-6 text-sm border-t
+                    ${darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"}`}
+      >
+        <p className="font-medium">
+          © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
+          {t("Усі права захищені.", "Все права защищены.")}
+        </p>
+      </footer>
     </div>
   );
 }
