@@ -1,3 +1,4 @@
+// src/pages/DashboardSection.jsx
 import { useEffect, useMemo, useState } from "react";
 import { CheckSquare, Award, Info, X, ChevronRight, Lock, FileDown, Send } from "lucide-react";
 
@@ -37,7 +38,7 @@ export default function DashboardSection({
   const [localLessons, setLocalLessons] = useState(lessons || {});
 
   /* ====== Сертифікат: статус із бекенду ====== */
-  const [certInfoOpen, setCertInfoOpen] = useState(false);
+  const [certInfoOpen, setCertInfoOpen] = useState(false); // тепер повноекранне оверлей-вікно
   const [certStatus, setCertStatus] = useState({
     unlocked: false,
     unlock_at: null,        // ISO
@@ -46,7 +47,7 @@ export default function DashboardSection({
     approved: false,
   });
 
-  // тік для інфо-таймера (тільки в підказці)
+  // тік для інфо-таймера (показуємо тільки всередині інфо-вікна)
   const [nowTs, setNowTs] = useState(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNowTs(Date.now()), 1000);
@@ -266,13 +267,13 @@ export default function DashboardSection({
               </div>
             </div>
 
-            {/* інфо-вікно */}
+            {/* інфо-вікно (повноекранне) */}
             <div
               className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
-                showInfo ? "opacity-100 scale-100" : "opacity-0 scale-95"
+                showInfo ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
-              <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40"></div>
+              <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40" />
               <div className="relative z-0">
                 <h3 className="text-lg md:text-xl font-bold mb-2 leading-tight tracking-tight break-words px-2">
                   {t("Як розвивати майстерність", "Как развивать мастерство")}
@@ -283,21 +284,6 @@ export default function DashboardSection({
                     "Проходите уроки, чтобы развивать навыки. За каждый урок начисляется 20 единиц мастерства. Каждые 100 — новый уровень! Выполняйте домашние задания — бонусные 10 единиц."
                   )}
                 </p>
-
-                {/* 🆕 Пояснення про сертифікати з таймером тут */}
-                {certStatus.unlock_at && !unlocked && (
-                  <div className="mt-4 text-sm">
-                    <p className="font-semibold mb-1">
-                      {t(
-                        "Доступ до сторінки з сертифікатами буде доступний через:",
-                        "Доступ к странице с сертификатами будет доступен через:"
-                      )}
-                    </p>
-                    <p className="font-mono text-lg">
-                      {countdownStr}
-                    </p>
-                  </div>
-                )}
               </div>
             </div>
           </div>
@@ -355,7 +341,7 @@ export default function DashboardSection({
               darkMode ? "bg-[#0f0016]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
             }`}
           >
-            {/* Іконка інформації зверху праворуч */}
+            {/* Кнопка інформації (тепер відкриває повноекранне вікно) */}
             <button
               onClick={() => setCertInfoOpen((v) => !v)}
               className="absolute top-3 right-3 z-20 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
@@ -364,26 +350,80 @@ export default function DashboardSection({
               {certInfoOpen ? <X className="w-5 h-5 text-pink-500" /> : <Info className="w-5 h-5 text-pink-500" />}
             </button>
 
-            {/* Підказка-«бабл» */}
-            {certInfoOpen && (
+            {/* ПОВНОЕКРАННЕ інфо-вікно з плавною появою (аналогічно «Моя майстерність») */}
+            <div
+              className={`absolute inset-0 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+                certInfoOpen ? "opacity-100 scale-100" : "opacity-0 scale-95 pointer-events-none"
+              }`}
+            >
               <div
-                className={`absolute top-12 right-3 z-20 w-80 text-sm rounded-xl border shadow-xl p-4
-                ${darkMode ? "bg-[#1a0a1f]/90 border-fuchsia-900/40 text-fuchsia-100" : "bg-white/95 border-pink-200 text-gray-700"} backdrop-blur`}
-              >
-                <p className="font-semibold mb-1">{t("Доступ до сертифікату", "Доступ к сертификату")}</p>
-                <p className="opacity-80 leading-relaxed">
-                  {unlocked
-                    ? t(
-                        "Ви можете подати запит на іменний сертифікат, після підтвердження в адмінці з’явиться кнопка завантаження.",
-                        "Вы можете отправить заявку на именной сертификат, после подтверждения в админке появится кнопка скачивания."
-                      )
-                    : t(
-                        "Сторінка із сертифікатами відкриється через встановлений період після першого входу. Нижче вказано дату відкриття.",
-                        "Страница с сертификатами откроется через установленный период после первого входа. Ниже указана дата открытия."
+                className={`absolute inset-0 rounded-2xl backdrop-blur-md border ${
+                  darkMode ? "bg-[#1a0a1f]/80 border-fuchsia-900/40" : "bg-white/80 border-pink-200"
+                }`}
+              />
+              <div className="relative z-0 max-w-md">
+                <h3 className="text-lg md:text-xl font-bold mb-2">
+                  {t("Доступ до сертифікатів", "Доступ к сертификатам")}
+                </h3>
+
+                {!unlocked ? (
+                  <>
+                    <p className="text-sm md:text-base font-medium leading-relaxed mb-4">
+                      {t(
+                        "Сторінка із сертифікатами відкриється після встановленого періоду від вашого першого входу.",
+                        "Страница с сертификатами откроется по истечении установленного периода с вашего первого входа."
                       )}
-                </p>
+                    </p>
+                    {certStatus.unlock_at && (
+                      <div className="mt-1">
+                        <p className="text-sm opacity-80 mb-1">
+                          {t("Буде доступно через:", "Будет доступно через:")}
+                        </p>
+                        <p className="font-mono text-xl">
+                          {countdownStr}
+                        </p>
+                        <p className="text-xs opacity-75 mt-2">
+                          {t("Дата відкриття", "Дата открытия")}:{" "}
+                          {new Date(certStatus.unlock_at).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  <>
+                    <p className="text-sm md:text-base font-medium leading-relaxed mb-4">
+                      {t(
+                        "Після відкриття ви можете подати запит на іменний сертифікат. Після схвалення зʼявиться кнопка завантаження.",
+                        "После открытия вы можете отправить запрос на именной сертификат. После одобрения появится кнопка скачивания."
+                      )}
+                    </p>
+                    {!certStatus.approved && !certStatus.requested && (
+                      <button
+                        onClick={handleRequestCert}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
+                      >
+                        <Send className="w-5 h-5" />
+                        {t("Подати запит на сертифікат", "Отправить запрос на сертификат")}
+                      </button>
+                    )}
+                    {certStatus.requested && !certStatus.approved && (
+                      <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                        ⏳ {t("Запит відправлено — очікує підтвердження", "Запрос отправлен — ждёт подтверждения")}
+                      </span>
+                    )}
+                    {certStatus.approved && (
+                      <button
+                        onClick={handleDownloadCert}
+                        className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
+                      >
+                        <FileDown className="w-5 h-5" />
+                        {t("Завантажити сертифікат", "Скачать сертификат")}
+                      </button>
+                    )}
+                  </>
+                )}
               </div>
-            )}
+            </div>
 
             {/* Контент картки (розмиваємо, якщо заблоковано) */}
             <div className={`${!unlocked ? "blur-[2px] select-none pointer-events-none" : ""}`}>
@@ -398,8 +438,8 @@ export default function DashboardSection({
                 )}
               </p>
 
-              {/* Кнопки за статусом */}
-              {unlocked && !certStatus.approved && !certStatus.requested && (
+              {/* Кнопки за статусом (коли розблоковано і не відкритий інфо-оверлей) */}
+              {unlocked && !certInfoOpen && !certStatus.approved && !certStatus.requested && (
                 <button
                   onClick={handleRequestCert}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
@@ -409,13 +449,13 @@ export default function DashboardSection({
                 </button>
               )}
 
-              {unlocked && certStatus.requested && !certStatus.approved && (
+              {unlocked && !certInfoOpen && certStatus.requested && !certStatus.approved && (
                 <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
                   ⏳ {t("Запит відправлено — очікує підтвердження", "Запрос отправлен — ждёт подтверждения")}
                 </span>
               )}
 
-              {unlocked && certStatus.approved && (
+              {unlocked && !certInfoOpen && certStatus.approved && (
                 <button
                   onClick={handleDownloadCert}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-[0.99] transition"
