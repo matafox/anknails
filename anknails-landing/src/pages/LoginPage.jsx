@@ -99,44 +99,7 @@ export default function LoginPage() {
         </div>
 
         <div className="flex items-center gap-3 md:gap-4">
-          {/* Мова */}
-          <div className="hidden sm:flex items-center gap-2">
-            <Globe className="w-4 h-4 text-pink-500" />
-            {["ru", "uk"].map((lang) => (
-              <button
-                key={lang}
-                onClick={() => {
-                  i18n.changeLanguage(lang);
-                  localStorage.setItem("lang", lang);
-                }}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium border transition ${
-                  i18n.language === lang
-                    ? "bg-pink-500 text-white border-pink-500"
-                    : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
-                }`}
-              >
-                {lang.toUpperCase()}
-              </button>
-            ))}
-          </div>
 
-          {/* Тема */}
-          <button
-            onClick={() => setTheme(!darkMode)}
-            className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
-              darkMode
-                ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]"
-                : "bg-pink-200"
-            }`}
-            title={i18n.language === "ru" ? "Сменить тему" : "Змінити тему"}
-          >
-            <span
-              className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${
-                darkMode ? "translate-x-6" : "translate-x-0"
-              }`}
-            />
-            <span className="sr-only">Theme</span>
-          </button>
         </div>
       </header>
 
@@ -156,9 +119,6 @@ export default function LoginPage() {
         >
           {/* Заголовок */}
           <div className="text-center mb-10">
-            <h1 className="text-4xl font-extrabold tracking-tight bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
-              ANK&nbsp;Studio
-            </h1>
             <p className="mt-3 text-sm opacity-75 font-medium">
               {i18n.language === "ru"
                 ? "Введите данные для входа в аккаунт"
