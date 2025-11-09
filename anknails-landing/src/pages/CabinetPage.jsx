@@ -401,6 +401,21 @@ export default function CabinetPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
+  const IMGUR_CLIENT_ID = "8f3cb6e4c248b26"; // як у BannerTab
+
+async function uploadToImgur(file) {
+  const form = new FormData();
+  form.append("image", file);
+  const res = await fetch("https://api.imgur.com/3/image", {
+    method: "POST",
+    headers: { Authorization: `Client-ID ${IMGUR_CLIENT_ID}` },
+    body: form,
+  });
+  const j = await res.json();
+  if (!res.ok || !j?.data?.link) throw new Error(j?.data?.error || "Imgur upload failed");
+  return j.data.link;
+}
+
   const refreshAfterLessonComplete = async () => {
     if (!user?.id) return;
 
@@ -425,6 +440,47 @@ export default function CabinetPage() {
       console.warn("⚠️ refreshAfterLessonComplete failed", e);
     }
   };
+
+  const avatarInputRef = useRef(null);
+
+const handleChooseAvatar = () => {
+  avatarInputRef.current?.click();
+};
+
+const onAvatarSelected = async (e) => {
+  const file = e.target.files?.[0];
+  if (!file) return;
+  try {
+    // 1) завантажуємо в Imgur
+    const link = await uploadToImgur(file);
+
+    // 2) зберігаємо в бекенд по session_token
+    const sessionToken = localStorage.getItem("session_token");
+    const r = await fetch(`${BACKEND}/api/users/avatar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        user_id: user.id,
+        session_token: sessionToken,
+        avatar_url: link,
+      }),
+    });
+    if (!r.ok) {
+      const txt = await r.text().catch(() => "");
+      throw new Error(`save avatar failed: ${r.status} ${txt}`);
+    }
+    const j = await r.json();
+
+    // 3) локально оновлюємо
+    setUser((prev) => (prev ? { ...prev, avatar_url: j.avatar_url } : prev));
+  } catch (err) {
+    alert(t("Не вдалося оновити аватар", "Не удалось обновить аватар"));
+    console.warn(err);
+  } finally {
+    // очищаємо value, щоб можна було вибрати той же файл ще раз
+    if (avatarInputRef.current) avatarInputRef.current.value = "";
+  }
+};
 
   const [progress, setProgress] = useState({});
   const [overallProgress, setOverallProgress] = useState(0);
@@ -503,6 +559,7 @@ export default function CabinetPage() {
           xp: found.xp || 0,
           level: found.level || 1,
           package: found.package || "solo",
+          avatar_url: found.avatar_url || null,
         });
       })
       .catch(() => (window.location.href = "/login"));
@@ -721,27 +778,68 @@ const markLessonComplete = async () => {
           menuOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
         } ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"} md:pt-0 pt-16`}
       >
-        <div className="p-6 flex-1 overflow-y-auto">
-          <div className="flex flex-col items-center text-center mb-4 group select-none">
-            <SquareUserRound className="w-16 h-16 text-pink-500 mb-2 group-hover:scale-110 transition-transform duration-300" />
-            <h2 className="font-bold text-lg group-hover:text-pink-600 transition-colors">
-              {user.name || user.email.split("@")[0]}
-            </h2>
-            <div className="mt-1">
-              {user.package === "pro" ? (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
-                  PRO
-                </span>
-              ) : (
-                <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
-                  {t("Самостійний", "Самостоятельный")}
-                </span>
-              )}
-            </div>
-            <p className="text-sm opacity-70">
-              {t("Доступ до", "Доступ до")}: {user.expires_at}
-            </p>
-          </div>
+        <div className="flex flex-col items-center text-center mb-4 select-none">
+  {/* Прихований інпут для вибору файлу */}
+  <input
+    ref={avatarInputRef}
+    type="file"
+    accept="image/*"
+    className="hidden"
+    onChange={onAvatarSelected}
+  />
+
+  {/* Кругла аватарка */}
+  <button
+    onClick={handleChooseAvatar}
+    title={t("Змінити аватар", "Сменить аватар")}
+    className="relative group"
+  >
+    {user.avatar_url ? (
+      <img
+        src={user.avatar_url}
+        alt="Avatar"
+        className="w-20 h-20 rounded-full object-cover ring-2 ring-pink-300 shadow-md group-hover:scale-105 transition"
+        referrerPolicy="no-referrer"
+      />
+    ) : (
+      <div
+        className={`w-20 h-20 rounded-full flex items-center justify-center ring-2 shadow-md group-hover:scale-105 transition
+          ${darkMode ? "ring-fuchsia-800/50 bg-[#15001f]" : "ring-pink-300 bg-pink-50"}`}
+      >
+        <SquareUserRound className="w-10 h-10 text-pink-500" />
+      </div>
+    )}
+
+    {/* бейдж "Змінити" при ховері */}
+    <span
+      className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold
+        opacity-0 group-hover:opacity-100 pointer-events-none
+        ${darkMode ? "bg-fuchsia-700 text-white" : "bg-pink-500 text-white"}`}
+    >
+      {t("Змінити", "Сменить")}
+    </span>
+  </button>
+
+  <h2 className="mt-3 font-bold text-lg">
+    {user.name || user.email.split("@")[0]}
+  </h2>
+
+  <div className="mt-1">
+    {user.package === "pro" ? (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
+        PRO
+      </span>
+    ) : (
+      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
+        {t("Самостійний", "Самостоятельный")}
+      </span>
+    )}
+  </div>
+
+  <p className="text-sm opacity-70">
+    {t("Доступ до", "Доступ до")}: {user.expires_at}
+  </p>
+</div>
 
           {/* Загальний прогрес курсу */}
           <div className="mb-4 px-3">
