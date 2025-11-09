@@ -67,9 +67,6 @@ export default function LoginPage() {
           <div className="w-full max-w-md rounded-[2rem] p-8 md:p-10 bg-white/80 backdrop-blur border border-pink-200/60 shadow-[0_0_40px_rgba(255,182,193,0.35)]">
             {/* 🔹 Привітання над формою */}
             <div className="mb-8 text-center">
-              <div className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-pink-100 to-rose-100 text-pink-600 border border-pink-200">
-                {t("Ласкаво просимо", "Добро пожаловать")}
-              </div>
               <p className="mt-2 text-sm opacity-75">
                 {t("Увійдіть, щоб почати навчання", "Войдите, чтобы начать обучение")}
               </p>
