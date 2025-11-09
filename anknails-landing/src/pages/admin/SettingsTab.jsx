@@ -14,13 +14,40 @@ export default function SettingsTab({ i18n, darkMode }) {
   const [saving, setSaving] = useState(false);
   const [loadingProgress, setLoadingProgress] = useState(false);
 
+  // 🆕 статуси сертифікатів по юзерах
+  const [certStatuses, setCertStatuses] = useState({}); // { [userId]: { unlocked, unlock_at, requested, approved } }
+
   // 🧠 Завантаження користувачів
   const loadUsers = async () => {
     try {
       setLoading(true);
       const res = await fetch(`${BACKEND}/api/users`);
       const data = await res.json();
-      setUsers(data.users || []);
+      const list = data.users || [];
+      setUsers(list);
+
+      // 🆕 підтягнемо статуси сертифікатів пачкою
+      const pairs = await Promise.all(
+        list.map(async (u) => {
+          try {
+            const r = await fetch(`${BACKEND}/api/cert/status?user_id=${u.id}`);
+            const j = await r.json();
+            return [
+              u.id,
+              {
+                unlocked: !!j.unlocked,
+                unlock_at: j.unlock_at ?? null,
+                requested: !!j.requested,
+                approved: !!j.approved,
+              },
+            ];
+          } catch {
+            return [u.id, { unlocked: false, unlock_at: null, requested: false, approved: false }];
+          }
+        })
+      );
+      const map = Object.fromEntries(pairs);
+      setCertStatuses(map);
     } catch (err) {
       console.error("Помилка завантаження користувачів:", err);
     } finally {
@@ -161,6 +188,33 @@ export default function SettingsTab({ i18n, darkMode }) {
     }
   };
 
+  // 🆕 адмін натискає "Завантажити сертифікат" -> схвалюємо + відкриваємо PDF
+  const adminDownloadAndApprove = async (userId) => {
+    try {
+      // спочатку схвалимо (щоб у юзера з'явилась кнопка)
+      await fetch(`${BACKEND}/api/cert/admin/approve`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ token: "anka12341", user_id: userId, approved: true }),
+      });
+      // оновимо статус
+      const r = await fetch(`${BACKEND}/api/cert/status?user_id=${userId}`);
+      const j = await r.json();
+      setCertStatuses((prev) => ({
+        ...prev,
+        [userId]: {
+          unlocked: !!j.unlocked,
+          unlock_at: j.unlock_at ?? null,
+          requested: !!j.requested,
+          approved: !!j.approved,
+        },
+      }));
+      // відкриємо PDF у новій вкладці
+      window.open(`${BACKEND}/api/cert/generate?user_id=${userId}`, "_blank", "noopener,noreferrer");
+    } catch (e) {
+      alert(i18n.language === "ru" ? "Не удалось открыть сертификат" : "Не вдалося відкрити сертифікат");
+    }
+  };
 
   return (
     <section>
@@ -279,7 +333,7 @@ export default function SettingsTab({ i18n, darkMode }) {
           </p>
         ) : users.length > 0 ? (
           <table
-            className={`min-w-[800px] w-full rounded-xl overflow-hidden border ${
+            className={`min-w-[980px] w-full rounded-xl overflow-hidden border ${
               darkMode ? "border-fuchsia-900/30" : "border-pink-200"
             }`}
           >
@@ -300,100 +354,160 @@ export default function SettingsTab({ i18n, darkMode }) {
                 <th className="py-2 px-3 text-left">
                   {i18n.language === "ru" ? "Доступ до" : "Доступ до"}
                 </th>
+                {/* 🆕 Сертифікат */}
+                <th className="py-2 px-3 text-left">
+                  {i18n.language === "ru" ? "Сертификат" : "Сертифікат"}
+                </th>
                 <th></th>
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
-                <tr
-                  key={u.id}
-                  className={`border-t ${
-                    darkMode
-                      ? "border-fuchsia-900/30 hover:bg-fuchsia-950/30"
-                      : "border-pink-200 hover:bg-pink-50"
-                  }`}
-                >
-                  <td className="py-2 px-3">{u.id}</td>
-                  <td className="py-2 px-3">
-                    <input
-                      type="text"
-                      defaultValue={u.name || ""}
-                      onBlur={(e) => handleNameChange(u.id, e.target.value.trim())}
-                      className={`px-2 py-1 w-full rounded-md border text-sm outline-none ${
-                        darkMode
-                          ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
-                          : "bg-white/70 border-pink-200 focus:border-pink-500"
-                      }`}
-                    />
-                  </td>
-                  <td className="py-2 px-3">{u.email}</td>
-                  <td className="py-2 px-3 font-mono opacity-80">{u.password}</td>
-                  <td className="py-2 px-3">
-                    <select
-                      value={u.course_id ?? ""}
-                      onChange={(e) =>
-                        handleCourseChange(
-                          u.id,
-                          e.target.value ? Number(e.target.value) : null
-                        )
-                      }
-                      className={`px-2 py-1 rounded-md border text-sm outline-none ${
-                        darkMode
-                          ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
-                          : "bg-white/70 border-pink-200 focus:border-pink-500"
-                      }`}
-                    >
-                      <option value="">
-                        {i18n.language === "ru" ? "Без курса" : "Без курсу"}
-                      </option>
-                      {courses.map((c) => (
-                        <option key={c.id} value={c.id}>
-                          {c.title}
+              {users.map((u) => {
+                const cs = certStatuses[u.id] || {};
+                const unlocked = !!cs.unlocked;
+                const unlockDate = cs.unlock_at ? new Date(cs.unlock_at).toLocaleDateString() : null;
+                return (
+                  <tr
+                    key={u.id}
+                    className={`border-t ${
+                      darkMode
+                        ? "border-fuchsia-900/30 hover:bg-fuchsia-950/30"
+                        : "border-pink-200 hover:bg-pink-50"
+                    }`}
+                  >
+                    <td className="py-2 px-3">{u.id}</td>
+                    <td className="py-2 px-3">
+                      <input
+                        type="text"
+                        defaultValue={u.name || ""}
+                        onBlur={(e) => handleNameChange(u.id, e.target.value.trim())}
+                        className={`px-2 py-1 w-full rounded-md border text-sm outline-none ${
+                          darkMode
+                            ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
+                            : "bg-white/70 border-pink-200 focus:border-pink-500"
+                        }`}
+                      />
+                    </td>
+                    <td className="py-2 px-3">{u.email}</td>
+                    <td className="py-2 px-3 font-mono opacity-80">{u.password}</td>
+                    <td className="py-2 px-3">
+                      <select
+                        value={u.course_id ?? ""}
+                        onChange={(e) =>
+                          handleCourseChange(
+                            u.id,
+                            e.target.value ? Number(e.target.value) : null
+                          )
+                        }
+                        className={`px-2 py-1 rounded-md border text-sm outline-none ${
+                          darkMode
+                            ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
+                            : "bg-white/70 border-pink-200 focus:border-pink-500"
+                        }`}
+                      >
+                        <option value="">
+                          {i18n.language === "ru" ? "Без курса" : "Без курсу"}
                         </option>
-                      ))}
-                    </select>
-                  </td>
+                        {courses.map((c) => (
+                          <option key={c.id} value={c.id}>
+                            {c.title}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
 
-                  <td className="py-2 px-3">
-                    <select
-                      value={u.package || "solo"}
-                      onChange={(e) => handlePackageChange(u.id, e.target.value)}
-                      className={`px-2 py-1 rounded-md border text-sm outline-none ${
-                        darkMode
-                          ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
-                          : "bg-white/70 border-pink-200 focus:border-pink-500"
-                      }`}
-                    >
-                      <option value="solo">
-                        {i18n.language === "ru"
-                          ? "Самостоятельный"
-                          : "Самостійний"}
-                      </option>
-                      <option value="pro">Pro</option>
-                    </select>
-                  </td>
+                    <td className="py-2 px-3">
+                      <select
+                        value={u.package || "solo"}
+                        onChange={(e) => handlePackageChange(u.id, e.target.value)}
+                        className={`px-2 py-1 rounded-md border text-sm outline-none ${
+                          darkMode
+                            ? "bg-fuchsia-950/40 border-fuchsia-800/40 text-fuchsia-100 focus:border-pink-400"
+                            : "bg-white/70 border-pink-200 focus:border-pink-500"
+                        }`}
+                      >
+                        <option value="solo">
+                          {i18n.language === "ru"
+                            ? "Самостоятельный"
+                            : "Самостійний"}
+                        </option>
+                        <option value="pro">Pro</option>
+                      </select>
+                    </td>
 
-                  <td className="py-2 px-3">
-                    {new Date(u.expires_at) < new Date() ? (
-                      <span className="text-red-500 font-medium">
-                        {i18n.language === "ru" ? "Истёк" : "Вигасло"}
-                      </span>
-                    ) : (
-                      <span>{new Date(u.expires_at).toLocaleDateString()}</span>
-                    )}
-                  </td>
-                  <td className="py-2 px-3">
-                    <button
-                      onClick={() => loadProgress(u.id)}
-                      className="text-sm text-pink-600 hover:underline"
-                    >
-                      {i18n.language === "ru"
-                        ? "Прогресс"
-                        : "Переглянути прогрес"}
-                    </button>
-                  </td>
-                </tr>
-              ))}
+                    <td className="py-2 px-3">
+                      {new Date(u.expires_at) < new Date() ? (
+                        <span className="text-red-500 font-medium">
+                          {i18n.language === "ru" ? "Истёк" : "Вигасло"}
+                        </span>
+                      ) : (
+                        <span>{new Date(u.expires_at).toLocaleDateString()}</span>
+                      )}
+                    </td>
+
+                    {/* 🆕 Колонка «Сертифікат» */}
+                    <td className="py-2 px-3">
+                      {!unlocked && unlockDate && (
+                        <span className="text-xs">
+                          {i18n.language === "ru" ? "Откроется:" : "Відкриється:"} {unlockDate}
+                        </span>
+                      )}
+
+                      {unlocked && !cs.requested && (
+                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                          {i18n.language === "ru" ? "Нет запроса" : "Немає запиту"}
+                        </span>
+                      )}
+
+                      {unlocked && cs.requested && !cs.approved && (
+                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                          {i18n.language === "ru" ? "Запрошен" : "Запит отримано"}
+                        </span>
+                      )}
+
+                      {unlocked && cs.approved && (
+                        <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                          {i18n.language === "ru" ? "Одобрен" : "Схвалено"}
+                        </span>
+                      )}
+                    </td>
+
+                    <td className="py-2 px-3">
+                      <div className="flex items-center gap-3">
+                        <button
+                          onClick={() => loadProgress(u.id)}
+                          className="text-sm text-pink-600 hover:underline"
+                        >
+                          {i18n.language === "ru"
+                            ? "Прогресс"
+                            : "Переглянути прогрес"}
+                        </button>
+
+                        {/* Дія завантажити сертифікат (одразу схвалює) */}
+                        {unlocked && cs.requested && !cs.approved && (
+                          <button
+                            onClick={() => adminDownloadAndApprove(u.id)}
+                            className="text-sm text-rose-600 hover:underline"
+                          >
+                            {i18n.language === "ru"
+                              ? "Скачать сертификат"
+                              : "Завантажити сертифікат"}
+                          </button>
+                        )}
+
+                        {unlocked && cs.approved && (
+                          <button
+                            onClick={() => window.open(`${BACKEND}/api/cert/generate?user_id=${u.id}`, "_blank", "noopener,noreferrer")}
+                            className="text-sm text-rose-600 hover:underline"
+                          >
+                            {i18n.language === "ru" ? "Открыть" : "Відкрити"}
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
             </tbody>
           </table>
         ) : (
@@ -479,16 +593,16 @@ export default function SettingsTab({ i18n, darkMode }) {
                       <td className="py-2 px-3">{p.lesson_title}</td>
                       <td className="py-2 px-3">{percent}%</td>
                       <td className="py-2 px-3">
-  {p.homework_done ? (
-    <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
-      ✅ {i18n.language === "ru" ? "Выполнено" : "Виконано"}
-    </span>
-  ) : (
-    <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
-      — {i18n.language === "ru" ? "Нет отметки" : "Немає позначки"}
-    </span>
-  )}
-</td>
+                        {p.homework_done ? (
+                          <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                            ✅ {i18n.language === "ru" ? "Выполнено" : "Виконано"}
+                          </span>
+                        ) : (
+                          <span className="inline-flex items-center gap-2 px-2.5 py-1 rounded-md text-xs font-medium bg-gray-100 text-gray-600 border border-gray-200">
+                            — {i18n.language === "ru" ? "Нет отметки" : "Немає позначки"}
+                          </span>
+                        )}
+                      </td>
                     </tr>
                   );
                 })}
