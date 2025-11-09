@@ -9,6 +9,7 @@ import {
   FileDown,
   Send,
   GraduationCap,
+  Loader2,
 } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
@@ -197,54 +198,13 @@ export default function DashboardSection({
     }
   };
 
- const handleDownloadCert = async () => {
-  if (!user?.id) return alert(t("Немає user_id", "Нет user_id"));
-
-  // відкриваємо попап синхронно — щоб не заблокувало
-  const popup = window.open("", "_blank", "noopener,noreferrer");
-
-  try {
-    const res = await fetch(`${BACKEND}/api/cert/generate?user_id=${user.id}`, {
-      method: "GET",
-      // ВАЖЛИВО: без credentials!
-      // credentials: "omit", // можна явно так, або просто не вказувати
-      headers: { Accept: "application/json" },
-      mode: "cors",
-    });
-
-    // якщо бекенд повернув 4xx/5xx — покажемо детальну помилку
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      const msg = err?.detail || `HTTP ${res.status}`;
-      throw new Error(msg);
-    }
-
-    const { url } = await res.json();
-
-    if (!url || !/^https?:\/\//i.test(url)) {
-      throw new Error("Invalid URL from backend");
-    }
-
-    if (popup) {
-      // мінімізує ризик блокування попапів
-      popup.location.href = url;
-    } else {
-      // запасний варіант
-      const w = window.open(url, "_blank", "noopener,noreferrer");
-      if (!w) {
-        alert(
-          t(
-            "Браузер заблокував відкриття вікна. Дозвольте pop-ups і спробуйте ще раз.",
-            "Браузер заблокировал открытие окна. Разрешите pop-ups и попробуйте ещё раз."
-          )
-        );
-      }
-    }
-  } catch (e) {
-    if (popup) popup.close();
-    alert(t(`Не вдалося відкрити сертифікат: ${e.message}`, `Не удалось открыть сертификат: ${e.message}`));
+ const handleDownloadCert = () => {
+  if (!user?.id) {
+    return alert(t("Немає user_id", "Нет user_id"));
   }
+  window.open(`${BACKEND}/api/cert/open?user_id=${user.id}`, "_blank");
 };
+
 
 
   /* === Рендер === */
@@ -507,10 +467,11 @@ export default function DashboardSection({
               )}
 
               {unlocked && !certInfoOpen && certStatus.requested && !certStatus.approved && (
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                  ⏳ {t("Запит відправлено - очікує підтвердження", "Запрос отправлен - ждёт подтверждения")}
-                </span>
-              )}
+  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
+    <Loader2 className="w-4 h-4 animate-spin" />
+    {t("Запит відправлено - очікує підтвердження", "Запрос отправлен - ждёт подтверждения")}
+  </span>
+)}
 
               {unlocked && !certInfoOpen && certStatus.approved && (
                 <button
