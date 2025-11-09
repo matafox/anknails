@@ -15,7 +15,7 @@ import {
   ChevronRight,
   DollarSign,
   Grid,
-  BarChart3, // 🆕 іконка для Traffic
+  BarChart3, // іконка для Traffic
 } from "lucide-react";
 
 import ModulesTab from "./admin/ModulesTab";
@@ -24,7 +24,7 @@ import SettingsTab from "./admin/SettingsTab";
 import CoursesTab from "./admin/CoursesTab";
 import EarningsTab from "./admin/EarningsTab";
 import DashboardTab from "./admin/DashboardTab";
-import TrafficTab from "./admin/TrafficTab"; // 🆕 нова сторінка
+import TrafficTab from "./admin/TrafficTab";
 
 export default function AdminPage() {
   const { i18n } = useTranslation();
@@ -82,14 +82,15 @@ export default function AdminPage() {
     window.location.href = "/";
   };
 
-  // 🧭 Навігація (додали Traffic)
+  // 🧭 Навігація (Трафік під Заробітком, з бейджем NEW)
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: Grid },
-    { id: "traffic", label: i18n.language === "ru" ? "Трафик" : "Трафік", icon: BarChart3 }, // 🆕
     { id: "courses", label: i18n.language === "ru" ? "Курсы" : "Курси", icon: Layers },
     { id: "modules", label: i18n.language === "ru" ? "Модули" : "Модулі", icon: BookOpen },
     { id: "banner", label: i18n.language === "ru" ? "Баннер" : "Банер", icon: Image },
     { id: "earnings", label: i18n.language === "ru" ? "Заработок" : "Заробіток", icon: DollarSign },
+    // ⬇️ Трафік іде одразу після Заробітку
+    { id: "traffic", label: i18n.language === "ru" ? "Трафик" : "Трафік", icon: BarChart3, badge: "NEW" },
     { id: "settings", label: i18n.language === "ru" ? "Настройки" : "Налаштування", icon: Settings },
   ];
 
@@ -130,14 +131,14 @@ export default function AdminPage() {
             )}
 
             <nav className="space-y-2 mb-6">
-              {tabs.map(({ id, label, icon: Icon }) => (
+              {tabs.map(({ id, label, icon: Icon, badge }) => (
                 <button
                   key={id}
                   onClick={() => {
                     setActiveTab(id);
                     setMenuOpen(false);
                   }}
-                  className={`flex items-center ${collapsed ? "justify-center" : "gap-3"} w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  className={`relative flex items-center ${collapsed ? "justify-center" : "gap-3"} w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                     activeTab === id
                       ? darkMode
                         ? "bg-pink-500/30 text-fuchsia-100 border border-pink-400/40"
@@ -148,8 +149,30 @@ export default function AdminPage() {
                   }`}
                   title={collapsed ? label : ""}
                 >
+                  {/* Бейдж NEW для трафіка */}
+                  {badge && (
+                    <span
+                      className={`absolute right-3 top-1.5 text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide
+                        ${darkMode ? "bg-fuchsia-600/90 text-white" : "bg-pink-500 text-white"}`}
+                    >
+                      {badge}
+                    </span>
+                  )}
                   <Icon className="w-4 h-4" />
-                  {!collapsed && label}
+                  {!collapsed && (
+                    <span className="flex items-center gap-2">
+                      {label}
+                      {/* дублювати бейдж біля тексту, коли меню не згорнуте */}
+                      {badge && (
+                        <span
+                          className={`text-[10px] px-2 py-0.5 rounded-full font-bold uppercase tracking-wide
+                            ${darkMode ? "bg-fuchsia-600/90 text-white" : "bg-pink-500 text-white"}`}
+                        >
+                          {badge}
+                        </span>
+                      )}
+                    </span>
+                  )}
                 </button>
               ))}
             </nav>
@@ -202,7 +225,7 @@ export default function AdminPage() {
       <main className="flex-1 flex flex-col min-h-screen p-4 sm:p-6 md:p-8">
         <div className="flex-1 overflow-y-auto">
           {activeTab === "dashboard" && <DashboardTab darkMode={darkMode} i18n={i18n} setActiveTab={setActiveTab} />}
-          {activeTab === "traffic" && <TrafficTab darkMode={darkMode} i18n={i18n} />} {/* 🆕 */}
+          {activeTab === "traffic" && <TrafficTab darkMode={darkMode} i18n={i18n} />}
           {activeTab === "courses" && <CoursesTab darkMode={darkMode} i18n={i18n} />}
           {activeTab === "modules" && <ModulesTab darkMode={darkMode} i18n={i18n} />}
           {activeTab === "banner" && <BannerTab darkMode={darkMode} i18n={i18n} />}
