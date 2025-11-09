@@ -849,7 +849,7 @@ const percent = done
           {/* 🆕 ПІДТРИМКА — блок над футером сайдбару */}
           <div className="mt-6">
             <a
-              href="mailto:ankstudio.online@gmail.com"
+              href="https://t.me/m/cE5yXCdSZTAy"
               className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
                 darkMode
                   ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
@@ -922,45 +922,47 @@ const percent = done
 
 {/* Контент */}
 <main
-  className={`flex-1 flex flex-col min-h-dvh mt-16 md:mt-0
-              p-5 md:p-10 [padding-bottom:env(safe-area-inset-bottom)]`}
+  className={`mt-16 md:mt-0 p-5 md:p-10
+              grid grid-rows-[auto_1fr_auto] min-h-dvh min-h-0
+              [padding-bottom:env(safe-area-inset-bottom)]`}
 >
-  {/* Вміст сторінки зі скролом */}
-  <div className="flex-1 overflow-y-auto">
-    {banner && banner.active && (
-      <div className="flex flex-col md:flex-row gap-4 mb-8">
-        {/* 🖼 Основний банер */}
-        <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-          {banner.image_url && (
-            <img
-              src={banner.image_url}
-              alt="Banner"
-              className="w-full h-48 md:h-64 object-cover"
-            />
-          )}
-          <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
-            {banner.title}
-          </div>
-        </div>
-
-        {/* 💅 Перехід на дашборд */}
-        <div
-          onClick={() => {
-            setSelectedLesson(null);
-            setMenuOpen(false);
-            localStorage.setItem("last_view", "dashboard");
-          }}
-          className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]
-                     bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center
-                     text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform
-                     hover:scale-[1.03] active:scale-[0.98]"
-          title={t("Перейти до дашборду", "Перейти на главную")}
-        >
-          ANK Studio Online
+  {/* row 1: банер/кнопка */}
+  {banner && banner.active && (
+    <div className="flex flex-col md:flex-row gap-4 mb-8">
+      {/* 🖼 Основний банер */}
+      <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
+        {banner.image_url && (
+          <img
+            src={banner.image_url}
+            alt="Banner"
+            className="w-full h-48 md:h-64 object-cover"
+          />
+        )}
+        <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
+          {banner.title}
         </div>
       </div>
-    )}
 
+      {/* 💅 Перехід на дашборд */}
+      <div
+        onClick={() => {
+          setSelectedLesson(null);
+          setMenuOpen(false);
+          localStorage.setItem("last_view", "dashboard");
+        }}
+        className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]
+                   bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center
+                   text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform
+                   hover:scale-[1.03] active:scale-[0.98]"
+        title={t("Перейти до дашборду", "Перейти на главную")}
+      >
+        ANK Studio Online
+      </div>
+    </div>
+  )}
+
+  {/* row 2: контент (скролиться) */}
+  <section className="min-h-0 overflow-y-auto">
     {!selectedLesson ? (
       <>
         {view === "dashboard" && (
@@ -1112,15 +1114,15 @@ const percent = done
         </div>
       </div>
     )}
-  </div>
+  </section>
 
-  {/* Footer — лише на дашборді; завжди внизу завдяки mt-auto */}
+  {/* row 3: футер — лише на дашборді, завжди видимий */}
   {!selectedLesson && view === "dashboard" && (
     <footer
-      className={`mt-auto text-center py-6 text-sm border-t
+      className={`text-center py-6 text-sm border-t
                   ${darkMode
-                    ? "border-fuchsia-900/30 text-fuchsia-100/80"
-                    : "border-pink-200 text-gray-600"}`}
+                    ? "border-fuchsia-900/30 text-fuchsia-100/80 bg-[#0c0016]/60 backdrop-blur"
+                    : "border-pink-200 text-gray-600 bg-white/70 backdrop-blur"}`}
     >
       <p className="font-medium">
         © {new Date().getFullYear()}{" "}
