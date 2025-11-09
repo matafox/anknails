@@ -1053,8 +1053,17 @@ const markLessonComplete = async () => {
             )}
 
             {view === "modules" && (
-              <ModulesPage modules={modules} darkMode={darkMode} t={t} onBack={() => setView("dashboard")} />
-            )}
+  <ModulesPage
+    modules={modules}
+    darkMode={darkMode}
+    t={t}
+    onBack={() => setView("dashboard")}
+    onOpenLesson={(lesson) => {
+      setSelectedLesson(lesson);
+      setView("dashboard");
+    }}
+  />
+)}
           </>
         ) : (
           <div
