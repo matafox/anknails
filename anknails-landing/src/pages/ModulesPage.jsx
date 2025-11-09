@@ -4,12 +4,12 @@ import { BookOpen, ChevronLeft, ChevronDown, ChevronUp, PlayCircle } from "lucid
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
-export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson }) {
+export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson, progress = {} }) {
   const [expanded, setExpanded] = useState(null);
   const [lessonsMap, setLessonsMap] = useState({});
   const [loadingMap, setLoadingMap] = useState({});
 
-  // 🎨 Набір градієнтів для карток модулів (циклічно)
+  // 🎨 Градієнти для модулів
   const GRADIENTS_LIGHT = [
     "from-pink-100 via-rose-100 to-amber-100",
     "from-rose-100 via-orange-100 to-pink-100",
@@ -69,12 +69,22 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
       onOpenLesson(lesson);
       return;
     }
-    // Fallback: збережемо в localStorage і перезавантажимо (у тебе це підтримано в Cabinet)
     try {
       localStorage.setItem("last_lesson", JSON.stringify(lesson));
       localStorage.setItem("last_view", "lesson");
     } catch {}
     window.location.reload();
+  };
+
+  // утиліта для відсотків прогресу
+  const getPercent = (l) => {
+    const p = progress[l.id];
+    if (!p) return 0;
+    if (p.completed) return 100;
+    const total = Number(p.total_seconds || 0);
+    const watched = Number(p.watched_seconds || 0);
+    if (total <= 0 || watched <= 0) return 0;
+    return Math.min(100, Math.max(0, Math.round((watched / total) * 100)));
   };
 
   return (
@@ -86,19 +96,19 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
       }`}
     >
       <div className="max-w-5xl mx-auto">
-        {/* 🔙 Назад */}
-        <button
-          onClick={onBack}
-          className="flex items-center gap-2 mb-6 text-pink-500 hover:text-rose-500 transition font-medium"
-        >
-          <ChevronLeft className="w-5 h-5" />
-          {t("Назад до дашборду", "Назад на главную")}
-        </button>
-
-        {/* Заголовок */}
-        <h1 className="text-3xl md:text-4xl font-bold mb-8 bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent text-center">
-          {t("Мої модулі", "Мои модули")}
-        </h1>
+        {/* 🔙 Назад + Заголовок в ОДНОМУ рядку зліва */}
+        <div className="flex items-center gap-3 mb-8">
+          <button
+            onClick={onBack}
+            className="flex items-center gap-2 text-pink-500 hover:text-rose-500 transition font-medium"
+          >
+            <ChevronLeft className="w-5 h-5" />
+            {t("Назад до дашборду", "Назад на главную")}
+          </button>
+          <h1 className="text-2xl md:text-3xl font-bold bg-gradient-to-r from-pink-500 to-rose-500 bg-clip-text text-transparent">
+            {t("Мої модулі", "Мои модули")}
+          </h1>
+        </div>
 
         {/* 📋 Список модулів */}
         {modules.length === 0 ? (
@@ -174,44 +184,70 @@ export default function ModulesPage({ modules, darkMode, t, onBack, onOpenLesson
                         </div>
                       ) : (
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                          {lessons.map((l) => (
-                            <button
-                              key={l.id}
-                              onClick={() => openLesson(l)}
-                              className={`group text-left p-3 rounded-xl border transition
-                                ${darkMode
-                                  ? "bg-[#15001f]/50 border-fuchsia-900/40 hover:border-pink-500/40 hover:bg-[#1a0526]/60"
-                                  : "bg-white/70 border-pink-100 hover:border-pink-300 hover:bg-white"}`}
-                            >
-                              <div className="flex items-start gap-2">
-                                <div
-                                  className={`mt-0.5 flex items-center justify-center w-8 h-8 rounded-md
-                                    ${darkMode ? "bg-[#1f0a2a]" : "bg-pink-50"}`}
-                                >
-                                  <PlayCircle className="w-4 h-4 text-pink-600" />
-                                </div>
-                                <div className="min-w-0">
-                                  <div className="font-semibold truncate">{l.title}</div>
-                                  {l.type && (
-                                    <div className="mt-0.5">
-                                      {l.type === "theory" && (
-                                        <span className="inline-flex items-center text-[11px] px-2 py-[2px] rounded-full border
-                                          border-pink-200 bg-pink-50 text-pink-600">
-                                          {t("Теорія", "Теория")}
+                          {lessons.map((l) => {
+                            const percent = getPercent(l);
+                            const done = percent === 100;
+                            return (
+                              <button
+                                key={l.id}
+                                onClick={() => openLesson(l)}
+                                className={`group text-left p-3 rounded-xl border transition
+                                  ${darkMode
+                                    ? "bg-[#15001f]/50 border-fuchsia-900/40 hover:border-pink-500/40 hover:bg-[#1a0526]/60"
+                                    : "bg-white/70 border-pink-100 hover:border-pink-300 hover:bg-white"}`}
+                              >
+                                <div className="flex items-start gap-2">
+                                  <div
+                                    className={`mt-0.5 flex items-center justify-center w-8 h-8 rounded-md
+                                      ${darkMode ? "bg-[#1f0a2a]" : "bg-pink-50"}`}
+                                  >
+                                    <PlayCircle className="w-4 h-4 text-pink-600" />
+                                  </div>
+                                  <div className="min-w-0 w-full">
+                                    <div className="font-semibold truncate">{l.title}</div>
+
+                                    {/* бейдж типу уроку */}
+                                    {l.type && (
+                                      <div className="mt-0.5">
+                                        {l.type === "theory" && (
+                                          <span className="inline-flex items-center text-[11px] px-2 py-[2px] rounded-full border
+                                            border-pink-200 bg-pink-50 text-pink-600">
+                                            {t("Теорія", "Теория")}
+                                          </span>
+                                        )}
+                                        {l.type === "practice" && (
+                                          <span className="inline-flex items-center text-[11px] px-2 py-[2px] rounded-full border
+                                            border-rose-200 bg-rose-50 text-rose-600">
+                                            {t("Практика", "Практика")}
+                                          </span>
+                                        )}
+                                      </div>
+                                    )}
+
+                                    {/* прогрес під уроком */}
+                                    <div className="mt-2">
+                                      <div className="flex items-center justify-between text-[11px] mb-1">
+                                        <span className={`${done ? "text-emerald-600" : "text-pink-600"} font-medium`}>
+                                          {done ? t("Завершено", "Завершено") : t("Прогрес", "Прогресс")}
                                         </span>
-                                      )}
-                                      {l.type === "practice" && (
-                                        <span className="inline-flex items-center text-[11px] px-2 py-[2px] rounded-full border
-                                          border-rose-200 bg-rose-50 text-rose-600">
-                                          {t("Практика", "Практика")}
+                                        <span className={`${done ? "text-emerald-600" : "text-pink-600"} font-semibold`}>
+                                          {percent}%
                                         </span>
-                                      )}
+                                      </div>
+                                      <div className={`${darkMode ? "bg-fuchsia-950/50" : "bg-pink-100"} h-1.5 rounded-full overflow-hidden`}>
+                                        <div
+                                          className={`h-full transition-all duration-700 ease-out ${
+                                            done ? "bg-emerald-400" : "bg-gradient-to-r from-pink-400 to-rose-500"
+                                          }`}
+                                          style={{ width: `${percent}%` }}
+                                        />
+                                      </div>
                                     </div>
-                                  )}
+                                  </div>
                                 </div>
-                              </div>
-                            </button>
-                          ))}
+                              </button>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
