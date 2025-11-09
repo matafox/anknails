@@ -65,6 +65,20 @@ export default function LoginPage() {
         {/* Центрований блок логіну */}
         <main className="flex-1 flex items-center justify-center px-5">
           <div className="w-full max-w-md rounded-[2rem] p-8 md:p-10 bg-white/80 backdrop-blur border border-pink-200/60 shadow-[0_0_40px_rgba(255,182,193,0.35)]">
+            {/* 🔹 Привітання над формою */}
+            <div className="mb-8 text-center">
+              <div className="inline-block px-3 py-1 text-xs font-semibold rounded-full bg-gradient-to-r from-pink-100 to-rose-100 text-pink-600 border border-pink-200">
+                {t("Ласкаво просимо", "Добро пожаловать")}
+              </div>
+              <h1 className="mt-3 text-2xl font-extrabold tracking-tight bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 bg-clip-text text-transparent">
+                ANK Studio Online
+              </h1>
+              <p className="mt-2 text-sm opacity-75">
+                {t("Увійдіть, щоб продовжити навчання", "Войдите, чтобы продолжить обучение")}
+              </p>
+            </div>
+
+            {/* Форма логіну */}
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <input
@@ -92,12 +106,15 @@ export default function LoginPage() {
                 <p className="text-sm text-rose-500 text-center font-medium">{error}</p>
               )}
 
+              {/* 🌈 Яскрава градієнтна кнопка */}
               <button
                 type="submit"
                 disabled={loading}
-                className={`w-full py-3.5 rounded-2xl font-semibold text-white transition ${
-                  loading ? "bg-gray-400 cursor-not-allowed" : "bg-gray-500 hover:bg-gray-600"
-                }`}
+                className={`w-full py-3.5 rounded-2xl font-semibold text-white transition transform
+                  ${loading
+                    ? "bg-gray-400 cursor-not-allowed"
+                    : "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 hover:shadow-[0_0_25px_rgba(255,0,128,0.35)] hover:scale-[1.02] active:scale-[0.99]"
+                  }`}
               >
                 {loading ? t("Завантаження...", "Загрузка...") : t("Увійти", "Войти")}
               </button>
