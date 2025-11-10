@@ -1,14 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import {
-  Menu,
-  X,
-  Sun,
-  Moon,
-  Globe,
-  Settings,
-  LogOut,
-} from "lucide-react";
+import { Menu, X, Sun, Moon, Globe, Settings, LogOut } from "lucide-react";
 
 export default function Header({ onMenuToggle }) {
   const { i18n } = useTranslation();
@@ -16,10 +8,10 @@ export default function Header({ onMenuToggle }) {
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [open, setOpen] = useState(false); // mobile dropdown
-  const panelRef = useRef<HTMLDivElement | null>(null);
+  const panelRef = useRef(null);
 
   // локалізатор коротких рядків
-  const tr = (ua: string, ru: string) => (i18n.language === "ru" ? ru : ua);
+  const tr = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
   // auth
   useEffect(() => {
@@ -34,23 +26,32 @@ export default function Header({ onMenuToggle }) {
 
   // тема
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = saved === "dark" || (!saved && prefersDark);
-    setDarkMode(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
+    try {
+      const saved = localStorage.getItem("theme");
+      const prefersDark =
+        typeof window !== "undefined" &&
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const isDark = saved === "dark" || (!saved && prefersDark);
+      setDarkMode(isDark);
+      document.documentElement.classList.toggle("dark", isDark);
+    } catch {}
   }, []);
 
   const toggleTheme = () => {
     const v = !darkMode;
     setDarkMode(v);
-    document.documentElement.classList.toggle("dark", v);
-    localStorage.setItem("theme", v ? "dark" : "light");
+    try {
+      document.documentElement.classList.toggle("dark", v);
+      localStorage.setItem("theme", v ? "dark" : "light");
+    } catch {}
   };
 
-  const changeLanguage = (lng: "ru" | "uk") => {
+  const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
-    localStorage.setItem("lang", lng);
+    try {
+      localStorage.setItem("lang", lng);
+    } catch {}
   };
 
   // скрол-ефект
@@ -60,19 +61,19 @@ export default function Header({ onMenuToggle }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  // закриття по кліку поза/dropdown, ESC
+  // закриття по кліку поза/ESC
   useEffect(() => {
-    const onDown = (e: MouseEvent) => {
+    const onDown = (e) => {
       if (!open) return;
-      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+      if (panelRef.current && !panelRef.current.contains(e.target)) {
         setOpen(false);
-        onMenuToggle?.(false);
+        onMenuToggle && onMenuToggle(false);
       }
     };
-    const onEsc = (e: KeyboardEvent) => {
+    const onEsc = (e) => {
       if (e.key === "Escape") {
         setOpen(false);
-        onMenuToggle?.(false);
+        onMenuToggle && onMenuToggle(false);
       }
     };
     document.addEventListener("mousedown", onDown);
@@ -86,14 +87,14 @@ export default function Header({ onMenuToggle }) {
   const toggleDropdown = () => {
     const next = !open;
     setOpen(next);
-    onMenuToggle?.(next);
+    onMenuToggle && onMenuToggle(next);
   };
 
-  const scrollTo = (id: string) => {
+  const scrollTo = (id) => {
     const el = document.getElementById(id);
     if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
     setOpen(false);
-    onMenuToggle?.(false);
+    onMenuToggle && onMenuToggle(false);
   };
 
   const items =
@@ -156,7 +157,7 @@ export default function Header({ onMenuToggle }) {
 
           {/* Мова */}
           <div className="hidden sm:flex items-center gap-1 rounded-xl border border-pink-200/40 bg-white/50 dark:bg-white/10 dark:border-fuchsia-900/30 p-1">
-            {(["ru", "uk"] as const).map((lng) => (
+            {["ru", "uk"].map((lng) => (
               <button
                 key={lng}
                 onClick={() => changeLanguage(lng)}
@@ -209,14 +210,11 @@ export default function Header({ onMenuToggle }) {
         </div>
       </div>
 
-      {/* Mobile dropdown (закріплений під хедером) */}
+      {/* Mobile dropdown (під хедером) */}
       {open && (
-        <div
-          ref={panelRef}
-          className="md:hidden absolute top-16 left-0 right-0 z-50"
-        >
+        <div ref={panelRef} className="md:hidden absolute top-16 left-0 right-0 z-50">
           <div className="mx-3 rounded-2xl border border-pink-200/50 dark:border-fuchsia-900/40 bg-white/80 dark:bg-[#0c0016]/85 backdrop-blur-xl shadow-xl p-2">
-            {/* навігація */}
+            {/* Навігація */}
             <div className="flex flex-col py-1">
               {items.map((it) => (
                 <button
@@ -231,11 +229,11 @@ export default function Header({ onMenuToggle }) {
 
             <div className="my-2 h-px bg-pink-200/50 dark:bg-fuchsia-900/40" />
 
-            {/* мова + тема */}
+            {/* Мова + тема */}
             <div className="flex items-center justify-between px-3 py-2">
               <div className="flex items-center gap-2 text-sm">
                 <Globe className="w-4 h-4" />
-                {(["ru", "uk"] as const).map((lng) => (
+                {["ru", "uk"].map((lng) => (
                   <button
                     key={lng}
                     onClick={() => changeLanguage(lng)}
@@ -258,7 +256,7 @@ export default function Header({ onMenuToggle }) {
               </button>
             </div>
 
-            {/* доступ / адмін */}
+            {/* Доступ / адмін */}
             <div className="px-3 pb-2">
               {!isAdmin ? (
                 <a
