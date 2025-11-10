@@ -56,27 +56,42 @@ export default function DashboardSection({
     [user?.id]
   );
 
+  // 🔒 збережемо токен, якщо прийшов у user (щоб був і після перезавантажень)
+  useEffect(() => {
+    if (user?.session_token) {
+      localStorage.setItem("session_token", user.session_token);
+    }
+  }, [user?.session_token]);
+
   // токен з user або з localStorage
   const getSessionToken = () =>
     user?.session_token || localStorage.getItem("session_token") || "";
 
-  // завантаження статусу (з офлайн-fallback)
+  // ⬇️ завантаження статусу (з офлайн/помилковим fallback на локальний флаг)
   useEffect(() => {
     if (!user?.id) {
       setWelcomeOpen(false);
       return;
     }
     (async () => {
+      const localSeen =
+        !!welcomeKey && localStorage.getItem(welcomeKey) === "1";
+
       try {
-        const r = await fetch(`${BACKEND}/api/welcome/status?user_id=${user.id}`);
+        const r = await fetch(
+          `${BACKEND}/api/welcome/status?user_id=${user.id}`
+        );
         if (r.ok) {
           const j = await r.json();
-          setWelcomeOpen(!j.seen);
+          // якщо або бекенд каже seen, або локально відмічено — не показуємо
+          setWelcomeOpen(!(j.seen || localSeen));
         } else {
-          if (welcomeKey && !localStorage.getItem(welcomeKey)) setWelcomeOpen(true);
+          // при 4xx/5xx орієнтуємось на локальний флаг
+          setWelcomeOpen(!localSeen);
         }
       } catch {
-        if (welcomeKey && !localStorage.getItem(welcomeKey)) setWelcomeOpen(true);
+        // офлайн — теж орієнтуємось на локальний флаг
+        setWelcomeOpen(!localSeen);
       }
     })();
   }, [user?.id, welcomeKey]);
@@ -85,23 +100,26 @@ export default function DashboardSection({
   const closeWelcome = async () => {
     setWelcomeOpen(false);
     if (welcomeKey) localStorage.setItem(welcomeKey, "1");
+
     try {
-      const session_token = getSessionToken();
-      if (!session_token) {
-        console.warn("No session_token for /api/welcome/seen");
-        return;
-      }
-      const res = await fetch(`${BACKEND}/api/welcome/seen`, {
+      const session_token =
+        getSessionToken() ||
+        localStorage.getItem("session_token") ||
+        user?.session_token ||
+        "";
+
+      const headers = { "Content-Type": "application/json" };
+      if (session_token) headers["X-Session-Token"] = session_token;
+
+      // якщо токена немає — все одно не падаємо (локальний флаг уже проставили)
+      await fetch(`${BACKEND}/api/welcome/seen`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Session-Token": session_token,
-        },
-        body: JSON.stringify({ user_id: user.id, session_token }),
-      });
-      if (!res.ok) {
-        console.warn("welcome/seen failed:", res.status, await res.text());
-      }
+        headers,
+        body: JSON.stringify({
+          user_id: user?.id,
+          session_token: session_token || undefined,
+        }),
+      }).catch(() => {});
     } catch (e) {
       console.warn("welcome/seen exception:", e);
     }
