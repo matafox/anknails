@@ -72,7 +72,7 @@ export default function Header({ onMenuToggle }) {
               ANK Studio
             </button>
 
-            {/* ЦЕНТРАЛЬНЕ НАВ (опц.) – вирівняне по центру */}
+            {/* ЦЕНТРАЛЬНЕ НАВ (десктоп) */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-700 dark:text-fuchsia-100">
               <a href="#modules" className="hover:text-pink-500">Модулі</a>
               <a href="#forwhom" className="hover:text-pink-500">Для кого курс</a>
@@ -80,8 +80,9 @@ export default function Header({ onMenuToggle }) {
               <a href="#faq" className="hover:text-pink-500">FAQ</a>
             </nav>
 
-            {/* ПРАВОРУЧ: мова, тема, доступ */}
+            {/* ПРАВОРУЧ */}
             <div className="flex items-center gap-2">
+              {/* Тема — лишаємо і на мобілці */}
               <button
                 onClick={toggleTheme}
                 className="p-2 rounded-xl bg-white/50 dark:bg-white/10 border border-white/30"
@@ -90,6 +91,7 @@ export default function Header({ onMenuToggle }) {
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
+              {/* Мова — лише десктоп (на мобілці перенесено в меню) */}
               <div className="hidden sm:flex items-center gap-1">
                 {["ru","uk"].map(l => (
                   <button
@@ -106,6 +108,7 @@ export default function Header({ onMenuToggle }) {
                 ))}
               </div>
 
+              {/* Доступ / Адмін — лише десктоп; на мобілці ТІЛЬКИ в меню */}
               {isAdmin ? (
                 <>
                   <a
@@ -132,7 +135,7 @@ export default function Header({ onMenuToggle }) {
                 </a>
               )}
 
-              {/* Кнопка меню (мобільно) */}
+              {/* Бургер — мобілка */}
               <button
                 onClick={toggleMenu}
                 className="md:hidden p-2 rounded-xl bg-white/50 dark:bg-white/10 border border-white/30"
@@ -148,27 +151,67 @@ export default function Header({ onMenuToggle }) {
       {/* СПЕЙСЕР ПІД ФІКСОВАНИЙ ХЕДЕР */}
       <div className="h-16 md:h-20" aria-hidden />
 
-      {/* Мобільний дропдаун (під хедером, теж фіксований) */}
+      {/* Мобільний дропдаун (під хедером) */}
       {menuOpen && (
         <div className="fixed top-16 md:top-20 inset-x-0 z-[9998] bg-white/95 dark:bg-[#0c0016]/95 backdrop-blur-xl border-b border-pink-200/40">
           <div className="max-w-7xl mx-auto px-4 py-4 grid gap-2">
+            {/* Основні пункти */}
             <a href="#modules" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">Модулі</a>
             <a href="#forwhom" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">Для кого курс</a>
             <a href="#tariffs"  onClick={() => setMenuOpen(false)} className="py-3 font-semibold">Тарифи</a>
             <a href="#faq"      onClick={() => setMenuOpen(false)} className="py-3 font-semibold">FAQ</a>
 
-            {isAdmin ? (
-              <>
-                <a href="/admin" className="mt-2 inline-flex items-center gap-2 px-4 py-3 rounded-xl text-white bg-gradient-to-r from-pink-500 to-rose-500">
-                  <Settings className="w-4 h-4" /> {i18n.language === "ru" ? "Админ панель" : "Адмін панель"}
+            {/* Перемикач мови — ТІЛЬКИ мобілка */}
+            <div className="mt-2 pt-3 border-t border-pink-200/40 dark:border-fuchsia-900/30">
+              <div className="flex items-center gap-2 mb-2">
+                <Globe className="w-4 h-4 opacity-70" />
+                <span className="text-sm opacity-80">Мова / Язык</span>
+              </div>
+              <div className="flex items-center gap-2">
+                {["ru", "uk"].map((lng) => (
+                  <button
+                    key={lng}
+                    onClick={() => { changeLanguage(lng); setMenuOpen(false); }}
+                    className={`px-3 py-1.5 text-sm rounded-lg border font-medium
+                      ${i18n.language === lng
+                        ? "bg-pink-500 text-white border-pink-500 shadow-[0_0_10px_rgba(255,0,128,0.35)]"
+                        : "bg-pink-50 text-gray-700 border-pink-200 hover:bg-pink-100"}`}
+                  >
+                    {lng.toUpperCase()}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Доступ/Адмін — ТІЛЬКИ мобілка, одна кнопка «Доступ…» */}
+            <div className="mt-3">
+              {isAdmin ? (
+                <>
+                  <a
+                    href="/admin"
+                    onClick={() => setMenuOpen(false)}
+                    className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl text-white bg-gradient-to-r from-pink-500 to-rose-500"
+                  >
+                    <Settings className="w-4 h-4" />
+                    {i18n.language === "ru" ? "Админ панель" : "Адмін панель"}
+                  </a>
+                  <button
+                    onClick={() => { setMenuOpen(false); handleLogout(); }}
+                    className="mt-2 w-full py-3 text-pink-600 font-semibold"
+                  >
+                    {i18n.language === "ru" ? "Выйти" : "Вийти"}
+                  </button>
+                </>
+              ) : (
+                <a
+                  href="/login"
+                  onClick={() => setMenuOpen(false)}
+                  className="inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-white bg-gradient-to-r from-pink-500 to-rose-500"
+                >
+                  {i18n.language === "ru" ? "Доступ к платформе" : "Доступ до платформи"}
                 </a>
-                <button onClick={handleLogout} className="py-3 text-pink-600">{i18n.language === "ru" ? "Выйти" : "Вийти"}</button>
-              </>
-            ) : (
-              <a href="/login" className="mt-2 inline-flex items-center justify-center px-4 py-3 rounded-xl text-white bg-gradient-to-r from-pink-500 to-rose-500">
-                {i18n.language === "ru" ? "Доступ к платформе" : "Доступ до платформи"}
-              </a>
-            )}
+              )}
+            </div>
           </div>
         </div>
       )}
