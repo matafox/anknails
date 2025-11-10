@@ -48,47 +48,76 @@ export default function DashboardSection({
   const [localLessons, setLocalLessons] = useState(lessons || {});
 
   /* === Привітальна модалка (1 раз) === */
-  const [welcomeOpen, setWelcomeOpen] = useState(false);
-  useEffect(() => {
-  if (!user?.id) return;
-  fetch(`${BACKEND}/api/welcome/status?user_id=${user.id}`)
-    .then(r => r.ok ? r.json() : { seen: true })
-    .then(j => setWelcomeOpen(!j.seen))
-    .catch(() => {
-      // fallback на випадок офлайну/помилки — показати один раз
-      const key = `ank_welcome_seen_v1_${user.id}`;
-      if (!localStorage.getItem(key)) setWelcomeOpen(true);
-    });
-}, [user?.id]);
+const [welcomeOpen, setWelcomeOpen] = useState(false);
 
+// стабільний ключ для fallback у localStorage
+const welcomeKey = useMemo(
+  () => (user?.id ? `ank_welcome_seen_v1_${user.id}` : null),
+  [user?.id]
+);
+
+// токен беремо з user або з localStorage
+const getSessionToken = () =>
+  user?.session_token || localStorage.getItem("session_token") || "";
+
+// завантаження статусу (з офлайн-fallback)
+useEffect(() => {
+  if (!user?.id) {
+    setWelcomeOpen(false);
+    return;
+  }
+  (async () => {
+    try {
+      const r = await fetch(`${BACKEND}/api/welcome/status?user_id=${user.id}`);
+      if (r.ok) {
+        const j = await r.json();
+        setWelcomeOpen(!j.seen);
+      } else {
+        if (welcomeKey && !localStorage.getItem(welcomeKey)) setWelcomeOpen(true);
+      }
+    } catch {
+      // fallback на випадок офлайну/помилки — показати один раз
+      if (welcomeKey && !localStorage.getItem(welcomeKey)) setWelcomeOpen(true);
+    }
+  })();
+}, [user?.id, welcomeKey]);
+
+// єдиний коректний обробник закриття
 const closeWelcome = async () => {
   setWelcomeOpen(false);
-  // optional fallback
-  localStorage.setItem(`ank_welcome_seen_v1_${user?.id}`, "1");
+  if (welcomeKey) localStorage.setItem(welcomeKey, "1"); // локальний fallback
+
   try {
-    await fetch(`${BACKEND}/api/welcome/seen`, {
+    const session_token = getSessionToken();
+    if (!session_token) {
+      console.warn("No session_token for /api/welcome/seen");
+      return;
+    }
+    const res = await fetch(`${BACKEND}/api/welcome/seen`, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ user_id: user.id, session_token: getSessionToken() })
+      headers: {
+        "Content-Type": "application/json",
+        "X-Session-Token": session_token, // дублюємо в хедері (зручно для бека)
+      },
+      body: JSON.stringify({ user_id: user.id, session_token }),
     });
-  } catch {}
+    if (!res.ok) {
+      console.warn("welcome/seen failed:", res.status, await res.text());
+    }
+  } catch (e) {
+    console.warn("welcome/seen exception:", e);
+  }
 };
 
-  useEffect(() => {
-    // Блокуємо скрол, коли модалка відкрита
-    if (welcomeOpen) {
-      const prev = document.body.style.overflow;
-      document.body.style.overflow = "hidden";
-      return () => {
-        document.body.style.overflow = prev;
-      };
-    }
-  }, [welcomeOpen]);
-
-  const closeWelcome = () => {
-    localStorage.setItem(welcomeKey, "1");
-    setWelcomeOpen(false);
+// блокування скролу, поки відкрита модалка
+useEffect(() => {
+  if (!welcomeOpen) return;
+  const prev = document.body.style.overflow;
+  document.body.style.overflow = "hidden";
+  return () => {
+    document.body.style.overflow = prev;
   };
+}, [welcomeOpen]);
 
   /* ====== Сертифікат: статус із бекенду ====== */
   const [certInfoOpen, setCertInfoOpen] = useState(false);
