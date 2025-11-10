@@ -386,7 +386,7 @@ export default function DashboardSection({
             {/* Кнопка інформації (зовнішня) */}
             <button
               onClick={() => setCertInfoOpen((v) => !v)}
-              className="absolute top-3 right-3 z-40 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+              className="absolute top-3 right-3 z-8 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
               title={t("Інформація про сертифікат", "Информация о сертификате")}
             >
               {certInfoOpen ? <X className="w-5 h-5 text-pink-500" /> : <Info className="w-5 h-5 text-pink-500" />}
