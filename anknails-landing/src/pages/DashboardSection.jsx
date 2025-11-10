@@ -512,7 +512,7 @@ export default function DashboardSection({
 
             {/* ПОВНОЕКРАННЕ інфо-вікно */}
             <div
-              className={`absolute inset-0 z-9 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+              className={`absolute inset-0 z-40 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
