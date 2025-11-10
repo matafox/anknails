@@ -264,7 +264,7 @@ export default function DashboardSection({
             {/* ℹ️ кнопка (зовнішня) */}
             <button
               onClick={() => setShowInfo(!showInfo)}
-              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-30"
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-5"
               title={t("Як підвищити майстерність", "Как развивать мастерство")}
             >
               {showInfo ? <X className="w-5 h-5 text-yellow-500" /> : <Info className="w-5 h-5" />}
@@ -310,7 +310,7 @@ export default function DashboardSection({
               {/* ✅ Хрестик всередині вікна */}
               <button
                 onClick={() => setShowInfo(false)}
-                className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 transition"
+                className="absolute top-3 right-3 z-9 p-2 rounded-full hover:bg-black/5 transition"
                 aria-label="close info"
               >
                 <X className="w-5 h-5" />
