@@ -48,76 +48,74 @@ export default function DashboardSection({
   const [localLessons, setLocalLessons] = useState(lessons || {});
 
   /* === Привітальна модалка (1 раз) === */
-const [welcomeOpen, setWelcomeOpen] = useState(false);
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
 
-// стабільний ключ для fallback у localStorage
-const welcomeKey = useMemo(
-  () => (user?.id ? `ank_welcome_seen_v1_${user.id}` : null),
-  [user?.id]
-);
+  // стабільний ключ для fallback у localStorage
+  const welcomeKey = useMemo(
+    () => (user?.id ? `ank_welcome_seen_v1_${user.id}` : null),
+    [user?.id]
+  );
 
-// токен беремо з user або з localStorage
-const getSessionToken = () =>
-  user?.session_token || localStorage.getItem("session_token") || "";
+  // токен з user або з localStorage
+  const getSessionToken = () =>
+    user?.session_token || localStorage.getItem("session_token") || "";
 
-// завантаження статусу (з офлайн-fallback)
-useEffect(() => {
-  if (!user?.id) {
-    setWelcomeOpen(false);
-    return;
-  }
-  (async () => {
-    try {
-      const r = await fetch(`${BACKEND}/api/welcome/status?user_id=${user.id}`);
-      if (r.ok) {
-        const j = await r.json();
-        setWelcomeOpen(!j.seen);
-      } else {
-        if (welcomeKey && !localStorage.getItem(welcomeKey)) setWelcomeOpen(true);
-      }
-    } catch {
-      // fallback на випадок офлайну/помилки — показати один раз
-      if (welcomeKey && !localStorage.getItem(welcomeKey)) setWelcomeOpen(true);
-    }
-  })();
-}, [user?.id, welcomeKey]);
-
-// єдиний коректний обробник закриття
-const closeWelcome = async () => {
-  setWelcomeOpen(false);
-  if (welcomeKey) localStorage.setItem(welcomeKey, "1"); // локальний fallback
-
-  try {
-    const session_token = getSessionToken();
-    if (!session_token) {
-      console.warn("No session_token for /api/welcome/seen");
+  // завантаження статусу (з офлайн-fallback)
+  useEffect(() => {
+    if (!user?.id) {
+      setWelcomeOpen(false);
       return;
     }
-    const res = await fetch(`${BACKEND}/api/welcome/seen`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "X-Session-Token": session_token, // дублюємо в хедері (зручно для бека)
-      },
-      body: JSON.stringify({ user_id: user.id, session_token }),
-    });
-    if (!res.ok) {
-      console.warn("welcome/seen failed:", res.status, await res.text());
-    }
-  } catch (e) {
-    console.warn("welcome/seen exception:", e);
-  }
-};
+    (async () => {
+      try {
+        const r = await fetch(`${BACKEND}/api/welcome/status?user_id=${user.id}`);
+        if (r.ok) {
+          const j = await r.json();
+          setWelcomeOpen(!j.seen);
+        } else {
+          if (welcomeKey && !localStorage.getItem(welcomeKey)) setWelcomeOpen(true);
+        }
+      } catch {
+        if (welcomeKey && !localStorage.getItem(welcomeKey)) setWelcomeOpen(true);
+      }
+    })();
+  }, [user?.id, welcomeKey]);
 
-// блокування скролу, поки відкрита модалка
-useEffect(() => {
-  if (!welcomeOpen) return;
-  const prev = document.body.style.overflow;
-  document.body.style.overflow = "hidden";
-  return () => {
-    document.body.style.overflow = prev;
+  // єдиний обробник закриття
+  const closeWelcome = async () => {
+    setWelcomeOpen(false);
+    if (welcomeKey) localStorage.setItem(welcomeKey, "1");
+    try {
+      const session_token = getSessionToken();
+      if (!session_token) {
+        console.warn("No session_token for /api/welcome/seen");
+        return;
+      }
+      const res = await fetch(`${BACKEND}/api/welcome/seen`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "X-Session-Token": session_token,
+        },
+        body: JSON.stringify({ user_id: user.id, session_token }),
+      });
+      if (!res.ok) {
+        console.warn("welcome/seen failed:", res.status, await res.text());
+      }
+    } catch (e) {
+      console.warn("welcome/seen exception:", e);
+    }
   };
-}, [welcomeOpen]);
+
+  // блокування скролу, поки модалка відкрита
+  useEffect(() => {
+    if (!welcomeOpen) return;
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [welcomeOpen]);
 
   /* ====== Сертифікат: статус із бекенду ====== */
   const [certInfoOpen, setCertInfoOpen] = useState(false);
@@ -129,7 +127,7 @@ useEffect(() => {
     approved: false,
   });
 
-  // таймер для рахунку в інфо-вікні
+  // таймер (щоб «жив» countdown)
   const [nowTs, setNowTs] = useState(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNowTs(Date.now()), 1000);
@@ -142,8 +140,7 @@ useEffect(() => {
   );
   const secondsLeft = useMemo(() => {
     if (!unlockAtMs) return 0;
-    const left = Math.max(0, Math.floor((unlockAtMs - nowTs) / 1000));
-    return left;
+    return Math.max(0, Math.floor((unlockAtMs - nowTs) / 1000));
   }, [unlockAtMs, nowTs]);
 
   const pad = (n) => String(n).padStart(2, "0");
@@ -185,7 +182,7 @@ useEffect(() => {
     })();
   }, [modules]);
 
-  // 🧾 Статус сертифіката з бекенду
+  // 🧾 Статус сертифіката
   const loadCertStatus = async () => {
     if (!user?.id) return;
     try {
@@ -202,7 +199,6 @@ useEffect(() => {
       console.error("cert/status error:", e);
     }
   };
-
   useEffect(() => {
     loadCertStatus();
   }, [user?.id]);
@@ -219,18 +215,12 @@ useEffect(() => {
     (darkMode ? STAGE_COLORS_DARK : STAGE_COLORS)[realStage] ||
     (darkMode ? STAGE_COLORS_DARK[5] : STAGE_COLORS[5]);
 
-  /* === Хелпери === */
-  const getSessionToken = () => {
-    return user?.session_token || localStorage.getItem("session_token") || "";
-  };
-
   /* === Дії з сертифікатом === */
   const handleRequestCert = async () => {
     if (!user?.id) return alert(t("Немає user_id", "Нет user_id"));
     const session_token = getSessionToken();
-    if (!session_token) {
-      console.warn("session_token is empty");
-    }
+    if (!session_token) console.warn("session_token is empty");
+
     try {
       const res = await fetch(`${BACKEND}/api/cert/request`, {
         method: "POST",
@@ -261,7 +251,7 @@ useEffect(() => {
       alert(
         t(
           "Запит на сертифікат відправлено. Ми повідомимо, коли його буде схвалено.",
-          "Запрос на сертификат отправлен. Мы сообщим, когда он будет одобрен."
+          "Запрос отправлен. Мы сообщим, когда он будет одобрен."
         )
       );
     } catch (e) {
@@ -271,9 +261,7 @@ useEffect(() => {
   };
 
   const handleDownloadCert = () => {
-    if (!user?.id) {
-      return alert(t("Немає user_id", "Нет user_id"));
-    }
+    if (!user?.id) return alert(t("Немає user_id", "Нет user_id"));
     window.open(`${BACKEND}/api/cert/open?user_id=${user.id}`, "_blank");
   };
 
@@ -344,7 +332,7 @@ useEffect(() => {
               </span>
             </h3>
 
-            {modules.length === 0 ? (
+            {!modules?.length ? (
               <p className="text-sm opacity-70">
                 {t("Модулів поки що немає", "Модулей пока нет")}
               </p>
@@ -417,7 +405,6 @@ useEffect(() => {
               }`}
             >
               <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40" />
-              {/* ✅ Хрестик всередині вікна */}
               <button
                 onClick={() => setShowInfo(false)}
                 className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 transition"
@@ -448,9 +435,12 @@ useEffect(() => {
           >
             <h3 className="text-xl font-bold mb-3 text-pink-600">{t("Прогрес курсу", "Прогресс курса")}</h3>
             <div className="text-center">
-              <p className="text-5xl font-extrabолд text-pink-500 mb-2">{overallProgress}%</p>
+              <p className="text-5xl font-extrabold text-pink-500 mb-2">{overallProgress}%</p>
               <div className="h-2 w-full bg-pink-100 rounded-full overflow-hidden mb-3">
-                <div className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700" style={{ width: `${overallProgress}%` }} />
+                <div
+                  className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700"
+                  style={{ width: `${overallProgress}%` }}
+                />
               </div>
               <p className="text-sm opacity-70">
                 {t("Ви переглянули", "Вы просмотрели")} {completedLessons} {t("уроків з", "уроков из")}{" "}
@@ -513,7 +503,6 @@ useEffect(() => {
                   darkMode ? "bg-[#1a0a1f]/80 border-fuchsia-900/40" : "bg-white/80 border-pink-200"
                 }`}
               />
-              {/* ✅ Хрестик всередині вікна */}
               <button
                 onClick={() => setCertInfoOpen(false)}
                 className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
@@ -528,23 +517,19 @@ useEffect(() => {
                 </h3>
 
                 {!unlocked ? (
-                  <>
-                    <p className="text-sm md:text-base font-medium leading-relaxed mb-4">
-                      {t(
-                        "Доступ до завантаження сертифіката відкриється через 4 тижні.",
-                        "Доступ к загрузке сертификата откроется через 4 недели."
-                      )}
-                    </p>
-                  </>
+                  <p className="text-sm md:text-base font-medium leading-relaxed mb-4">
+                    {t(
+                      "Доступ до завантаження сертифіката відкриється через 4 тижні.",
+                      "Доступ к загрузке сертификата откроется через 4 недели."
+                    )}
+                  </p>
                 ) : (
-                  <>
-                    <p className="text-sm md:text-base font-medium leading-relaxed mb-2">
-                      {t(
-                        "Подайте запит на іменний сертифікат у блоці нижче. Після схвалення зʼявиться кнопка завантаження.",
-                        "Отправьте запрос на именной сертификат в блоке ниже. После одобрения появится кнопка скачивания."
-                      )}
-                    </p>
-                  </>
+                  <p className="text-sm md:text-base font-medium leading-relaxed mb-2">
+                    {t(
+                      "Подайте запит на іменний сертифікат у блоці нижче. Після схвалення зʼявиться кнопка завантаження.",
+                      "Отправьте запрос на именной сертификат в блоке ниже. После одобрения появится кнопка скачивания."
+                    )}
+                  </p>
                 )}
               </div>
             </div>
@@ -592,7 +577,7 @@ useEffect(() => {
               )}
             </div>
 
-            {/* Оверлей блокування (без таймера) */}
+            {/* Оверлей блокування з датою і таймером */}
             {!unlocked && !certInfoOpen && (
               <div
                 className={`absolute inset-0 z-30 flex flex-col items-center justify-center
@@ -601,9 +586,14 @@ useEffect(() => {
                 <div className="flex flex-col items-center text-center px-6">
                   <Lock className="w-10 h-10 mb-2 text-pink-500" />
                   {certStatus.unlock_at && (
-                    <p className="text-sm opacity-85">
+                    <p className="text-sm opacity-80">
                       {t("Дата відкриття", "Дата открытия")}:{" "}
                       {new Date(certStatus.unlock_at).toLocaleDateString()}
+                    </p>
+                  )}
+                  {secondsLeft > 0 && (
+                    <p className="mt-1 text-sm font-medium opacity-80">
+                      {t("Залишилось", "Осталось")}: {countdownStr}
                     </p>
                   )}
                 </div>
