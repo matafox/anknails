@@ -48,15 +48,16 @@ export default function DashboardSection({
   const [localLessons, setLocalLessons] = useState(lessons || {});
 
   /* ====== Сертифікат: статус із бекенду ====== */
-  const [certInfoOpen, setCertInfoOpen] = useState(false);
+  const [certInfoOpen, setCertInfoOpen] = useState(false); // повноекранне інфо-вікно
   const [certStatus, setCertStatus] = useState({
     unlocked: false,
-    unlock_at: null,
+    unlock_at: null, // ISO
     seconds_left: 0,
     requested: false,
     approved: false,
   });
 
+  // таймер для рахунку в інфо-вікні
   const [nowTs, setNowTs] = useState(Date.now());
   useEffect(() => {
     const id = setInterval(() => setNowTs(Date.now()), 1000);
@@ -78,6 +79,7 @@ export default function DashboardSection({
   const h = Math.floor((secondsLeft % 86400) / 3600);
   const m = Math.floor((secondsLeft % 3600) / 60);
   const s = secondsLeft % 60;
+  const countdownStr = `${d}${t("д", "д")} ${pad(h)}:${pad(m)}:${pad(s)}`;
 
   const unlocked = !!certStatus.unlocked;
 
@@ -133,22 +135,30 @@ export default function DashboardSection({
     loadCertStatus();
   }, [user?.id]);
 
+  // 🧮 Обчислення рівня
   const completedLessons = Object.values(progress).filter((p) => p.completed).length;
   const realSkills = skills ?? completedLessons * 20;
   const realStage = Math.min(stage ?? Math.floor(realSkills / 100) + 1, 5);
   const nextStageSkills = 100 * realStage;
   const progressToNext = ((realSkills % 100) / 100) * 100;
 
+  // 🎨 Палітра «Моя майстерність»
   const stageColor =
     (darkMode ? STAGE_COLORS_DARK : STAGE_COLORS)[realStage] ||
     (darkMode ? STAGE_COLORS_DARK[5] : STAGE_COLORS[5]);
 
-  const getSessionToken = () =>
-    user?.session_token || localStorage.getItem("session_token") || "";
+  /* === Хелпери === */
+  const getSessionToken = () => {
+    return user?.session_token || localStorage.getItem("session_token") || "";
+  };
 
+  /* === Дії з сертифікатом === */
   const handleRequestCert = async () => {
     if (!user?.id) return alert(t("Немає user_id", "Нет user_id"));
     const session_token = getSessionToken();
+    if (!session_token) {
+      console.warn("session_token is empty");
+    }
     try {
       const res = await fetch(`${BACKEND}/api/cert/request`, {
         method: "POST",
@@ -162,7 +172,9 @@ export default function DashboardSection({
       } catch {
         j = { success: false, raw: text };
       }
+
       if (!res.ok || !j?.success) {
+        console.error("cert/request fail:", res.status, j);
         alert(
           t(
             `Помилка запиту сертифіката: ${j?.detail || j?.error || res.status}`,
@@ -171,6 +183,7 @@ export default function DashboardSection({
         );
         return;
       }
+
       setCertStatus((prev) => ({ ...prev, requested: true }));
       await loadCertStatus();
       alert(
@@ -180,15 +193,21 @@ export default function DashboardSection({
         )
       );
     } catch (e) {
+      console.error("cert/request exception:", e);
       alert(t("Не вдалося подати запит. Спробуйте пізніше.", "Не удалось отправить запрос. Попробуйте позже."));
     }
   };
 
-  const handleDownloadCert = () => {
-    if (!user?.id) return alert(t("Немає user_id", "Нет user_id"));
-    window.open(`${BACKEND}/api/cert/open?user_id=${user.id}`, "_blank");
-  };
+ const handleDownloadCert = () => {
+  if (!user?.id) {
+    return alert(t("Немає user_id", "Нет user_id"));
+  }
+  window.open(`${BACKEND}/api/cert/open?user_id=${user.id}`, "_blank");
+};
 
+
+
+  /* === Рендер === */
   return (
     <div
       className={`min-h-[calc(100vh-8rem)] flex flex-col justify-between ${
@@ -242,10 +261,10 @@ export default function DashboardSection({
           <div
             className={`relative p-6 rounded-2xl border shadow-md overflow-hidden transition-all duration-700 bg-gradient-to-br ${stageColor}`}
           >
-            {/* ℹ️ кнопка (зменшений z-index) */}
+            {/* ℹ️ кнопка (зовнішня) */}
             <button
               onClick={() => setShowInfo(!showInfo)}
-              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-[5]"
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-30"
               title={t("Як підвищити майстерність", "Как развивать мастерство")}
             >
               {showInfo ? <X className="w-5 h-5 text-yellow-500" /> : <Info className="w-5 h-5" />}
@@ -281,22 +300,23 @@ export default function DashboardSection({
               </div>
             </div>
 
-            {/* інфо-вікно (над контентом, але нижче сайдбару) */}
+            {/* інфо-вікно (поверх усього) */}
             <div
-              className={`absolute inset-0 z-[8] flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+              className={`absolute inset-0 z-40 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
                 showInfo ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
               <div className="absolute inset-0 rounded-2xl bg-white/70 backdrop-blur-md border border-white/40" />
+              {/* ✅ Хрестик всередині вікна */}
               <button
                 onClick={() => setShowInfo(false)}
-                className="absolute top-3 right-3 z-[9] p-2 rounded-full hover:bg-black/5 transition"
+                className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 transition"
                 aria-label="close info"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="relative z-[9]">
+              <div className="relative z-10">
                 <h3 className="text-lg md:text-xl font-bold mb-2 leading-tight tracking-tight break-words px-2">
                   {t("Як розвивати майстерність", "Как развивать мастерство")}
                 </h3>
@@ -363,18 +383,18 @@ export default function DashboardSection({
               darkMode ? "bg-[#0f0016]/70 border-fuchsia-900/30" : "bg-white border-pink-200"
             }`}
           >
-            {/* Кнопка інформації (зменшений z-index) */}
+            {/* Кнопка інформації (зовнішня) */}
             <button
               onClick={() => setCertInfoOpen((v) => !v)}
-              className="absolute top-3 right-3 z-[5] p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+              className="absolute top-3 right-3 z-40 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
               title={t("Інформація про сертифікат", "Информация о сертификате")}
             >
               {certInfoOpen ? <X className="w-5 h-5 text-pink-500" /> : <Info className="w-5 h-5 text-pink-500" />}
             </button>
 
-            {/* ПОВНОЕКРАННЕ інфо-вікно (але нижче сайдбару) */}
+            {/* ПОВНОЕКРАННЕ інфо-вікно */}
             <div
-              className={`absolute inset-0 z-[8] flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+              className={`absolute inset-0 z-50 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
@@ -383,15 +403,16 @@ export default function DashboardSection({
                   darkMode ? "bg-[#1a0a1f]/80 border-fuchsia-900/40" : "bg-white/80 border-pink-200"
                 }`}
               />
+              {/* ✅ Хрестик всередині вікна */}
               <button
                 onClick={() => setCertInfoOpen(false)}
-                className="absolute top-3 right-3 z-[9] p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+                className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
                 aria-label="close certificate info"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="relative z-[9] max-w-md">
+              <div className="relative z-50 max-w-md">
                 <h3 className="text-lg md:text-xl font-bold mb-2">
                   {t("Доступ до сертифікатів", "Доступ к сертификатам")}
                 </h3>
@@ -400,10 +421,11 @@ export default function DashboardSection({
                   <>
                     <p className="text-sm md:text-base font-medium leading-relaxed mb-4">
                       {t(
-                        "Доступ до завантаження сертифіката відкриється через 4 тижні.",
-                        "Доступ к загрузке сертификата откроется через 4 недели."
-                      )}
+  "Доступ до завантаження сертифіката відкриється через 4 тижні.",
+  "Доступ к загрузке сертификата откроется через 4 недели."
+)}
                     </p>
+                    
                   </>
                 ) : (
                   <>
@@ -413,6 +435,7 @@ export default function DashboardSection({
                         "Отправьте запрос на именной сертификат в блоке ниже. После одобрения появится кнопка скачивания."
                       )}
                     </p>
+                    {/* за вимогою: кнопки в інфо-вікні немає */}
                   </>
                 )}
               </div>
@@ -432,7 +455,7 @@ export default function DashboardSection({
                 )}
               </p>
 
-              {/* Кнопки статусу */}
+              {/* Кнопки статусу — тільки тут */}
               {unlocked && !certInfoOpen && !certStatus.approved && !certStatus.requested && (
                 <button
                   onClick={handleRequestCert}
@@ -444,11 +467,11 @@ export default function DashboardSection({
               )}
 
               {unlocked && !certInfoOpen && certStatus.requested && !certStatus.approved && (
-                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  {t("Запит відправлено - очікує підтвердження", "Запрос отправлен - ждёт подтверждения")}
-                </span>
-              )}
+  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
+    <Loader2 className="w-4 h-4 animate-spin" />
+    {t("Запит відправлено - очікує підтвердження", "Запрос отправлен - ждёт подтверждения")}
+  </span>
+)}
 
               {unlocked && !certInfoOpen && certStatus.approved && (
                 <button
@@ -461,12 +484,11 @@ export default function DashboardSection({
               )}
             </div>
 
-            {/* Оверлей блокування */}
+            {/* Оверлей блокування (без таймера) */}
             {!unlocked && !certInfoOpen && (
               <div
-                className={`absolute inset-0 z-[6] flex flex-col items-center justify-center ${
-                  darkMode ? "bg-black/40" : "bg-white/60"
-                } backdrop-blur-md`}
+                className={`absolute inset-0 z-30 flex flex-col items-center justify-center
+                ${darkMode ? "bg-black/40" : "bg-white/60"} backdrop-blur-md`}
               >
                 <div className="flex flex-col items-center text-center px-6">
                   <Lock className="w-10 h-10 mb-2 text-pink-500" />
