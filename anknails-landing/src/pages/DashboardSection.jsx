@@ -394,7 +394,7 @@ export default function DashboardSection({
 
             {/* ПОВНОЕКРАННЕ інфо-вікно */}
             <div
-              className={`absolute inset-0 z-50 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+              className={`absolute inset-0 z-9 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
@@ -406,13 +406,13 @@ export default function DashboardSection({
               {/* ✅ Хрестик всередині вікна */}
               <button
                 onClick={() => setCertInfoOpen(false)}
-                className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+                className="absolute top-3 right-3 z-9 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
                 aria-label="close certificate info"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="relative z-50 max-w-md">
+              <div className="relative z-9 max-w-md">
                 <h3 className="text-lg md:text-xl font-bold mb-2">
                   {t("Доступ до сертифікатів", "Доступ к сертификатам")}
                 </h3>
