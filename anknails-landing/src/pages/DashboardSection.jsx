@@ -264,7 +264,7 @@ export default function DashboardSection({
             {/* ℹ️ кнопка (зовнішня) */}
             <button
               onClick={() => setShowInfo(!showInfo)}
-              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-30"
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-9"
               title={t("Як підвищити майстерність", "Как развивать мастерство")}
             >
               {showInfo ? <X className="w-5 h-5 text-yellow-500" /> : <Info className="w-5 h-5" />}
@@ -394,7 +394,7 @@ export default function DashboardSection({
 
             {/* ПОВНОЕКРАННЕ інфо-вікно */}
             <div
-              className={`absolute inset-0 z-50 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+              className={`absolute inset-0 z-9 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
