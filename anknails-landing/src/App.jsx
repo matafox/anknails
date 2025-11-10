@@ -53,17 +53,6 @@ export default function App() {
           <h1 className="text-[2.2rem] sm:text-5xl md:text-6xl font-extrabold text-gray-900 dark:text-white bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
             {t("title")}
           </h1>
-
-          <div className="px-4 py-1.5 rounded-full border border-white/40 dark:border-white/10 
-                          bg-white/40 dark:bg-white/10 backdrop-blur-xl shadow-[0_0_20px_rgba(255,0,128,0.2)]
-                          text-sm sm:text-base font-semibold text-fuchsia-600 dark:text-pink-300
-                          flex items-center gap-2 select-none animate-fade-in">
-            <span className="relative flex w-2 h-2">
-              <span className="absolute inline-flex w-full h-full bg-pink-400 rounded-full opacity-75 animate-ping"></span>
-              <span className="relative inline-flex w-2 h-2 bg-pink-500 rounded-full"></span>
-            </span>
-            {t("soon_badge", "Скоро")}
-          </div>
         </div>
 
         <p className="text-base sm:text-lg text-gray-600 dark:text-gray-300 mb-8 sm:mb-10 max-w-md sm:max-w-xl leading-relaxed">
