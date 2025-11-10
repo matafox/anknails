@@ -487,7 +487,7 @@ export default function DashboardSection({
             {/* Оверлей блокування (без таймера) */}
             {!unlocked && !certInfoOpen && (
               <div
-                className={`absolute inset-0 z-30 flex flex-col items-center justify-center
+                className={`absolute inset-0 z-9 flex flex-col items-center justify-center
                 ${darkMode ? "bg-black/40" : "bg-white/60"} backdrop-blur-md`}
               >
                 <div className="flex flex-col items-center text-center px-6">
