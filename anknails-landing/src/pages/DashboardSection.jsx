@@ -504,7 +504,7 @@ export default function DashboardSection({
             {/* Кнопка інформації (зовнішня) */}
             <button
               onClick={() => setCertInfoOpen((v) => !v)}
-              className="absolute top-3 right-3 z-9 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+              className="absolute top-3 right-3 z-40 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
               title={t("Інформація про сертифікат", "Информация о сертификате")}
             >
               {certInfoOpen ? <X className="w-5 h-5 text-pink-500" /> : <Info className="w-5 h-5 text-pink-500" />}
@@ -512,7 +512,7 @@ export default function DashboardSection({
 
             {/* ПОВНОЕКРАННЕ інфо-вікно */}
             <div
-              className={`absolute inset-0 z-40 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+              className={`absolute inset-0 z-9 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
