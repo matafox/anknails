@@ -47,11 +47,54 @@ export default function DashboardSection({
   const [stage, setStage] = useState(user?.level || 1);
   const [localLessons, setLocalLessons] = useState(lessons || {});
 
+  /* === Привітальна модалка (1 раз) === */
+  const [welcomeOpen, setWelcomeOpen] = useState(false);
+  useEffect(() => {
+  if (!user?.id) return;
+  fetch(`${BACKEND}/api/welcome/status?user_id=${user.id}`)
+    .then(r => r.ok ? r.json() : { seen: true })
+    .then(j => setWelcomeOpen(!j.seen))
+    .catch(() => {
+      // fallback на випадок офлайну/помилки — показати один раз
+      const key = `ank_welcome_seen_v1_${user.id}`;
+      if (!localStorage.getItem(key)) setWelcomeOpen(true);
+    });
+}, [user?.id]);
+
+const closeWelcome = async () => {
+  setWelcomeOpen(false);
+  // optional fallback
+  localStorage.setItem(`ank_welcome_seen_v1_${user?.id}`, "1");
+  try {
+    await fetch(`${BACKEND}/api/welcome/seen`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ user_id: user.id, session_token: getSessionToken() })
+    });
+  } catch {}
+};
+
+  useEffect(() => {
+    // Блокуємо скрол, коли модалка відкрита
+    if (welcomeOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = "hidden";
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [welcomeOpen]);
+
+  const closeWelcome = () => {
+    localStorage.setItem(welcomeKey, "1");
+    setWelcomeOpen(false);
+  };
+
   /* ====== Сертифікат: статус із бекенду ====== */
-  const [certInfoOpen, setCertInfoOpen] = useState(false); // повноекранне інфо-вікно
+  const [certInfoOpen, setCertInfoOpen] = useState(false);
   const [certStatus, setCertStatus] = useState({
     unlocked: false,
-    unlock_at: null, // ISO
+    unlock_at: null,
     seconds_left: 0,
     requested: false,
     approved: false,
@@ -198,14 +241,12 @@ export default function DashboardSection({
     }
   };
 
- const handleDownloadCert = () => {
-  if (!user?.id) {
-    return alert(t("Немає user_id", "Нет user_id"));
-  }
-  window.open(`${BACKEND}/api/cert/open?user_id=${user.id}`, "_blank");
-};
-
-
+  const handleDownloadCert = () => {
+    if (!user?.id) {
+      return alert(t("Немає user_id", "Нет user_id"));
+    }
+    window.open(`${BACKEND}/api/cert/open?user_id=${user.id}`, "_blank");
+  };
 
   /* === Рендер === */
   return (
@@ -214,6 +255,46 @@ export default function DashboardSection({
         darkMode ? "text-fuchsia-100" : "text-gray-800"
       }`}
     >
+      {/* ====== Привітальна модалка (показується 1 раз) ====== */}
+      {welcomeOpen && (
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center">
+          {/* overlay */}
+          <div
+            className={`absolute inset-0 ${darkMode ? "bg-black/50" : "bg-white/60"} backdrop-blur-md`}
+            onClick={closeWelcome}
+          />
+          {/* card */}
+          <div
+            className={`relative z-[10001] mx-4 w-full max-w-md rounded-2xl border shadow-2xl p-6 text-center
+              ${darkMode ? "bg-[#1a0a1f]/90 border-fuchsia-900/40" : "bg-white border-pink-200"}`}
+          >
+            <button
+              onClick={closeWelcome}
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10"
+              aria-label="close welcome"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            <h3 className="text-2xl font-extrabold mb-2 bg-gradient-to-r from-pink-600 to-rose-500 bg-clip-text text-transparent">
+              {t("Вітаємо в ANK Studio Online!", "Добро пожаловать ко мне на обучение!")}
+            </h3>
+            <p className={`${darkMode ? "text-fuchsia-100/80" : "text-gray-600"} mb-5`}>
+              {t(
+                "Почніть з першого модуля і поступово проходьте уроки. Успіхів! 💅",
+                "Начните с первого модуля и постепенно проходите уроки. Удачи! 💅"
+              )}
+            </p>
+            <button
+              onClick={closeWelcome}
+              className="inline-flex items-center justify-center px-5 py-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.02] active:scale-95 transition"
+            >
+              {t("Гарного навчання", "Начать")}
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* ====== Контент дашборду ====== */}
       <div className="flex-1">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -264,7 +345,7 @@ export default function DashboardSection({
             {/* ℹ️ кнопка (зовнішня) */}
             <button
               onClick={() => setShowInfo(!showInfo)}
-              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-9"
+              className="absolute top-3 right-3 p-2 rounded-full hover:bg-white/20 transition z-30"
               title={t("Як підвищити майстерність", "Как развивать мастерство")}
             >
               {showInfo ? <X className="w-5 h-5 text-yellow-500" /> : <Info className="w-5 h-5" />}
@@ -394,7 +475,7 @@ export default function DashboardSection({
 
             {/* ПОВНОЕКРАННЕ інфо-вікно */}
             <div
-              className={`absolute inset-0 z-9 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
+              className={`absolute inset-0 z-50 flex flex-col items-center justify-center text-center p-8 transition-all duration-700 ${
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
@@ -406,7 +487,7 @@ export default function DashboardSection({
               {/* ✅ Хрестик всередині вікна */}
               <button
                 onClick={() => setCertInfoOpen(false)}
-                className="absolute top-3 right-3 z-9 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
+                className="absolute top-3 right-3 z-50 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
                 aria-label="close certificate info"
               >
                 <X className="w-5 h-5" />
@@ -421,11 +502,10 @@ export default function DashboardSection({
                   <>
                     <p className="text-sm md:text-base font-medium leading-relaxed mb-4">
                       {t(
-  "Доступ до завантаження сертифіката відкриється через 4 тижні.",
-  "Доступ к загрузке сертификата откроется через 4 недели."
-)}
+                        "Доступ до завантаження сертифіката відкриється через 4 тижні.",
+                        "Доступ к загрузке сертификата откроется через 4 недели."
+                      )}
                     </p>
-                    
                   </>
                 ) : (
                   <>
@@ -435,7 +515,6 @@ export default function DashboardSection({
                         "Отправьте запрос на именной сертификат в блоке ниже. После одобрения появится кнопка скачивания."
                       )}
                     </p>
-                    {/* за вимогою: кнопки в інфо-вікні немає */}
                   </>
                 )}
               </div>
@@ -467,11 +546,11 @@ export default function DashboardSection({
               )}
 
               {unlocked && !certInfoOpen && certStatus.requested && !certStatus.approved && (
-  <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
-    <Loader2 className="w-4 h-4 animate-spin" />
-    {t("Запит відправлено - очікує підтвердження", "Запрос отправлен - ждёт подтверждения")}
-  </span>
-)}
+                <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl text-sm font-medium bg-amber-50 text-amber-700 border border-amber-200">
+                  <Loader2 className="w-4 h-4 animate-spin" />
+                  {t("Запит відправлено - очікує підтвердження", "Запрос отправлен - ждёт подтверждения")}
+                </span>
+              )}
 
               {unlocked && !certInfoOpen && certStatus.approved && (
                 <button
@@ -487,7 +566,7 @@ export default function DashboardSection({
             {/* Оверлей блокування (без таймера) */}
             {!unlocked && !certInfoOpen && (
               <div
-                className={`absolute inset-0 z-9 flex flex-col items-center justify-center
+                className={`absolute inset-0 z-30 flex flex-col items-center justify-center
                 ${darkMode ? "bg-black/40" : "bg-white/60"} backdrop-blur-md`}
               >
                 <div className="flex flex-col items-center text-center px-6">
