@@ -1,29 +1,27 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
   Menu,
   X,
   Sun,
   Moon,
-  Sparkles,
-  Gift,
-  Star,
-  HelpCircle,
-  User,
   Globe,
-  LogIn,
-  LogOut,
   Settings,
+  LogOut,
 } from "lucide-react";
 
 export default function Header({ onMenuToggle }) {
   const { i18n } = useTranslation();
-  const [menuOpen, setMenuOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [open, setOpen] = useState(false); // mobile dropdown
+  const panelRef = useRef<HTMLDivElement | null>(null);
 
-  // 🔑 Перевірка входу
+  // локалізатор коротких рядків
+  const tr = (ua: string, ru: string) => (i18n.language === "ru" ? ru : ua);
+
+  // auth
   useEffect(() => {
     setIsAdmin(localStorage.getItem("admin_token") === "true");
   }, []);
@@ -34,7 +32,7 @@ export default function Header({ onMenuToggle }) {
     window.location.href = "/";
   };
 
-  // 🌓 Тема
+  // тема
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -44,188 +42,248 @@ export default function Header({ onMenuToggle }) {
   }, []);
 
   const toggleTheme = () => {
-    const newTheme = !darkMode;
-    setDarkMode(newTheme);
-    document.documentElement.classList.toggle("dark", newTheme);
-    localStorage.setItem("theme", newTheme ? "dark" : "light");
+    const v = !darkMode;
+    setDarkMode(v);
+    document.documentElement.classList.toggle("dark", v);
+    localStorage.setItem("theme", v ? "dark" : "light");
   };
 
-  const changeLanguage = (lng) => {
+  const changeLanguage = (lng: "ru" | "uk") => {
     i18n.changeLanguage(lng);
     localStorage.setItem("lang", lng);
   };
 
-  const toggleMenu = () => {
-    const newState = !menuOpen;
-    setMenuOpen(newState);
-    onMenuToggle?.(newState);
-  };
-
-  const scrollToSection = (id) => {
-    const el = document.getElementById(id);
-    if (el) el.scrollIntoView({ behavior: "smooth" });
-    setMenuOpen(false);
-    onMenuToggle?.(false);
-  };
-
+  // скрол-ефект
   useEffect(() => {
-    const onScroll = () => setScrolled(window.scrollY > 20);
+    const onScroll = () => setScrolled(window.scrollY > 8);
     window.addEventListener("scroll", onScroll);
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const menuItems =
+  // закриття по кліку поза/dropdown, ESC
+  useEffect(() => {
+    const onDown = (e: MouseEvent) => {
+      if (!open) return;
+      if (panelRef.current && !panelRef.current.contains(e.target as Node)) {
+        setOpen(false);
+        onMenuToggle?.(false);
+      }
+    };
+    const onEsc = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setOpen(false);
+        onMenuToggle?.(false);
+      }
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onEsc);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onEsc);
+    };
+  }, [open, onMenuToggle]);
+
+  const toggleDropdown = () => {
+    const next = !open;
+    setOpen(next);
+    onMenuToggle?.(next);
+  };
+
+  const scrollTo = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "start" });
+    setOpen(false);
+    onMenuToggle?.(false);
+  };
+
+  const items =
     i18n.language === "ru"
       ? [
-          { icon: Sparkles, label: "Модули", id: "modules" },
-          { icon: Star, label: "Для кого курс", id: "forwhom" },
-          { icon: Gift, label: "Тарифы", id: "tariffs" },
-          { icon: HelpCircle, label: "FAQ", id: "faq" },
+          { label: "Модули", id: "modules" },
+          { label: "Для кого курс", id: "forwhom" },
+          { label: "Тарифы", id: "tariffs" },
+          { label: "FAQ", id: "faq" },
         ]
       : [
-          { icon: Sparkles, label: "Модулі", id: "modules" },
-          { icon: Star, label: "Для кого курс", id: "forwhom" },
-          { icon: Gift, label: "Тарифи", id: "tariffs" },
-          { icon: HelpCircle, label: "FAQ", id: "faq" },
+          { label: "Модулі", id: "modules" },
+          { label: "Для кого курс", id: "forwhom" },
+          { label: "Тарифи", id: "tariffs" },
+          { label: "FAQ", id: "faq" },
         ];
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-[9999] transition-all duration-700 ${
+      className={`sticky top-0 left-0 right-0 z-[100] transition-all ${
         scrolled
-          ? "backdrop-blur-xl bg-white/80 dark:bg-black/30 shadow-[0_0_25px_rgba(255,0,128,0.15)] border-b border-pink-400/10"
+          ? "backdrop-blur-xl bg-white/80 dark:bg-black/40 border-b border-pink-400/10 shadow-[0_2px_20px_rgba(244,63,94,.12)]"
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-7xl mx-auto px-6 py-4 flex justify-between items-center">
-        {/* 🩷 Логотип */}
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        {/* Лого */}
         <button
           onClick={() => (window.location.href = "https://ankstudio.online")}
-          className={`text-2xl sm:text-3xl font-bold tracking-wide transition-all 
-              focus:outline-none active:scale-95 
-              text-transparent bg-clip-text bg-gradient-to-r 
-              from-fuchsia-500 via-pink-500 to-rose-400
-              hover:opacity-90`}
+          className="text-xl sm:text-2xl font-extrabold tracking-tight text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400"
+          aria-label="ANK Studio"
         >
           ANK Studio
         </button>
 
-        {/* 🍔 Меню */}
-        <button
-          onClick={toggleMenu}
-          className="p-2 rounded-xl bg-white/40 dark:bg-white/10 border border-white/30 backdrop-blur-md hover:scale-105 transition-all"
-        >
-          {menuOpen ? (
-            <X className="w-6 h-6 text-pink-500" />
-          ) : (
-            <Menu className="w-6 h-6 text-pink-400" />
-          )}
-        </button>
-      </div>
+        {/* Навігація (desktop) */}
+        <nav className="hidden md:flex items-center gap-7">
+          {items.map((it) => (
+            <button
+              key={it.id}
+              onClick={() => scrollTo(it.id)}
+              className="text-sm font-semibold text-gray-700/90 dark:text-fuchsia-100/90 hover:text-pink-600 dark:hover:text-pink-300 transition"
+            >
+              {it.label}
+            </button>
+          ))}
+        </nav>
 
-      {/* 🌸 Повноекранне меню */}
-      {menuOpen && (
-        <div
-          className={`fixed inset-0 z-[9998] flex items-center justify-center animate-fade-in ${
-            darkMode
-              ? "bg-[#0c0016]/90 text-fuchsia-100"
-              : "bg-white/95 text-gray-800"
-          }`}
-          style={{
-            height: "100vh",
-            width: "100vw",
-            backdropFilter: "blur(80px) saturate(250%) brightness(1.1)",
-            WebkitBackdropFilter: "blur(80px) saturate(250%) brightness(1.1)",
-          }}
-        >
-          <div
-            className={`w-full max-w-md rounded-3xl p-10 flex flex-col items-stretch space-y-6 
-            ${
-              darkMode
-                ? "bg-[#1a0a1f]/70 border border-pink-500/30 shadow-[0_0_60px_rgba(255,0,128,0.25)]"
-                : "bg-white/70 border border-pink-200/40 shadow-[0_0_50px_rgba(255,182,193,0.4)]"
-            }`}
+        {/* Правий блок дій */}
+        <div className="flex items-center gap-2">
+          {/* Тема */}
+          <button
+            onClick={toggleTheme}
+            className="p-2 rounded-xl border border-pink-200/40 bg-white/50 dark:bg-white/10 dark:border-fuchsia-900/30 hover:scale-[1.05] transition"
+            aria-label={darkMode ? tr("Світла тема", "Светлая тема") : tr("Темна тема", "Тёмная тема")}
+            title={darkMode ? tr("Світла тема", "Светлая тема") : tr("Темна тема", "Тёмная тема")}
           >
-            {menuItems.map(({ icon: Icon, label, id }) => (
+            {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+          </button>
+
+          {/* Мова */}
+          <div className="hidden sm:flex items-center gap-1 rounded-xl border border-pink-200/40 bg-white/50 dark:bg-white/10 dark:border-fuchsia-900/30 p-1">
+            {(["ru", "uk"] as const).map((lng) => (
               <button
-                key={id}
-                onClick={() => scrollToSection(id)}
-                className={`flex items-center justify-start gap-4 w-full py-4 px-5 text-lg font-semibold rounded-2xl border transition-all duration-300 hover:scale-[1.02]
-      ${
-        darkMode
-          ? "bg-gradient-to-r from-[#2a0f3a]/50 to-[#3b174c]/40 border-fuchsia-500/20 hover:border-fuchsia-400/40 hover:from-pink-700/40 hover:to-rose-600/40"
-          : "bg-white border-pink-200 hover:bg-pink-50 hover:border-pink-300"
-      }`}
+                key={lng}
+                onClick={() => changeLanguage(lng)}
+                className={`px-2.5 py-1 text-xs font-semibold rounded-md transition ${
+                  i18n.language === lng
+                    ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow"
+                    : "text-gray-700 dark:text-fuchsia-100 hover:bg-pink-50/70 dark:hover:bg-white/10"
+                }`}
               >
-                <Icon className="w-5 h-5 text-pink-500 dark:text-pink-400" strokeWidth={2.2} />
-                <span className="text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
-                  {label}
-                </span>
+                {lng.toUpperCase()}
               </button>
             ))}
+          </div>
 
-          {/* 🔐 Авторизація */}
-{!isAdmin ? (
-  <a
-  href="/login"
-  className="flex items-center justify-center w-full py-4 mt-3 text-lg font-semibold rounded-2xl bg-gray-400 text-white hover:bg-gray-500 transition-all duration-300"
->
-  {i18n.language === "ru" ? "Доступ к платформе" : "Доступ до платформи"}
-</a>
-) : (
-  <>
-    <a
-      href="/admin"
-      className="flex items-center justify-center gap-3 w-full py-4 text-lg font-semibold rounded-2xl bg-gradient-to-r from-pink-500 to-rose-500 text-white shadow-[0_0_25px_rgba(255,0,128,0.5)] hover:scale-[1.03] transition-all duration-300"
-    >
-      <Settings className="w-5 h-5" />
-      {i18n.language === "ru" ? "Админ панель" : "Адмін панель"}
-    </a>
-
-    <button
-      onClick={handleLogout}
-      className="flex items-center justify-center gap-3 w-full py-3 rounded-xl text-sm font-semibold text-pink-500 hover:text-rose-500 transition-all"
-    >
-      <LogOut className="w-4 h-4" />
-      {i18n.language === "ru" ? "Выйти" : "Вийти"}
-    </button>
-  </>
-)}
-
-            {/* ⚙️ Тема + Мова */}
-            <div className="mt-6 flex flex-col items-center gap-3">
-              <button
-                onClick={toggleTheme}
-                className="flex items-center gap-2 hover:text-pink-500 transition"
+          {/* Доступ / Адмін (desktop) */}
+          {!isAdmin ? (
+            <a
+              href="/login"
+              className="hidden md:inline-flex items-center justify-center px-3.5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 shadow"
+            >
+              {tr("Доступ до платформи", "Доступ к платформе")}
+            </a>
+          ) : (
+            <div className="hidden md:flex items-center gap-2">
+              <a
+                href="/admin"
+                className="inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:opacity-95 shadow"
               >
-                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-                <span className="text-sm font-medium">
-                  {darkMode
-                    ? i18n.language === "ru"
-                      ? "Светлая тема"
-                      : "Світла тема"
-                    : i18n.language === "ru"
-                    ? "Тёмная тема"
-                    : "Темна тема"}
-                </span>
+                <Settings className="w-4 h-4" />
+                {tr("Адмін панель", "Админ панель")}
+              </a>
+              <button
+                onClick={handleLogout}
+                className="px-3 py-2 rounded-xl text-sm font-semibold text-pink-600 dark:text-pink-300 hover:bg-pink-50/80 dark:hover:bg-white/10 transition"
+              >
+                <LogOut className="w-4 h-4 inline mr-1" />
+                {tr("Вийти", "Выйти")}
               </button>
+            </div>
+          )}
 
-              <div className="flex items-center gap-2">
+          {/* Кнопка дропдауна (mobile) */}
+          <button
+            onClick={toggleDropdown}
+            className="md:hidden p-2 rounded-xl bg-white/60 dark:bg-white/10 border border-white/30 hover:scale-[1.05] transition"
+            aria-label="Toggle menu"
+          >
+            {open ? <X className="w-6 h-6 text-pink-500" /> : <Menu className="w-6 h-6 text-pink-400" />}
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile dropdown (закріплений під хедером) */}
+      {open && (
+        <div
+          ref={panelRef}
+          className="md:hidden absolute top-16 left-0 right-0 z-50"
+        >
+          <div className="mx-3 rounded-2xl border border-pink-200/50 dark:border-fuchsia-900/40 bg-white/80 dark:bg-[#0c0016]/85 backdrop-blur-xl shadow-xl p-2">
+            {/* навігація */}
+            <div className="flex flex-col py-1">
+              {items.map((it) => (
+                <button
+                  key={it.id}
+                  onClick={() => scrollTo(it.id)}
+                  className="text-left px-4 py-3 rounded-xl text-sm font-semibold text-gray-800 dark:text-fuchsia-100 hover:bg-pink-50/80 dark:hover:bg-white/10 transition"
+                >
+                  {it.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="my-2 h-px bg-pink-200/50 dark:bg-fuchsia-900/40" />
+
+            {/* мова + тема */}
+            <div className="flex items-center justify-between px-3 py-2">
+              <div className="flex items-center gap-2 text-sm">
                 <Globe className="w-4 h-4" />
-                {["ru", "uk"].map((lng) => (
+                {(["ru", "uk"] as const).map((lng) => (
                   <button
                     key={lng}
                     onClick={() => changeLanguage(lng)}
-                    className={`px-3 py-1 text-sm rounded-md transition-all font-medium ${
+                    className={`px-2.5 py-1 rounded-md font-semibold text-xs transition ${
                       i18n.language === lng
-                        ? "bg-pink-500 text-white shadow-[0_0_10px_rgba(255,0,128,0.4)]"
-                        : "bg-pink-50 text-gray-700 border border-pink-200 hover:bg-pink-100"
+                        ? "bg-gradient-to-r from-pink-500 to-rose-500 text-white"
+                        : "text-gray-700 dark:text-fuchsia-100 hover:bg-pink-50/70 dark:hover:bg-white/10"
                     }`}
                   >
                     {lng.toUpperCase()}
                   </button>
                 ))}
               </div>
+
+              <button
+                onClick={toggleTheme}
+                className="p-2 rounded-lg border border-pink-200/40 dark:border-fuchsia-900/40"
+              >
+                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button>
+            </div>
+
+            {/* доступ / адмін */}
+            <div className="px-3 pb-2">
+              {!isAdmin ? (
+                <a
+                  href="/login"
+                  className="w-full inline-flex items-center justify-center px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 shadow"
+                >
+                  {tr("Доступ до платформи", "Доступ к платформе")}
+                </a>
+              ) : (
+                <div className="flex items-center gap-2">
+                  <a
+                    href="/admin"
+                    className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl text-sm font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500"
+                  >
+                    <Settings className="w-4 h-4" />
+                    {tr("Адмін панель", "Админ панель")}
+                  </a>
+                  <button
+                    onClick={handleLogout}
+                    className="px-3 py-3 rounded-xl text-sm font-semibold text-pink-600 dark:text-pink-300 hover:bg-pink-50/80 dark:hover:bg-white/10 transition"
+                  >
+                    <LogOut className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </div>
