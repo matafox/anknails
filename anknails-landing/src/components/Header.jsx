@@ -1,6 +1,6 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Menu, X, Sun, Moon, Settings, LogOut } from "lucide-react";
+import { Menu, X, Sun, Moon, Settings, LogOut, Globe, Check } from "lucide-react";
 
 const HDR_H_MOBILE = 64;   // px (h-16)
 const HDR_H_DESKTOP = 80;  // px (h-20)
@@ -12,7 +12,11 @@ export default function Header({ onMenuToggle }) {
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // ✅ локальний хелпер для RU/UK
+  // 🌐 dropdown state
+  const [langOpen, setLangOpen] = useState(false);
+  const langRef = useRef(null);
+
+  // локальний хелпер RU/UK
   const T = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
   useEffect(() => {
@@ -40,6 +44,23 @@ export default function Header({ onMenuToggle }) {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
+  // закриття мовного меню по кліку назовні / Esc
+  useEffect(() => {
+    const onClick = (e) => {
+      if (!langRef.current) return;
+      if (!langRef.current.contains(e.target)) setLangOpen(false);
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setLangOpen(false);
+    };
+    document.addEventListener("mousedown", onClick);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onClick);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, []);
+
   const toggleTheme = () => {
     const v = !darkMode;
     setDarkMode(v);
@@ -54,6 +75,7 @@ export default function Header({ onMenuToggle }) {
     try {
       localStorage.setItem("lang", lng);
     } catch {}
+    setLangOpen(false);
   };
 
   const toggleMenu = () => {
@@ -116,21 +138,41 @@ export default function Header({ onMenuToggle }) {
                 {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
               </button>
 
-              {/* Мова — лише десктоп; на мобілці перенесено в меню */}
-              <div className="hidden sm:flex items-center gap-1">
-                {["ru", "uk"].map((l) => (
-                  <button
-                    key={l}
-                    onClick={() => changeLanguage(l)}
-                    className={`px-2.5 py-1 text-xs rounded-lg border ${
-                      i18n.language === l
-                        ? "bg-pink-500 text-white border-pink-500"
-                        : "bg-white/70 dark:bg-white/10 text-gray-700 dark:text-fuchsia-100 border-pink-200"
-                    }`}
+              {/* 🌐 Мова — ДЕСКТОП: іконка Globe + випадайка */}
+              <div className="relative hidden md:block" ref={langRef}>
+                <button
+                  onClick={() => setLangOpen((v) => !v)}
+                  className="p-2 rounded-xl bg-white/50 dark:bg-white/10 border border-white/30 hover:bg-white/70 dark:hover:bg-white/20 transition"
+                  aria-haspopup="menu"
+                  aria-expanded={langOpen}
+                  aria-label="language"
+                >
+                  <Globe className="w-5 h-5" />
+                </button>
+
+                {langOpen && (
+                  <div
+                    role="menu"
+                    className="absolute right-0 mt-2 min-w-[140px] rounded-xl overflow-hidden border border-pink-200/60 dark:border-fuchsia-900/40 bg-white/95 dark:bg-[#0f0a14]/95 backdrop-blur-xl shadow-lg"
                   >
-                    {l.toUpperCase()}
-                  </button>
-                ))}
+                    {["uk", "ru"].map((lng) => {
+                      const active = i18n.language === lng;
+                      return (
+                        <button
+                          key={lng}
+                          role="menuitem"
+                          onClick={() => changeLanguage(lng)}
+                          className={`w-full px-3 py-2.5 text-left text-sm flex items-center justify-between
+                            ${active ? "bg-pink-50 dark:bg-white/10 font-semibold" : "hover:bg-pink-50/70 dark:hover:bg-white/10"}
+                            text-gray-800 dark:text-fuchsia-100`}
+                        >
+                          <span className="tracking-wide">{lng.toUpperCase()}</span>
+                          {active && <Check className="w-4 h-4 text-pink-500" />}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
 
               {/* Доступ / Адмін — тільки десктоп */}
@@ -184,45 +226,24 @@ export default function Header({ onMenuToggle }) {
       {menuOpen && (
         <div className="fixed top-16 md:top-20 inset-x-0 z-[9998] bg-white/95 dark:bg-[#0c0016]/95 backdrop-blur-xl border-b border-pink-200/40 dark:border-fuchsia-900/30">
           <div className="max-w-7xl mx-auto px-4 py-4 grid gap-2">
-            <a
-              href="#modules"
-              onClick={() => setMenuOpen(false)}
-              className="py-3 font-semibold"
-            >
+            <a href="#modules" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
               {T("Модулі", "Модули")}
             </a>
-            <a
-              href="#forwhom"
-              onClick={() => setMenuOpen(false)}
-              className="py-3 font-semibold"
-            >
+            <a href="#forwhom" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
               {T("Для кого курс", "Для кого курс")}
             </a>
-            <a
-              href="#tariffs"
-              onClick={() => setMenuOpen(false)}
-              className="py-3 font-semibold"
-            >
+            <a href="#tariffs" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
               {T("Тарифи", "Тарифы")}
             </a>
-            <a
-              href="#faq"
-              onClick={() => setMenuOpen(false)}
-              className="py-3 font-semibold"
-            >
-              FAQ
-            </a>
+            <a href="#faq" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">FAQ</a>
 
-            {/* RU / UK по центру */}
+            {/* RU / UK по центру (мобільне меню, залишив як було) */}
             <div className="mt-2 pt-3 border-t border-pink-200/40 dark:border-fuchsia-900/30">
               <div className="flex items-center justify-center gap-3">
                 {["ru", "uk"].map((lng) => (
                   <button
                     key={lng}
-                    onClick={() => {
-                      changeLanguage(lng);
-                      setMenuOpen(false);
-                    }}
+                    onClick={() => { changeLanguage(lng); setMenuOpen(false); }}
                     className={`px-4 py-1.5 text-sm rounded-lg border font-semibold
                       ${
                         i18n.language === lng
@@ -249,10 +270,7 @@ export default function Header({ onMenuToggle }) {
                     {T("Адмін панель", "Админ панель")}
                   </a>
                   <button
-                    onClick={() => {
-                      setMenuOpen(false);
-                      handleLogout();
-                    }}
+                    onClick={() => { setMenuOpen(false); handleLogout(); }}
                     className="mt-2 w-full py-3 text-pink-600 font-semibold"
                   >
                     {T("Вийти", "Выйти")}
