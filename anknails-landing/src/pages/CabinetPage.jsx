@@ -3,21 +3,20 @@ import WelcomeModal from "./WelcomeModal";
 import DashboardSection from "./DashboardSection";
 import ModulesPage from "./ModulesPage";
 import { useTranslation } from "react-i18next";
-import {
-  LogOut,
-  SquareUserRound,
-  Menu,
-  ArrowRightCircle,
-  X,
-  BookOpen,
-  ChevronDown,
-  ChevronUp,
-  Moon,
-  Globe,
-  Flame,
-  Check,
-  HelpCircle,
-} from "lucide-react";
+ import {
+   LogOut,
+   SquareUserRound,
+   ArrowRightCircle,
+   X,
+   BookOpen,
+   ChevronDown,
+   ChevronUp,
+   Moon,
+   Globe,
+   Flame,
+   Check,
+   HelpCircle,
+ } from "lucide-react";
 
 import Header from "../components/Header"; // ⬅️ НОВЕ: підключили спільний хедер
 
@@ -677,9 +676,6 @@ export default function CabinetPage() {
     localStorage.clear();
     window.location.href = "/login";
   };
-
-  const [progress, setProgress] = useState({});
-  const [overallProgress, setOverallProgress] = useState(0);
 
   const progSelected = selectedLesson ? (progress[selectedLesson.id] || {}) : {};
 
