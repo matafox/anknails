@@ -516,21 +516,21 @@ export default function DashboardSection({
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
+{/* Темний щільний фон + максимальний блюр */}
 <div
-  className={`absolute inset-0 rounded-2xl border backdrop-blur-2xl saturate-150 contrast-125 ${
-    darkMode
-      ? "bg-black/65 border-fuchsia-900/40"
-      : "bg-white/90 border-pink-200"
-  }`}
+  className={`absolute inset-0 rounded-2xl border 
+              backdrop-blur-3xl backdrop-brightness-50 backdrop-saturate-50
+              ${
+                darkMode
+                  ? "bg-black/80 border-fuchsia-900/40"
+                  : "bg-white/95 border-pink-200"
+              }`}
 />
 
-{/* Мʼяка віньєтка для ще кращого читання тексту */}
+{/* Додаткове затемнення (відключив віньєтку, робимо рівномірне) */}
 <div
-  className="
-    absolute inset-0 rounded-2xl pointer-events-none
-    bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.18),transparent_60%)]
-    dark:bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.28),transparent_60%)]
-  "
+  className={`absolute inset-0 rounded-2xl pointer-events-none
+              ${darkMode ? "bg-black/25" : "bg-black/10"}`}
 />
               <button
                 onClick={() => setCertInfoOpen(false)}
