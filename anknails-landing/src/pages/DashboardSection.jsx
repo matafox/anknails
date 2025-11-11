@@ -516,11 +516,22 @@ export default function DashboardSection({
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
-              <div
-                className={`absolute inset-0 rounded-2xl backdrop-blur-md border ${
-                  darkMode ? "bg-[#1a0a1f]/80 border-fuchsia-900/40" : "bg-white/80 border-pink-200"
-                }`}
-              />
+<div
+  className={`absolute inset-0 rounded-2xl border backdrop-blur-2xl saturate-150 contrast-125 ${
+    darkMode
+      ? "bg-black/65 border-fuchsia-900/40"
+      : "bg-white/90 border-pink-200"
+  }`}
+/>
+
+{/* Мʼяка віньєтка для ще кращого читання тексту */}
+<div
+  className="
+    absolute inset-0 rounded-2xl pointer-events-none
+    bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.18),transparent_60%)]
+    dark:bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.28),transparent_60%)]
+  "
+/>
               <button
                 onClick={() => setCertInfoOpen(false)}
                 className="absolute top-3 right-3 z-9 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
