@@ -1,11 +1,11 @@
+// src/components/Footer.jsx
 import { Heart } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 export default function Footer() {
   const { i18n } = useTranslation();
 
-  const acceptedText =
-    i18n.language === "ru" ? "Мы принимаем" : "Ми приймаємо";
+  const acceptedText = i18n.language === "ru" ? "Мы принимаем" : "Ми приймаємо";
 
   // 🔍 перевіряємо, чи ми на сторінці "about"
   const isAboutPage =
@@ -54,6 +54,22 @@ export default function Footer() {
             @mosaert
           </a>
         </span>
+      </div>
+
+      {/* Лінки політики / умов */}
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-gray-600 dark:text-gray-400">
+        <a
+          href="/privacy"
+          className="underline decoration-pink-400/60 hover:decoration-pink-500"
+        >
+          {i18n.language === "ru" ? "Политика конфиденциальности" : "Політика конфіденційності"}
+        </a>
+        {/* Можеш додати пізніше:
+        <span className="opacity-40">•</span>
+        <a href="/terms" className="underline decoration-pink-400/60 hover:decoration-pink-500">
+          {i18n.language === "ru" ? "Условия пользования" : "Умови користування"}
+        </a>
+        */}
       </div>
 
       {/* Легке сяйво внизу */}
