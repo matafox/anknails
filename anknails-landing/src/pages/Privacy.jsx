@@ -1,4 +1,3 @@
-// src/pages/Privacy.jsx
 import { useEffect, useState } from "react";
 import { useTranslation } from "react-i18next";
 import {
@@ -16,6 +15,12 @@ import {
 export default function PrivacyPage() {
   const { i18n } = useTranslation();
   const T = (ua, ru) => (i18n.language === "ru" ? ru : ua);
+
+  // ⬇️ Скидання скролу при завантаженні сторінки
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.title = T("Політика конфіденційності — ANK Studio", "Политика конфиденциальности — ANK Studio");
+  }, [i18n.language]);
 
   const [consent, setConsent] = useState("unknown");
 
