@@ -1,4 +1,3 @@
-// src/App.jsx
 import { useState, useEffect } from "react";
 import { ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -32,15 +31,14 @@ function ConsentBanner({ show, onDecide }) {
       const g = typeof window !== "undefined" ? window.gtag : null;
       const val = granted ? "granted" : "denied";
 
-      g &&
-        g("consent", "update", {
-          ad_storage: "denied",
-          ad_user_data: "denied",
-          ad_personalization: "denied",
-          analytics_storage: val,
-          functionality_storage: "granted",
-          security_storage: "granted",
-        });
+      g && g("consent", "update", {
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        analytics_storage: val,
+        functionality_storage: "granted",
+        security_storage: "granted",
+      });
 
       localStorage.setItem("ga_consent", val);
 
@@ -57,11 +55,9 @@ function ConsentBanner({ show, onDecide }) {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[10000] px-3 pb-3 sm:px-6 sm:pb-6 pointer-events-none">
-      <div
-        className="pointer-events-auto max-w-5xl mx-auto rounded-2xl border shadow-xl 
-        bg-white/90 dark:bg-[#141017]/90 backdrop-blur-md 
-        border-pink-200/60 dark:border-fuchsia-900/40 p-4 sm:p-5"
-      >
+      <div className="pointer-events-auto max-w-5xl mx-auto rounded-2xl border shadow-xl 
+                      bg-white/90 dark:bg-[#141017]/90 backdrop-blur-md 
+                      border-pink-200/60 dark:border-fuchsia-900/40 p-4 sm:p-5">
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="text-left flex-1">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
@@ -72,11 +68,10 @@ function ConsentBanner({ show, onDecide }) {
                 "Ми використовуємо Google Analytics для покращення платформи. Прийми або відхили аналітичні файли cookie.",
                 "Мы используем Google Analytics для улучшения платформы. Примите или отклоните аналитические файлы cookie."
               )}{" "}
+              {/* 👇 відкриваємо hash-маршрут, щоб не було 404 */}
               <a
-                href="/privacy"
+                href="#/privacy"
                 className="underline decoration-pink-400/70 hover:decoration-pink-500 text-pink-600 dark:text-fuchsia-300"
-                target="_blank"
-                rel="noreferrer"
               >
                 {T("Детальніше про приватність", "Подробнее о приватности")}
               </a>
@@ -116,9 +111,28 @@ export default function App() {
   const [popupVisible, setPopupVisible] = useState(false);
   const [needConsent, setNeedConsent] = useState(false);
 
-  // 🔀 Ранній рендер сторінки /privacy без роутера
+  // стейт, щоб реагувати на зміну хешу
+  const [hash, setHash] = useState(
+    typeof window !== "undefined" ? window.location.hash : ""
+  );
+
+  useEffect(() => {
+    const onHash = () => setHash(window.location.hash || "");
+    window.addEventListener("hashchange", onHash);
+    return () => window.removeEventListener("hashchange", onHash);
+  }, []);
+
+  // ✅ ранній рендер privacy для:
+  // 1) прямих переходів /privacy (якщо є редірект на index.html)
+  // 2) hash-маршруту #/privacy (працює завжди, без налаштувань сервера)
   const path = typeof window !== "undefined" ? window.location.pathname : "/";
-  if (path.startsWith("/privacy")) {
+  const search = typeof window !== "undefined" ? window.location.search : "";
+  const isPrivacy =
+    path.startsWith("/privacy") ||
+    hash.startsWith("#/privacy") ||
+    new URLSearchParams(search).get("page") === "privacy";
+
+  if (isPrivacy) {
     return (
       <div className="min-h-screen flex flex-col">
         <Header onMenuToggle={(open) => setMenuOpen(open)} />
@@ -147,15 +161,14 @@ export default function App() {
       const g = typeof window !== "undefined" ? window.gtag : null;
 
       if (saved === "granted" || saved === "denied") {
-        g &&
-          g("consent", "update", {
-            ad_storage: "denied",
-            ad_user_data: "denied",
-            ad_personalization: "denied",
-            analytics_storage: saved,
-            functionality_storage: "granted",
-            security_storage: "granted",
-          });
+        g && g("consent", "update", {
+          ad_storage: "denied",
+          ad_user_data: "denied",
+          ad_personalization: "denied",
+          analytics_storage: saved,
+          functionality_storage: "granted",
+          security_storage: "granted",
+        });
         setNeedConsent(false);
       } else {
         setNeedConsent(true);
@@ -234,7 +247,6 @@ export default function App() {
 
       <Footer />
 
-      {/* Банер згоди — завжди зверху всіх елементів */}
       <ConsentBanner show={needConsent} onDecide={() => setNeedConsent(false)} />
 
       {showScrollTop && !menuOpen && !popupVisible && (
