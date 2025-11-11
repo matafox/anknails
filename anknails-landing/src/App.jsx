@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { ChevronUp } from "lucide-react";
+import { ChevronUp, Cookie as CookieIcon } from "lucide-react";
 import { useTranslation } from "react-i18next";
 
 import Header from "./components/Header";
@@ -63,7 +63,8 @@ function ConsentBanner({ show, onDecide }) {
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="text-left flex-1">
-            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
+              <CookieIcon className="w-5 h-5 text-pink-500" />
               {T("Аналітичні cookies", "Аналитические cookies")}
             </h3>
             <p className="text-sm sm:text-[15px] text-gray-600 dark:text-gray-300 mt-1">
