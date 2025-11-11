@@ -1000,40 +1000,41 @@ const markWelcomeSeen = () => {
         </div>
       )}
 
-     {/* ПІДТРИМКА + ГОЛОВНА — по вертикалі, в два ряди */}
-<div className="mt-6 space-y-2">
-  <a
-    href="https://t.me/m/cE5yXCdSZTAy"
-    className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition ${
-      darkMode
-        ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
-        : "border-pink-200 bg-white/70 hover:bg-white"
-    }`}
-    title={t("Звернутися у підтримку", "Обратиться в поддержку")}
-  >
-    <HelpCircle className="w-4 h-4 text-pink-600" />
-    <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
-  </a>
+      {/* ПІДТРИМКА + ГОЛОВНА — по вертикалі, в два ряди */}
+      <div className="mt-6 space-y-2">
+        <a
+          href="https://t.me/m/cE5yXCdSZTAy"
+          className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition ${
+            darkMode
+              ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+              : "border-pink-200 bg-white/70 hover:bg-white"
+          }`}
+          title={t("Звернутися у підтримку", "Обратиться в поддержку")}
+        >
+          <HelpCircle className="w-4 h-4 text-pink-600" />
+          <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
+        </a>
 
-  <button
-    onClick={() => {
-      setSelectedLesson(null);
-      setView("dashboard");
-      localStorage.setItem("last_view", "dashboard");
-      setMenuOpen(false);
-      try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {}
-    }}
-    className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition ${
-      darkMode
-        ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
-        : "border-pink-200 bg-white/70 hover:bg-white"
-    }`}
-    title={t("Перейти на головну", "Перейти на главную")}
-  >
-    <Home className="w-4 h-4 text-pink-600" />
-    <span className="text-pink-600 font-medium">{t("Головна", "Главная")}</span>
-  </button>
-</div>
+        <button
+          onClick={() => {
+            setSelectedLesson(null);
+            setView("dashboard");
+            localStorage.setItem("last_view", "dashboard");
+            setMenuOpen(false);
+            try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {}
+          }}
+          className={`w-full flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition ${
+            darkMode
+              ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+              : "border-pink-200 bg-white/70 hover:bg-white"
+          }`}
+          title={t("Перейти на головну", "Перейти на главную")}
+        >
+          <Home className="w-4 h-4 text-pink-600" />
+          <span className="text-pink-600 font-medium">{t("Головна", "Главная")}</span>
+        </button>
+      </div>
+    </div>
 
     {/* Нижній футер сайдбару */}
     <div className="p-6 border-t border-pink-200/30 space-y-6">
@@ -1054,7 +1055,11 @@ const markWelcomeSeen = () => {
             darkMode ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" : "bg-pink-200"
           }`}
         >
-          <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${darkMode ? "translate-x-6" : "translate-x-0"}`}></span>
+          <span
+            className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${
+              darkMode ? "translate-x-6" : "translate-x-0"
+            }`}
+          />
         </button>
       </div>
 
