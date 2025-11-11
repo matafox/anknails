@@ -237,7 +237,7 @@ export default function Header({ onMenuToggle }) {
             </a>
             <a href="#faq" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">FAQ</a>
 
-            {/* RU / UK по центру (мобільне меню, залишив як було) */}
+            {/* RU / UK по центру (мобільне меню) */}
             <div className="mt-2 pt-3 border-t border-pink-200/40 dark:border-fuchsia-900/30">
               <div className="flex items-center justify-center gap-3">
                 {["ru", "uk"].map((lng) => (
