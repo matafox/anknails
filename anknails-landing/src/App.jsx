@@ -137,7 +137,7 @@ export default function App() {
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  // GA page_view на зміну хешу (коли є згода)
+  // GA page_view + скидання скролу на зміну хешу
   useEffect(() => {
     try {
       const g = window.gtag;
@@ -150,6 +150,13 @@ export default function App() {
         });
       }
     } catch {}
+
+    // ⬇️ важливо: коли відкриваємо службові сторінки — скролимо на верх
+    if (hash.startsWith("#/privacy") || hash.startsWith("#/terms")) {
+      setTimeout(() => {
+        window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      }, 0);
+    }
   }, [hash]);
 
   const isPrivacy =
