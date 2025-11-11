@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import Header from "../components/Header"; // ⬅️ підключили новий хедер
 
 export default function LoginPage() {
   const { i18n } = useTranslation();
@@ -56,15 +57,18 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800">
-      {/* Порожній сайдбар (як у кабінеті) */}
-      <aside className="hidden md:block md:w-72 border-r border-pink-200 bg-gradient-to-b from-white to-rose-50" />
+    <div className="min-h-screen flex flex-col bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800 dark:from-[#100d16] dark:via-[#18141f] dark:to-[#100d16]">
+      {/* ✅ Фіксований хедер зверху */}
+      <Header />
 
-      {/* Контентна частина */}
-      <div className="flex-1 min-h-screen flex flex-col">
+      {/* Контентна частина (з урахуванням фіксованого хедера вже є spacer у Header) */}
+      <div className="flex-1 w-full flex">
+        {/* Порожній сайдбар (як у кабінеті) */}
+        <aside className="hidden md:block md:w-72 border-r border-pink-200/60 dark:border-fuchsia-900/30 bg-gradient-to-b from-white to-rose-50 dark:from-[#120c18] dark:to-[#0f0a14]" />
+
         {/* Центрований блок логіну */}
         <main className="flex-1 flex items-center justify-center px-5">
-          <div className="w-full max-w-md rounded-[2rem] p-8 md:p-10 bg-white/80 backdrop-blur border border-pink-200/60 shadow-[0_0_40px_rgba(255,182,193,0.35)]">
+          <div className="w-full max-w-md rounded-[2rem] p-8 md:p-10 bg-white/80 dark:bg-white/10 backdrop-blur border border-pink-200/60 dark:border-fuchsia-900/40 shadow-[0_0_40px_rgba(255,182,193,0.35)]">
             {/* 🔹 Привітання над формою */}
             <div className="mb-8 text-center">
               <p className="mt-2 text-sm opacity-75">
@@ -81,7 +85,7 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white dark:bg-white/5 dark:text-fuchsia-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
                 />
               </div>
 
@@ -92,7 +96,7 @@ export default function LoginPage() {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white dark:bg-white/5 dark:text-fuchsia-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
                 />
               </div>
 
@@ -125,15 +129,15 @@ export default function LoginPage() {
             </form>
           </div>
         </main>
-
-        {/* ====== Футер дашборду (світла тема) ====== */}
-        <footer className="mt-8 text-center py-6 text-sm border-t border-pink-200 text-gray-600">
-          <p className="font-medium">
-            © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
-            {t("Усі права захищені.", "Все права защищены.")}
-          </p>
-        </footer>
       </div>
+
+      {/* Футер сторінки логіну */}
+      <footer className="text-center py-6 text-sm border-t border-pink-200/60 dark:border-fuchsia-900/30 text-gray-600 dark:text-fuchsia-200">
+        <p className="font-medium">
+          © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
+          {t("Усі права захищені.", "Все права защищены.")}
+        </p>
+      </footer>
     </div>
   );
 }
