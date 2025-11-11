@@ -1042,7 +1042,6 @@ const markWelcomeSeen = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Moon className="w-4 h-4 text-pink-500" />
-          <span>{t("Темна тема", "Тёмная тема")}</span>
         </div>
         <button
           onClick={() => {
@@ -1067,7 +1066,6 @@ const markWelcomeSeen = () => {
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Globe className="w-4 h-4 text-pink-500" />
-          <span>{t("Мова", "Язык")}</span>
         </div>
         <div className="flex gap-2">
           {["ru", "uk"].map((lang) => (
