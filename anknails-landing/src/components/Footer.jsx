@@ -7,6 +7,9 @@ export default function Footer() {
   const isAboutPage =
     typeof window !== "undefined" && window.location.hostname.includes("about.");
 
+  const PRIV = i18n.language === "ru" ? "Политика конфиденциальности" : "Політика конфіденційності";
+  const TERMS = i18n.language === "ru" ? "Условия пользования" : "Умови користування";
+
   return (
     <footer className="relative w-full z-10 py-8 px-4 flex flex-col items-center justify-center text-center text-xs sm:text-sm">
       <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-pink-300/40 to-transparent dark:via-pink-700/30" />
@@ -32,7 +35,7 @@ export default function Footer() {
         <span className="hidden sm:inline text-gray-400 dark:text-gray-600">•</span>
 
         <span className="flex items-center gap-1.5">
-          <span className="text-gray-5 00 dark:text-gray-400">Made with</span>
+          <span className="text-gray-500 dark:text-gray-400">Made with</span>
           <Heart className="w-4 h-4 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.4)] animate-pulse" fill="currentColor" />
           <span className="text-gray-500 dark:text-gray-400">by</span>
           <a
@@ -46,13 +49,14 @@ export default function Footer() {
         </span>
       </div>
 
-      {/* 👇 лінк на hash-маршрут, щоб не ловити 404 */}
+      {/* 👇 лінки на hash-маршрути, щоб не ловити 404 */}
       <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-gray-600 dark:text-gray-400">
-        <a
-          href="#/privacy"
-          className="underline decoration-pink-400/60 hover:decoration-pink-500"
-        >
-          {i18n.language === "ru" ? "Политика конфиденциальности" : "Політика конфіденційності"}
+        <a href="#/privacy" className="underline decoration-pink-400/60 hover:decoration-pink-500">
+          {PRIV}
+        </a>
+        <span className="hidden sm:inline">•</span>
+        <a href="#/terms" className="underline decoration-pink-400/60 hover:decoration-pink-500">
+          {TERMS}
         </a>
       </div>
 
