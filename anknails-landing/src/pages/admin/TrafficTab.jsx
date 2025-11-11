@@ -4,7 +4,6 @@ import {
   BarChart3,
   Save,
   Fingerprint,
-  Copy,
   Send,
   CheckCircle2,
   Activity,
@@ -21,9 +20,9 @@ export default function TrafficTab({ darkMode, i18n }) {
 
   const [gaId, setGaId] = useState("");
   const [inputGa, setInputGa] = useState("");
+
   const [activeUsers, setActiveUsers] = useState(null);
   const [error, setError] = useState("");
-  const [copied, setCopied] = useState(false);
   const [testSent, setTestSent] = useState(false);
   const [loadingRealtime, setLoadingRealtime] = useState(false);
 
@@ -31,6 +30,10 @@ export default function TrafficTab({ darkMode, i18n }) {
   const [topCities, setTopCities] = useState([]);
   const [topDevices, setTopDevices] = useState([]);
   const [topSources, setTopSources] = useState([]);
+
+  // 📈 історія по місяцях
+  const [monthlySeries, setMonthlySeries] = useState([]); // [{month:'2025-01', users: 123}, ...]
+  const [loadingHistory, setLoadingHistory] = useState(false);
 
   const isGaId = (s = "") => /^G-[A-Z0-9]+$/i.test((s || "").trim());
 
@@ -80,31 +83,7 @@ export default function TrafficTab({ darkMode, i18n }) {
     }
   };
 
-  // 3) Сніпет для <head>
-  const gaSnippet = useMemo(() => {
-    if (!isGaId(gaId)) return "";
-    const id = gaId.toUpperCase();
-    return [
-      `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>`,
-      `<script>`,
-      `  window.dataLayer = window.dataLayer || [];`,
-      `  function gtag(){dataLayer.push(arguments);}`,
-      `  gtag('js', new Date());`,
-      `  gtag('config', '${id}', { send_page_view: true });`,
-      `</script>`,
-    ].join("\n");
-  }, [gaId]);
-
-  const copySnippet = async () => {
-    if (!gaSnippet) return;
-    try {
-      await navigator.clipboard.writeText(gaSnippet);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1200);
-    } catch {}
-  };
-
-  // 4) Тест-подія
+  // 3) Відправити тест-подію (через MP)
   const sendTestEvent = async () => {
     if (!isGaId(gaId)) {
       alert(t("Спершу збережіть коректний GA ID", "Сначала сохраните корректный GA ID"));
@@ -125,7 +104,7 @@ export default function TrafficTab({ darkMode, i18n }) {
     }
   };
 
-  // 5) Realtime + розкладки
+  // 4) Realtime + розкладки
   const fetchOverview = async () => {
     try {
       setLoadingRealtime(true);
@@ -156,18 +135,42 @@ export default function TrafficTab({ darkMode, i18n }) {
     return () => clearInterval(id);
   }, []);
 
+  // 5) Місячна історія
+  const fetchHistory = async () => {
+    try {
+      setLoadingHistory(true);
+      const r = await fetch(`${BACKEND}/api/admin/ga/history?months=12`);
+      if (!r.ok) throw new Error(`status ${r.status}`);
+      const j = await r.json();
+      // Очікуваний формат бекенду: [{month:'2025-01', users: 123}, ...]
+      const arr = Array.isArray(j?.months) ? j.months : Array.isArray(j) ? j : [];
+      // відсортуємо по часу
+      arr.sort((a, b) => (a.month > b.month ? 1 : -1));
+      setMonthlySeries(arr);
+    } catch (e) {
+      setMonthlySeries([]);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchHistory();
+  }, []);
+
   const cardClass = `rounded-xl p-5 border ${
     darkMode ? "border-fuchsia-900/40 bg-[#1a0a1f]/70" : "border-pink-200 bg-white"
   }`;
 
-  const tableClass =
-    "w-full text-sm border-separate border-spacing-y-2";
+  const tableClass = "w-full text-sm border-separate border-spacing-y-2";
+  const headerCell = "text-xs uppercase opacity-60 pb-1";
+  const rowCell = "py-2 px-0";
 
-  const headerCell =
-    "text-xs uppercase opacity-60 pb-1";
-
-  const rowCell =
-    "py-2 px-0";
+  // ── простий барчарт (без бібліотек)
+  const maxUsers = useMemo(
+    () => Math.max(1, ...monthlySeries.map((m) => Number(m.users) || 0)),
+    [monthlySeries]
+  );
 
   return (
     <div className={`max-w-6xl mx-auto w-full ${darkMode ? "text-fuchsia-100" : "text-gray-800"}`}>
@@ -180,7 +183,7 @@ export default function TrafficTab({ darkMode, i18n }) {
         </h2>
       </div>
 
-      {/* GA ID */}
+      {/* GA ID + дії */}
       <div className={`p-4 rounded-xl border mb-6 ${darkMode ? "border-fuchsia-900/40 bg-[#0f0a1a]" : "border-pink-200 bg-white"}`}>
         <label className="text-sm font-medium flex items-center gap-2 mb-2">
           <Fingerprint className="w-4 h-4 text-pink-500" />
@@ -206,33 +209,18 @@ export default function TrafficTab({ darkMode, i18n }) {
         </div>
 
         {isGaId(gaId) && (
-          <div className="mt-4">
-            <p className="text-xs opacity-80 mb-2">
-              {t("Швидкий код для вставки у <head> (за потреби).", "Быстрый код для вставки в <head> (при необходимости).")}
-            </p>
-            <pre className={`rounded-lg p-3 text-xs overflow-x-auto select-all ${
-              darkMode ? "bg-[#140a17] border border-fuchsia-900/40" : "bg-pink-50 border border-pink-200"
-            }`}>
-{gaSnippet}
-            </pre>
-
-            <div className="mt-2 flex flex-wrap gap-2">
-              <button
-                onClick={copySnippet}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold border border-pink-300 text-pink-600 hover:bg-pink-50 dark:border-fuchsia-800 dark:text-fuchsia-200"
-              >
-                <Copy className="w-4 h-4" />
-                {copied ? t("Скопійовано", "Скопировано") : t("Скопіювати код", "Скопировать код")}
-              </button>
-
-              <button
-                onClick={sendTestEvent}
-                className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.02] transition"
-              >
-                {testSent ? <CheckCircle2 className="w-4 h-4" /> : <Send className="w-4 h-4" />}
-                {testSent ? t("Надіслано", "Отправлено") : t("Надіслати тест-подію", "Отправить тест-событие")}
-              </button>
-            </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <span className="text-xs opacity-80">
+              {t("GA підключено у проєкті. Нічого більше вставляти не треба.",
+                 "GA подключён в проекте. Ничего вставлять не нужно.")}
+            </span>
+            <button
+              onClick={sendTestEvent}
+              className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.02] transition"
+            >
+              {testSent ? <CheckCircle2 className="w-4 h-4" /> : <Send className="w-4 h-4" />}
+              {testSent ? t("Надіслано", "Отправлено") : t("Надіслати тест-подію", "Отправить тест-событие")}
+            </button>
           </div>
         )}
       </div>
@@ -267,18 +255,18 @@ export default function TrafficTab({ darkMode, i18n }) {
             <thead>
               <tr>
                 <th className={headerCell}>{t("Девайс", "Устройство")}</th>
-                <th className={headerCell} style={{textAlign:"right"}}>Users</th>
+                <th className={headerCell} style={{ textAlign: "right" }}>Users</th>
               </tr>
             </thead>
             <tbody>
               {topDevices.map((r, i) => (
                 <tr key={i} className="hover:opacity-90">
                   <td className={rowCell}>{r.name}</td>
-                  <td className={rowCell} style={{textAlign:"right"}}>{r.activeUsers}</td>
+                  <td className={rowCell} style={{ textAlign: "right" }}>{r.activeUsers}</td>
                 </tr>
               ))}
               {!topDevices.length && (
-                <tr><td className={rowCell} colSpan={2} style={{opacity:0.6}}>{t("Немає даних", "Нет данных")}</td></tr>
+                <tr><td className={rowCell} colSpan={2} style={{ opacity: 0.6 }}>{t("Немає даних", "Нет данных")}</td></tr>
               )}
             </tbody>
           </table>
@@ -294,18 +282,18 @@ export default function TrafficTab({ darkMode, i18n }) {
             <thead>
               <tr>
                 <th className={headerCell}>{t("Країна", "Страна")}</th>
-                <th className={headerCell} style={{textAlign:"right"}}>Users</th>
+                <th className={headerCell} style={{ textAlign: "right" }}>Users</th>
               </tr>
             </thead>
             <tbody>
               {topCountries.map((r, i) => (
                 <tr key={i} className="hover:opacity-90">
                   <td className={rowCell}>{r.name}</td>
-                  <td className={rowCell} style={{textAlign:"right"}}>{r.activeUsers}</td>
+                  <td className={rowCell} style={{ textAlign: "right" }}>{r.activeUsers}</td>
                 </tr>
               ))}
               {!topCountries.length && (
-                <tr><td className={rowCell} colSpan={2} style={{opacity:0.6}}>{t("Немає даних", "Нет данных")}</td></tr>
+                <tr><td className={rowCell} colSpan={2} style={{ opacity: 0.6 }}>{t("Немає даних", "Нет данных")}</td></tr>
               )}
             </tbody>
           </table>
@@ -321,18 +309,18 @@ export default function TrafficTab({ darkMode, i18n }) {
             <thead>
               <tr>
                 <th className={headerCell}>{t("Місто", "Город")}</th>
-                <th className={headerCell} style={{textAlign:"right"}}>Users</th>
+                <th className={headerCell} style={{ textAlign: "right" }}>Users</th>
               </tr>
             </thead>
             <tbody>
               {topCities.map((r, i) => (
                 <tr key={i} className="hover:opacity-90">
                   <td className={rowCell}>{r.name}</td>
-                  <td className={rowCell} style={{textAlign:"right"}}>{r.activeUsers}</td>
+                  <td className={rowCell} style={{ textAlign: "right" }}>{r.activeUsers}</td>
                 </tr>
               ))}
               {!topCities.length && (
-                <tr><td className={rowCell} colSpan={2} style={{opacity:0.6}}>{t("Немає даних", "Нет данных")}</td></tr>
+                <tr><td className={rowCell} colSpan={2} style={{ opacity: 0.6 }}>{t("Немає даних", "Нет данных")}</td></tr>
               )}
             </tbody>
           </table>
@@ -348,22 +336,70 @@ export default function TrafficTab({ darkMode, i18n }) {
             <thead>
               <tr>
                 <th className={headerCell}>{t("Джерело", "Источник")}</th>
-                <th className={headerCell} style={{textAlign:"right"}}>Users</th>
+                <th className={headerCell} style={{ textAlign: "right" }}>Users</th>
               </tr>
             </thead>
             <tbody>
               {topSources.map((r, i) => (
                 <tr key={i} className="hover:opacity-90">
                   <td className={rowCell}>{r.name}</td>
-                  <td className={rowCell} style={{textAlign:"right"}}>{r.activeUsers}</td>
+                  <td className={rowCell} style={{ textAlign: "right" }}>{r.activeUsers}</td>
                 </tr>
               ))}
               {!topSources.length && (
-                <tr><td className={rowCell} colSpan={2} style={{opacity:0.6}}>{t("Немає даних", "Нет данных")}</td></tr>
+                <tr><td className={rowCell} colSpan={2} style={{ opacity: 0.6 }}>{t("Немає даних", "Нет данных")}</td></tr>
               )}
             </tbody>
           </table>
         </div>
+      </div>
+
+      {/* 📊 Історія відвідувань (місячно) */}
+      <div className={`mt-6 ${cardClass}`}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-semibold">
+            {t("Історія відвідувань (місячно)", "История посещений (помесячно)")}
+          </p>
+          <button
+            onClick={fetchHistory}
+            className="text-xs px-3 py-1 rounded-lg border border-pink-300 hover:bg-pink-50 dark:border-fuchsia-800"
+          >
+            {t("Оновити", "Обновить")}
+          </button>
+        </div>
+
+        {loadingHistory ? (
+          <p className="text-sm opacity-70">{t("Завантаження…", "Загрузка…")}</p>
+        ) : monthlySeries.length ? (
+          <div className="w-full">
+            {/* Барчарт */}
+            <div className="h-40 w-full flex items-end gap-2">
+              {monthlySeries.map((m, idx) => {
+                const v = Number(m.users) || 0;
+                const h = Math.max(4, Math.round((v / maxUsers) * 100)); // мін 4px, у %
+                return (
+                  <div key={idx} className="flex-1 flex flex-col-reverse items-center gap-2">
+                    <div
+                      className="w-full rounded-md bg-gradient-to-t from-pink-500 to-rose-400"
+                      style={{ height: `${h}%` }}
+                      title={`${m.month}: ${v}`}
+                    />
+                  </div>
+                );
+              })}
+            </div>
+            {/* Шкала знизу */}
+            <div className="mt-2 grid" style={{ gridTemplateColumns: `repeat(${monthlySeries.length}, 1fr)` }}>
+              {monthlySeries.map((m, idx) => (
+                <div key={idx} className="text-[10px] text-center opacity-70">
+                  {m.month}
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm opacity-70">{t("Немає даних", "Нет данных")}</p>
+        )}
       </div>
     </div>
   );
