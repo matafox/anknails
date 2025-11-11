@@ -3,22 +3,21 @@ import WelcomeModal from "./WelcomeModal";
 import DashboardSection from "./DashboardSection";
 import ModulesPage from "./ModulesPage";
 import { useTranslation } from "react-i18next";
- import {
-   LogOut,
-   SquareUserRound,
-   ArrowRightCircle,
-   X,
-   BookOpen,
-   ChevronDown,
-   ChevronUp,
-   Moon,
-   Globe,
-   Flame,
-   Check,
-   HelpCircle,
- } from "lucide-react";
-
-import Header from "../components/Header"; // ⬅️ НОВЕ: підключили спільний хедер
+import {
+  LogOut,
+  SquareUserRound,
+  Menu,
+  ArrowRightCircle,
+  X,
+  BookOpen,
+  ChevronDown,
+  ChevronUp,
+  Moon,
+  Globe,
+  Flame,
+  Check,
+  HelpCircle, // 🆕 підтримка
+} from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
@@ -398,32 +397,36 @@ export default function CabinetPage() {
   const [selectedLesson, setSelectedLesson] = useState(null);
   const [banner, setBanner] = useState(null);
   const [darkMode, setDarkMode] = useState(false);
-
-  // ⬇️ тепер керуємо меню з Header через onMenuToggle
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const [showWelcome, setShowWelcome] = useState(false);
-  const WELCOME_VER = 2;
-  const welcomeKeyFor = (uid) => `welcome_seen_v${WELCOME_VER}_${uid}`;
+const [showWelcome, setShowWelcome] = useState(false);
+const WELCOME_VER = 2;
+const welcomeKeyFor = (uid) => `welcome_seen_v${WELCOME_VER}_${uid}`;
 
   useEffect(() => {
-    if (!user?.id) return;
-    const key = welcomeKeyFor(user.id);
-    const seenLocal = localStorage.getItem(key) === "1";
-    const seenSession = sessionStorage.getItem(key) === "1";
-    if (seenLocal || seenSession) return;
-    sessionStorage.setItem(key, "1");
-    setShowWelcome(true);
-  }, [user?.id]);
+  if (!user?.id) return;
 
-  const markWelcomeSeen = () => {
-    if (!user?.id) { setShowWelcome(false); return; }
-    const key = welcomeKeyFor(user.id);
-    localStorage.setItem(key, "1");
-    sessionStorage.setItem(key, "1");
-    setShowWelcome(false);
-  };
+  const key = welcomeKeyFor(user.id);
+  const seenLocal = localStorage.getItem(key) === "1";
+  const seenSession = sessionStorage.getItem(key) === "1";
 
+  // Якщо вже бачили — не показуємо
+  if (seenLocal || seenSession) return;
+
+  // Показуємо один раз у поточній сесії навіть без кліку користувача
+  sessionStorage.setItem(key, "1");
+  setShowWelcome(true);
+}, [user?.id]);
+
+// ⬇️ ДОДАЙ універсальний маркер «побачено»
+const markWelcomeSeen = () => {
+  if (!user?.id) { setShowWelcome(false); return; }
+  const key = welcomeKeyFor(user.id);
+  localStorage.setItem(key, "1");   // назавжди для цього користувача/версії
+  sessionStorage.setItem(key, "1"); // на поточну вкладку
+  setShowWelcome(false);
+};
+  
   const IMGUR_CLIENT_ID = "8f3cb6e4c248b26"; // як у BannerTab
 
   async function uploadToImgur(file) {
@@ -709,7 +712,7 @@ export default function CabinetPage() {
     }
   };
 
-  // ✅ Ручне завершення уроку
+  // ✅ Ручне завершення уроку (фікс: ставимо безумовно 100%)
   const markLessonComplete = async () => {
     if (!user?.id || !selectedLesson?.id) return;
 
@@ -758,22 +761,34 @@ export default function CabinetPage() {
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
-      {/* ✅ НОВЕ: спільний фіксований хедер (керує menuOpen через проп) */}
-      <Header onMenuToggle={setMenuOpen} />
 
       {showWelcome && (
-        <WelcomeModal
-          open={showWelcome}
-          onClose={markWelcomeSeen}
-          onStart={() => {
-            markWelcomeSeen();
-            setView("modules");
-          }}
-          t={t}
-          darkMode={darkMode}
-          user={user}
-        />
-      )}
+  <WelcomeModal
+    open={showWelcome}
+    onClose={markWelcomeSeen}            
+    onStart={() => {                     
+      markWelcomeSeen();
+      setView("modules");
+    }}
+    t={t}
+    darkMode={darkMode}
+    user={user}
+  />
+)}
+      
+      {/* HEADER */}
+      <header
+        className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-30 rounded-b-[6px] ${
+          darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/70"
+        }`}
+      >
+        <h1 className="font-bold bg-gradient-to-r from-fuchsia-500 to-rose-400 bg-clip-text text-transparent">
+          ANK Studio
+        </h1>
+        <button onClick={() => setMenuOpen(!menuOpen)}>
+          {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+        </button>
+      </header>
 
       {/* 🔲 Оверлей під сайдбаром (мобайл) */}
       {menuOpen && (
@@ -784,282 +799,283 @@ export default function CabinetPage() {
       )}
 
       {/* SIDEBAR — мобілка: випадає згори; десктоп: ліворуч як завжди */}
-      <aside
-   className={`
-     fixed md:static inset-x-0 top-16            /* відступ під хедер (64px) */
-     w-full md:w-72
-     h-[calc(100vh-64px)] md:h-screen            /* висота = екран - висота хедера */
-     md:h-auto
-     transition-transform duration-300
-     z-20 md:z-auto                               /* нижче за хедер (який z-30) */
-     border-b md:border-b-0 md:border-r
-     backdrop-blur-xl
-     ${menuOpen ? "translate-y-0" : "-translate-y-full md:translate-y-0"}
-     ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"}
-     pt-0 md:pt-0
-   `}
- >
-        {/* Кнопка закриття в самому меню (моб) */}
+<aside
+  className={`
+    fixed md:static inset-x-0 top-0
+    w-full md:w-72
+    h-[85vh] md:h-screen
+    md:h-auto
+    transition-transform duration-300
+    z-30 md:z-auto
+    border-b md:border-b-0 md:border-r
+    backdrop-blur-xl
+    ${menuOpen ? "translate-y-0" : "-translate-y-full md:translate-y-0"}
+    ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"}
+    pt-16 md:pt-0
+  `}
+>
+  {/* Кнопка закриття в самому меню (моб) */}
+  <button
+    onClick={() => setMenuOpen(false)}
+    className="md:hidden absolute top-4 right-4 p-2 rounded-full bg-white/70 text-pink-600 shadow"
+    aria-label="Close menu"
+  >
+    <X className="w-5 h-5" />
+  </button>
+
+  {/* ЄДИНА коренева обгортка всередині aside */}
+  <div className="flex flex-col h-full">
+    {/* Верхня прокручувана частина */}
+    <div className="p-6 flex-1 overflow-y-auto">
+      <div className="flex flex-col items-center text-center mb-4">
+        {/* Прихований інпут для вибору файлу */}
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onAvatarSelected}
+        />
+
+        {/* Кругла аватарка (клік — завантажити нову в Imgur) */}
         <button
-          onClick={() => setMenuOpen(false)}
-          className="md:hidden absolute top-4 right-4 p-2 rounded-full bg-white/70 text-pink-600 shadow"
-          aria-label="Close menu"
+          onClick={handleChooseAvatar}
+          title={t("Змінити аватар", "Сменить аватар")}
+          className="relative group"
         >
-          <X className="w-5 h-5" />
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt="Avatar"
+              className="w-20 h-20 rounded-full object-cover ring-2 ring-pink-300 shadow-md group-hover:scale-105 transition"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div
+              className={`w-20 h-20 rounded-full flex items-center justify-center ring-2 shadow-md group-hover:scale-105 transition ${
+                darkMode ? "ring-fuchsia-800/50 bg-[#15001f]" : "ring-pink-300 bg-pink-50"
+              }`}
+            >
+              <SquareUserRound className="w-10 h-10 text-pink-500" />
+            </div>
+          )}
+
+          {/* бейдж "Змінити" при ховері */}
+          <span
+            className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none ${
+              darkMode ? "bg-fuchsia-700 text-white" : "bg-pink-500 text-white"
+            }`}
+          >
+            {t("Змінити", "Сменить")}
+          </span>
         </button>
 
-        {/* ЄДИНА коренева обгортка всередині aside */}
-        <div className="flex flex-col h-full">
-          {/* Верхня прокручувана частина */}
-          <div className="p-6 flex-1 overflow-y-auto">
-            <div className="flex flex-col items-center text-center mb-4">
-              {/* Прихований інпут для вибору файлу */}
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={onAvatarSelected}
-              />
+        <h2 className="mt-3 font-bold text-lg">
+          {user.name || user.email.split("@")[0]}
+        </h2>
 
-              {/* Кругла аватарка */}
-              <button
-                onClick={handleChooseAvatar}
-                title={t("Змінити аватар", "Сменить аватар")}
-                className="relative group"
-              >
-                {user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt="Avatar"
-                    className="w-20 h-20 rounded-full object-cover ring-2 ring-pink-300 shadow-md group-hover:scale-105 transition"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div
-                    className={`w-20 h-20 rounded-full flex items-center justify-center ring-2 shadow-md group-hover:scale-105 transition ${
-                      darkMode ? "ring-fuchsia-800/50 bg-[#15001f]" : "ring-pink-300 bg-pink-50"
-                    }`}
-                  >
-                    <SquareUserRound className="w-10 h-10 text-pink-500" />
-                  </div>
-                )}
+        {/* 🔖 ТАРИФ: [бейдж] */}
+        <div className="mt-1 flex items-center gap-2">
+          <span className={`text-xs font-medium ${darkMode ? "text-fuchsia-200/80" : "text-gray-600"}`}>
+            {t("Тариф:", "Тариф:")}
+          </span>
 
-                <span
-                  className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none ${
-                    darkMode ? "bg-fuchsia-700 text-white" : "bg-pink-500 text-white"
-                  }`}
-                >
-                  {t("Змінити", "Сменить")}
-                </span>
-              </button>
-
-              <h2 className="mt-3 font-bold text-lg">
-                {user.name || user.email.split("@")[0]}
-              </h2>
-
-              {/* 🔖 ТАРИФ: [бейдж] */}
-              <div className="mt-1 flex items-center gap-2">
-                <span className={`text-xs font-medium ${darkMode ? "text-fuchsia-200/80" : "text-gray-600"}`}>
-                  {t("Тариф:", "Тариф:")}
-                </span>
-
-                {user.package === "pro" ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
-                    PRO
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
-                    {t("Самостійний", "Самостоятельный")}
-                  </span>
-                )}
-              </div>
-
-              <p className="text-sm opacity-70">
-                {t("Доступ до", "Доступ до")}: {user.expires_at}
-              </p>
-            </div>
-
-            {/* Загальний прогрес курсу */}
-            <div className="mb-4 px-3">
-              <p className="text-xs text-center font-medium text-pink-600">
-                {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
-              </p>
-              <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
-                  style={{ width: `${overallProgress}%` }}
-                />
-              </div>
-            </div>
-
-            {/* MODULES */}
-            {modules.length === 0 ? (
-              <p className="text-center text-sm opacity-70">
-                {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {modules.map((mod) => (
-                  <div key={mod.id} className="mb-2">
-                    <button
-                      onClick={() => toggleModule(mod.id)}
-                      className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
-                    >
-                      <span className="flex items-center gap-2">
-                        <BookOpen className="w-4 h-4" /> {mod.title}
-                      </span>
-                      <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
-                        {typeof mod.lessons === "number" ? mod.lessons : (lessons[mod.id]?.length ?? 0)}
-                      </span>
-                      {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
-                    </button>
-
-                    {mod.description && (
-                      <p className={`text-xs mt-1 ml-8 pr-4 leading-snug ${darkMode ? "text-fuchsia-200/70" : "text-gray-600"}`}>
-                        {mod.description}
-                      </p>
-                    )}
-
-                    {expanded === mod.id && (
-                      <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
-                        {lessons[mod.id]?.map((l) => {
-                          const prog = progress[l.id];
-                          const done = !!prog?.completed;
-                          const percent = done
-                            ? 100
-                            : (prog && prog.total_seconds > 0
-                                ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
-                                : 0);
-                          const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-                          return (
-                            <div
-                              key={l.id}
-                              onClick={() => {
-                                setSelectedLesson(l);
-                                localStorage.setItem("last_lesson", JSON.stringify(l));
-                                localStorage.setItem("last_view", "lesson");
-                                setMenuOpen(false);
-                              }}
-                              className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
-                                selectedLesson?.id === l.id
-                                  ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
-                                  : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                {done ? (
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="M9 12l2 2 4-4" />
-                                  </svg>
-                                ) : (
-                                  <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                                    <circle cx="12" cy="12" r="10" />
-                                  </svg>
-                                )}
-                                <span className="flex-1 truncate">{l.title}</span>
-                                {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
-                                {percent > 0 && (
-                                  <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
-                                    {percent}%
-                                  </span>
-                                )}
-                              </div>
-                              <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full ${done ? "bg-green-400" : percent > 0 ? "bg-gradient-to-r from-pink-400 to-rose-500" : "bg-transparent"}`}
-                                  style={{ width: `${percent}%`, transition: "width 0.7s ease-out", willChange: "width" }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-            
-            {/* ПІДТРИМКА — над футером сайдбару */}
-            <div className="mt-6">
-              <a
-                href="https://t.me/m/cE5yXCdSZTAy"
-                className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
-                  darkMode
-                    ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
-                    : "border-pink-200 bg-white/70 hover:bg-white"
-                }`}
-                title={t("Звернутися у підтримку", "Обратиться в поддержку")}
-              >
-                <HelpCircle className="w-4 h-4 text-pink-600" />
-                <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
-              </a>
-            </div>
-          </div>
-
-          {/* Нижній футер сайдбару */}
-          <div className="p-6 border-t border-pink-200/30 space-y-6">
-            {/* Темна тема */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Moon className="w-4 h-4 text-pink-500" />
-                <span>{t("Темна тема", "Тёмная тема")}</span>
-              </div>
-              <button
-                onClick={() => {
-                  const newMode = !darkMode;
-                  setDarkMode(newMode);
-                  document.documentElement.classList.toggle("dark", newMode);
-                  localStorage.setItem("theme", newMode ? "dark" : "light");
-                }}
-                className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
-                  darkMode ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" : "bg-pink-200"
-                }`}
-              >
-                <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${darkMode ? "translate-x-6" : "translate-x-0"}`}></span>
-              </button>
-            </div>
-
-            {/* Мова */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-pink-500" />
-                <span>{t("Мова", "Язык")}</span>
-              </div>
-              <div className="flex gap-2">
-                {["ru", "uk"].map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => {
-                      i18n.changeLanguage(lang);
-                      localStorage.setItem("lang", lang);
-                    }}
-                    className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
-                      i18n.language === lang ? "bg-pink-500 text-white border-pink-500" : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
-                    }`}
-                  >
-                    {lang.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Вихід */}
-            <button
-              onClick={handleLogout}
-              className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" /> {t("Вийти", "Выйти")}
-            </button>
-          </div>
+          {user.package === "pro" ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
+              PRO
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
+              {t("Самостійний", "Самостоятельный")}
+            </span>
+          )}
         </div>
-      </aside>
 
-      {/* Контент (зняв зайвий mt-16, бо spacer вже всередині Header) */}
-      <main className="flex-1 p-5 md:p-10 mt-0 overflow-y-auto">
+        <p className="text-sm opacity-70">
+          {t("Доступ до", "Доступ до")}: {user.expires_at}
+        </p>
+      </div>
+
+      {/* Загальний прогрес курсу */}
+      <div className="mb-4 px-3">
+        <p className="text-xs text-center font-medium text-pink-600">
+          {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
+        </p>
+        <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
+            style={{ width: `${overallProgress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* MODULES */}
+      {modules.length === 0 ? (
+        <p className="text-center text-sm opacity-70">
+          {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {modules.map((mod) => (
+            <div key={mod.id} className="mb-2">
+              <button
+                onClick={() => toggleModule(mod.id)}
+                className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
+              >
+                <span className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" /> {mod.title}
+                </span>
+                <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
+                  {typeof mod.lessons === "number" ? mod.lessons : (lessons[mod.id]?.length ?? 0)}
+                </span>
+                {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
+              </button>
+
+              {mod.description && (
+                <p className={`text-xs mt-1 ml-8 pr-4 leading-snug ${darkMode ? "text-fuchsia-200/70" : "text-gray-600"}`}>
+                  {mod.description}
+                </p>
+              )}
+
+              {expanded === mod.id && (
+                <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
+                  {lessons[mod.id]?.map((l) => {
+                    const prog = progress[l.id];
+                    const done = !!prog?.completed;
+                    const percent = done
+                      ? 100
+                      : (prog && prog.total_seconds > 0
+                          ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
+                          : 0);
+                    const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
+
+                    return (
+                      <div
+                        key={l.id}
+                        onClick={() => {
+                          setSelectedLesson(l);
+                          localStorage.setItem("last_lesson", JSON.stringify(l));
+                          localStorage.setItem("last_view", "lesson");
+                          setMenuOpen(false);
+                        }}
+                        className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
+                          selectedLesson?.id === l.id
+                            ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
+                            : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          {done ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M9 12l2 2 4-4" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                            </svg>
+                          )}
+                          <span className="flex-1 truncate">{l.title}</span>
+                          {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
+                          {percent > 0 && (
+                            <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
+                              {percent}%
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${done ? "bg-green-400" : percent > 0 ? "bg-gradient-to-r from-pink-400 to-rose-500" : "bg-transparent"}`}
+                            style={{ width: `${percent}%`, transition: "width 0.7s ease-out", willChange: "width" }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+      
+      {/* ПІДТРИМКА — над футером сайдбару */}
+      <div className="mt-6">
+        <a
+          href="https://t.me/m/cE5yXCdSZTAy"
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
+            darkMode
+              ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+              : "border-pink-200 bg-white/70 hover:bg-white"
+          }`}
+          title={t("Звернутися у підтримку", "Обратиться в поддержку")}
+        >
+          <HelpCircle className="w-4 h-4 text-pink-600" />
+          <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
+        </a>
+      </div>
+    </div>
+
+    {/* Нижній футер сайдбару */}
+    <div className="p-6 border-t border-pink-200/30 space-y-6">
+      {/* Темна тема */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Moon className="w-4 h-4 text-pink-500" />
+          <span>{t("Темна тема", "Тёмная тема")}</span>
+        </div>
+        <button
+          onClick={() => {
+            const newMode = !darkMode;
+            setDarkMode(newMode);
+            document.documentElement.classList.toggle("dark", newMode);
+            localStorage.setItem("theme", newMode ? "dark" : "light");
+          }}
+          className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
+            darkMode ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" : "bg-pink-200"
+          }`}
+        >
+          <span className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${darkMode ? "translate-x-6" : "translate-x-0"}`}></span>
+        </button>
+      </div>
+
+      {/* Мова */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-pink-500" />
+          <span>{t("Мова", "Язык")}</span>
+        </div>
+        <div className="flex gap-2">
+          {["ru", "uk"].map((lang) => (
+            <button
+              key={lang}
+              onClick={() => {
+                i18n.changeLanguage(lang);
+                localStorage.setItem("lang", lang);
+              }}
+              className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
+                i18n.language === lang ? "bg-pink-500 text-white border-pink-500" : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
+              }`}
+            >
+              {lang.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Вихід */}
+      <button
+        onClick={handleLogout}
+        className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
+      >
+        <LogOut className="w-4 h-4" /> {t("Вийти", "Выйти")}
+      </button>
+    </div>
+  </div>
+</aside>
+
+      {/* Контент */}
+      <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
         {banner && banner.active && (
           <div className="flex flex-col md:flex-row gap-4 mb-8">
             {/* 🖼 Основний банер */}
