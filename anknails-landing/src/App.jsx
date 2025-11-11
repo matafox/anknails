@@ -17,6 +17,7 @@ import PreEnrollPopup from "./components/PreEnrollPopup";
 import FaqSection from "./components/FaqSection";
 import CourseStart from "./components/CourseStart";
 import PrivacyPage from "./pages/Privacy";
+import TermsPage from "./pages/Terms";
 
 /* =========================
    Consent Banner (GA4, EU)
@@ -117,11 +118,14 @@ export default function App() {
     typeof window !== "undefined" ? window.location.hash || "" : ""
   );
 
-  // Авторедірект із прямого /privacy → #/privacy (уникає білого екрану)
+  // Авторедірект із прямих шляхів → hash-маршрути (щоб не ловити 404 на хостингу без SSR)
   useEffect(() => {
     if (typeof window !== "undefined") {
-      if (window.location.pathname.startsWith("/privacy") && !window.location.hash) {
+      const { pathname, hash } = window.location;
+      if (pathname.startsWith("/privacy") && !hash) {
         window.location.replace("/#/privacy");
+      } else if (pathname.startsWith("/terms") && !hash) {
+        window.location.replace("/#/terms");
       }
     }
   }, []);
@@ -151,6 +155,10 @@ export default function App() {
   const isPrivacy =
     (typeof window !== "undefined" && window.location.pathname.startsWith("/privacy")) ||
     hash.startsWith("#/privacy");
+
+  const isTerms =
+    (typeof window !== "undefined" && window.location.pathname.startsWith("/terms")) ||
+    hash.startsWith("#/terms");
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -191,8 +199,9 @@ export default function App() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // Окремий рендер сторінки політики
-  if (isPrivacy) {
+  // Рендер окремих статичних сторінок (privacy / terms)
+  if (isPrivacy || isTerms) {
+    const Page = isPrivacy ? PrivacyPage : TermsPage;
     return (
       <div
         className="relative min-h-screen flex flex-col 
@@ -201,7 +210,7 @@ export default function App() {
       >
         <Header onMenuToggle={(open) => setMenuOpen(open)} />
         <main className="flex-grow w-full px-4 sm:px-6 z-10 pt-24 sm:pt-28">
-          <PrivacyPage />
+          <Page />
         </main>
         <Footer />
         <ConsentBanner show={needConsent} onDecide={() => setNeedConsent(false)} />
