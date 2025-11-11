@@ -1000,8 +1000,8 @@ const markWelcomeSeen = () => {
         </div>
       )}
       
-      {/* ПІДТРИМКА — над футером сайдбару */}
-      <div className="mt-6">
+      {/* ПІДТРИМКА + ГОЛОВНА — згруповано, “Головна” одразу під “Підтримка” */}
+     <div className="mt-6 space-y-2">
         <a
           href="https://t.me/m/cE5yXCdSZTAy"
           className={`flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
@@ -1014,18 +1014,14 @@ const markWelcomeSeen = () => {
           <HelpCircle className="w-4 h-4 text-pink-600" />
           <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
         </a>
-      </div>
-    </div>
 
-         {/* 🏠 ГОЛОВНА — під підтримкою */}
-      <div className="mt-3">
         <button
           onClick={() => {
             setSelectedLesson(null);
             setView("dashboard");
             localStorage.setItem("last_view", "dashboard");
             setMenuOpen(false);
-            try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {}
+           try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {}
           }}
           className={`w-full flex items-center gap-2 px-3 py-2 rounded-lg border transition ${
             darkMode
