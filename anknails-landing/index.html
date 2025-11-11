@@ -1,35 +1,44 @@
 <!doctype html>
-<html lang="en">
+<html lang="uk">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <title>ANK Studio - Nail Course</title>
-    <link
-      rel="icon"
-      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>💅</text></svg>"
-    />
+
+    <link rel="icon"
+      href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2280%22>💅</text></svg>" />
+
     <script>
       try {
         const lang = localStorage.getItem("lang");
-        if (lang) localStorage.setItem("lang", lang);
         if (!lang) {
-          const browserLang = navigator.language.split("-")[0];
-          if (["ru", "uk", "pl", "en"].includes(browserLang)) {
-            localStorage.setItem("lang", browserLang);
-          } else {
-            localStorage.setItem("lang", "ru");
-          }
+          const l = navigator.language.split("-")[0];
+          localStorage.setItem("lang", ["ru","uk","pl","en"].includes(l) ? l : "ru");
         }
-      } catch (e) {
-        console.warn("Language sync error", e);
-      }
+      } catch {}
     </script>
-    <script src="https://widget.cloudinary.com/v2.0/global/all.js" type="text/javascript"></script>
-  </head>
 
+    <!-- GA4 -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QNZ703T32D"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
+      gtag('js', new Date());
+      gtag('config', 'G-QNZ703T32D', { send_page_view: true });
+
+      (function(){
+        const sendPV = () => gtag('event','page_view',{
+          page_location: location.href,
+          page_path: location.pathname + location.search,
+          page_title: document.title
+        });
+        const _ps = history.pushState, _rs = history.replaceState;
+        history.pushState = function(){ _ps.apply(this, arguments); setTimeout(sendPV,0); };
+        history.replaceState = function(){ _rs.apply(this, arguments); setTimeout(sendPV,0); };
+        addEventListener('popstate', sendPV);
+      })();
+    </script>
+  </head>
   <body class="bg-white dark:bg-neutral-900 transition-colors">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
