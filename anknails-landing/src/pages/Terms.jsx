@@ -18,8 +18,10 @@ export default function TermsPage() {
   const { i18n } = useTranslation();
   const T = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
+  // ⬇️ титул і скрол-ресет при монтуванні/зміні мови
   useEffect(() => {
     document.title = T("Умови користування — ANK Studio", "Условия пользования — ANK Studio");
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
   }, [i18n.language]);
 
   const backHome = () => {
