@@ -12,19 +12,31 @@ export default function Header({ onMenuToggle }) {
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  useEffect(() => setIsAdmin(localStorage.getItem("admin_token") === "true"), []);
+  // ✅ локальний хелпер для RU/UK
+  const T = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
-    const isDark = saved === "dark" || (!saved && prefersDark);
-    setDarkMode(isDark);
-    document.documentElement.classList.toggle("dark", isDark);
+    try {
+      setIsAdmin(localStorage.getItem("admin_token") === "true");
+    } catch {}
+  }, []);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("theme");
+      const prefersDark =
+        typeof window !== "undefined" &&
+        window.matchMedia &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches;
+      const isDark = saved === "dark" || (!saved && prefersDark);
+      setDarkMode(isDark);
+      document.documentElement.classList.toggle("dark", isDark);
+    } catch {}
   }, []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
-    window.addEventListener("scroll", onScroll);
+    window.addEventListener("scroll", onScroll, { passive: true });
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
@@ -32,12 +44,16 @@ export default function Header({ onMenuToggle }) {
     const v = !darkMode;
     setDarkMode(v);
     document.documentElement.classList.toggle("dark", v);
-    localStorage.setItem("theme", v ? "dark" : "light");
+    try {
+      localStorage.setItem("theme", v ? "dark" : "light");
+    } catch {}
   };
 
   const changeLanguage = (lng) => {
     i18n.changeLanguage(lng);
-    localStorage.setItem("lang", lng);
+    try {
+      localStorage.setItem("lang", lng);
+    } catch {}
   };
 
   const toggleMenu = () => {
@@ -47,7 +63,9 @@ export default function Header({ onMenuToggle }) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem("admin_token");
+    try {
+      localStorage.removeItem("admin_token");
+    } catch {}
     window.location.href = "/";
   };
 
@@ -56,9 +74,11 @@ export default function Header({ onMenuToggle }) {
       {/* ФІКСОВАНИЙ ХЕДЕР */}
       <header
         className={`fixed inset-x-0 top-0 z-[9999] 
-          ${scrolled
-            ? "backdrop-blur-xl bg-white/80 dark:bg-black/40 shadow-[0_2px_24px_rgba(255,0,128,0.15)] border-b border-pink-400/10"
-            : "bg-white/60 dark:bg-black/30 backdrop-blur-xl border-b border-transparent"}
+          ${
+            scrolled
+              ? "backdrop-blur-xl bg-white/80 dark:bg-black/40 shadow-[0_2px_24px_rgba(255,0,128,0.15)] border-b border-pink-400/10"
+              : "bg-white/60 dark:bg-black/30 backdrop-blur-xl border-b border-transparent"
+          }
         `}
       >
         <div className="h-16 md:h-20">
@@ -73,9 +93,15 @@ export default function Header({ onMenuToggle }) {
 
             {/* Центр — навігація (десктоп) */}
             <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-700 dark:text-fuchsia-100">
-              <a href="#modules" className="hover:text-pink-500">Модулі</a>
-              <a href="#forwhom" className="hover:text-pink-500">Для кого курс</a>
-              <a href="#tariffs" className="hover:text-pink-500">Тарифи</a>
+              <a href="#modules" className="hover:text-pink-500">
+                {T("Модулі", "Модули")}
+              </a>
+              <a href="#forwhom" className="hover:text-pink-500">
+                {T("Для кого курс", "Для кого курс")}
+              </a>
+              <a href="#tariffs" className="hover:text-pink-500">
+                {T("Тарифи", "Тарифы")}
+              </a>
               <a href="#faq" className="hover:text-pink-500">FAQ</a>
             </nav>
 
@@ -92,7 +118,7 @@ export default function Header({ onMenuToggle }) {
 
               {/* Мова — лише десктоп; на мобілці перенесено в меню */}
               <div className="hidden sm:flex items-center gap-1">
-                {["ru","uk"].map(l => (
+                {["ru", "uk"].map((l) => (
                   <button
                     key={l}
                     onClick={() => changeLanguage(l)}
@@ -115,14 +141,14 @@ export default function Header({ onMenuToggle }) {
                     className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white bg-gradient-to-r from-pink-500 to-rose-500"
                   >
                     <Settings className="w-4 h-4" />
-                    {i18n.language === "ru" ? "Админ панель" : "Адмін панель"}
+                    {T("Адмін панель", "Админ панель")}
                   </a>
                   <button
                     onClick={handleLogout}
                     className="hidden sm:inline-flex items-center gap-2 px-3 py-2 rounded-xl text-pink-600 hover:text-rose-500"
                   >
                     <LogOut className="w-4 h-4" />
-                    {i18n.language === "ru" ? "Выйти" : "Вийти"}
+                    {T("Вийти", "Выйти")}
                   </button>
                 </>
               ) : (
@@ -130,7 +156,7 @@ export default function Header({ onMenuToggle }) {
                   href="/login"
                   className="hidden sm:inline-flex items-center gap-2 px-4 py-2 rounded-xl text-white bg-gradient-to-r from-pink-500 to-rose-500"
                 >
-                  {i18n.language === "ru" ? "Доступ к платформе" : "Доступ до платформи"}
+                  {T("Доступ до платформи", "Доступ к платформе")}
                 </a>
               )}
 
@@ -140,7 +166,11 @@ export default function Header({ onMenuToggle }) {
                 className="md:hidden p-2 rounded-xl bg-white/50 dark:bg-white/10 border border-white/30"
                 aria-label="menu"
               >
-                {menuOpen ? <X className="w-6 h-6 text-pink-500" /> : <Menu className="w-6 h-6 text-pink-400" />}
+                {menuOpen ? (
+                  <X className="w-6 h-6 text-pink-500" />
+                ) : (
+                  <Menu className="w-6 h-6 text-pink-400" />
+                )}
               </button>
             </div>
           </div>
@@ -152,31 +182,53 @@ export default function Header({ onMenuToggle }) {
 
       {/* Мобільний дропдаун (під хедером) */}
       {menuOpen && (
-        <div className="fixed top-16 md:top-20 inset-x-0 z-[9998] bg-white/95 dark:bg-[#0c0016]/95 backdrop-blur-xl border-b border-pink-200/40">
+        <div className="fixed top-16 md:top-20 inset-x-0 z-[9998] bg-white/95 dark:bg-[#0c0016]/95 backdrop-blur-xl border-b border-pink-200/40 dark:border-fuchsia-900/30">
           <div className="max-w-7xl mx-auto px-4 py-4 grid gap-2">
-                  <a href="#modules" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
-        {T("Модулі", "Модули")}
-      </a>
-      <a href="#forwhom" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
-        {T("Для кого курс", "Для кого курс")}
-      </a>
-      <a href="#tariffs" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
-        {T("Тарифи", "Тарифы")}
-      </a>
-      <a href="#faq" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
-        {T("FAQ", "FAQ")}
-      </a>
-            {/* RU / UK по центру без текстів та іконок */}
+            <a
+              href="#modules"
+              onClick={() => setMenuOpen(false)}
+              className="py-3 font-semibold"
+            >
+              {T("Модулі", "Модули")}
+            </a>
+            <a
+              href="#forwhom"
+              onClick={() => setMenuOpen(false)}
+              className="py-3 font-semibold"
+            >
+              {T("Для кого курс", "Для кого курс")}
+            </a>
+            <a
+              href="#tariffs"
+              onClick={() => setMenuOpen(false)}
+              className="py-3 font-semibold"
+            >
+              {T("Тарифи", "Тарифы")}
+            </a>
+            <a
+              href="#faq"
+              onClick={() => setMenuOpen(false)}
+              className="py-3 font-semibold"
+            >
+              FAQ
+            </a>
+
+            {/* RU / UK по центру */}
             <div className="mt-2 pt-3 border-t border-pink-200/40 dark:border-fuchsia-900/30">
               <div className="flex items-center justify-center gap-3">
                 {["ru", "uk"].map((lng) => (
                   <button
                     key={lng}
-                    onClick={() => { changeLanguage(lng); setMenuOpen(false); }}
+                    onClick={() => {
+                      changeLanguage(lng);
+                      setMenuOpen(false);
+                    }}
                     className={`px-4 py-1.5 text-sm rounded-lg border font-semibold
-                      ${i18n.language === lng
-                        ? "bg-pink-500 text-white border-pink-500 shadow-[0_0_10px_rgba(255,0,128,0.35)]"
-                        : "bg-pink-50 text-gray-700 border-pink-200 hover:bg-pink-100"}`}
+                      ${
+                        i18n.language === lng
+                          ? "bg-pink-500 text-white border-pink-500 shadow-[0_0_10px_rgba(255,0,128,0.35)]"
+                          : "bg-pink-50 text-gray-700 border-pink-200 hover:bg-pink-100"
+                      }`}
                   >
                     {lng.toUpperCase()}
                   </button>
@@ -194,13 +246,16 @@ export default function Header({ onMenuToggle }) {
                     className="inline-flex w-full items-center justify-center gap-2 px-4 py-3 rounded-xl text-white bg-gradient-to-r from-pink-500 to-rose-500"
                   >
                     <Settings className="w-4 h-4" />
-                    {i18n.language === "ru" ? "Админ панель" : "Адмін панель"}
+                    {T("Адмін панель", "Админ панель")}
                   </a>
                   <button
-                    onClick={() => { setMenuOpen(false); handleLogout(); }}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleLogout();
+                    }}
                     className="mt-2 w-full py-3 text-pink-600 font-semibold"
                   >
-                    {i18n.language === "ru" ? "Выйти" : "Вийти"}
+                    {T("Вийти", "Выйти")}
                   </button>
                 </>
               ) : (
@@ -209,7 +264,7 @@ export default function Header({ onMenuToggle }) {
                   onClick={() => setMenuOpen(false)}
                   className="inline-flex w-full items-center justify-center px-4 py-3 rounded-xl text-white bg-gradient-to-r from-pink-500 to-rose-500"
                 >
-                  {i18n.language === "ru" ? "Доступ к платформе" : "Доступ до платформи"}
+                  {T("Доступ до платформи", "Доступ к платформе")}
                 </a>
               )}
             </div>
