@@ -228,7 +228,7 @@ export default function TrafficTab({ darkMode, i18n }) {
           <div className="flex items-center gap-2 mb-2">
             <Activity className="w-5 h-5 text-pink-500" />
             <p className="text-sm font-semibold">
-              {t("Активні користувачі (Realtime)", "Активные пользователи (Realtime)")}
+              {t("Активні користувачі (Наживо)", "Активные пользователи (Наживо)")}
             </p>
           </div>
           <p className="text-4xl font-extrabold text-pink-500">
