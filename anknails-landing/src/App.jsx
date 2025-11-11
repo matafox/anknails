@@ -1,3 +1,4 @@
+// src/App.jsx
 import { useState, useEffect } from "react";
 import { ChevronUp } from "lucide-react";
 import { useTranslation } from "react-i18next";
@@ -16,6 +17,7 @@ import TariffsSection from "./components/TariffsSection";
 import PreEnrollPopup from "./components/PreEnrollPopup";
 import FaqSection from "./components/FaqSection";
 import CourseStart from "./components/CourseStart";
+import PrivacyPage from "./pages/Privacy";
 
 /* =========================
    Consent Banner (GA4, EU)
@@ -23,7 +25,6 @@ import CourseStart from "./components/CourseStart";
 function ConsentBanner({ show, onDecide }) {
   const { i18n } = useTranslation();
   const T = (ua, ru) => (i18n.language === "ru" ? ru : ua);
-
   if (!show) return null;
 
   const applyConsent = (granted) => {
@@ -31,20 +32,18 @@ function ConsentBanner({ show, onDecide }) {
       const g = typeof window !== "undefined" ? window.gtag : null;
       const val = granted ? "granted" : "denied";
 
-      // Оновлюємо Consent Mode (ми керуємо лише аналітикою; реклама = denied)
-      g && g("consent", "update", {
-        ad_storage: "denied",
-        ad_user_data: "denied",
-        ad_personalization: "denied",
-        analytics_storage: val,
-        functionality_storage: "granted",
-        security_storage: "granted",
-      });
+      g &&
+        g("consent", "update", {
+          ad_storage: "denied",
+          ad_user_data: "denied",
+          ad_personalization: "denied",
+          analytics_storage: val,
+          functionality_storage: "granted",
+          security_storage: "granted",
+        });
 
-      // Зберігаємо вибір
       localStorage.setItem("ga_consent", val);
 
-      // Після "Прийняти" — одразу відправимо page_view
       if (granted && g) {
         g("event", "page_view", {
           page_location: location.href,
@@ -76,7 +75,8 @@ function ConsentBanner({ show, onDecide }) {
               <a
                 href="/privacy"
                 className="underline decoration-pink-400/70 hover:decoration-pink-500 text-pink-600 dark:text-fuchsia-300"
-                target="_blank" rel="noreferrer"
+                target="_blank"
+                rel="noreferrer"
               >
                 {T("Детальніше про приватність", "Подробнее о приватности")}
               </a>
@@ -114,9 +114,19 @@ export default function App() {
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
-
-  // Чи потрібно показати банер згоди
   const [needConsent, setNeedConsent] = useState(false);
+
+  // 🔀 Ранній рендер сторінки /privacy без роутера
+  const path = typeof window !== "undefined" ? window.location.pathname : "/";
+  if (path.startsWith("/privacy")) {
+    return (
+      <div className="min-h-screen flex flex-col">
+        <Header onMenuToggle={(open) => setMenuOpen(open)} />
+        <PrivacyPage />
+        <Footer />
+      </div>
+    );
+  }
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -137,14 +147,15 @@ export default function App() {
       const g = typeof window !== "undefined" ? window.gtag : null;
 
       if (saved === "granted" || saved === "denied") {
-        g && g("consent", "update", {
-          ad_storage: "denied",
-          ad_user_data: "denied",
-          ad_personalization: "denied",
-          analytics_storage: saved,
-          functionality_storage: "granted",
-          security_storage: "granted",
-        });
+        g &&
+          g("consent", "update", {
+            ad_storage: "denied",
+            ad_user_data: "denied",
+            ad_personalization: "denied",
+            analytics_storage: saved,
+            functionality_storage: "granted",
+            security_storage: "granted",
+          });
         setNeedConsent(false);
       } else {
         setNeedConsent(true);
