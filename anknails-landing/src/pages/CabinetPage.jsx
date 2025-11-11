@@ -785,20 +785,20 @@ export default function CabinetPage() {
 
       {/* SIDEBAR — мобілка: випадає згори; десктоп: ліворуч як завжди */}
       <aside
-        className={`
-          fixed md:static inset-x-0 top-0
-          w-full md:w-72
-          h-[85vh] md:h-screen
-          md:h-auto
-          transition-transform duration-300
-          z-30 md:z-auto
-          border-b md:border-b-0 md:border-r
-          backdrop-blur-xl
-          ${menuOpen ? "translate-y-0" : "-translate-y-full md:translate-y-0"}
-          ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"}
-          pt-16 md:pt-0
-        `}
-      >
+   className={`
+     fixed md:static inset-x-0 top-16            /* відступ під хедер (64px) */
+     w-full md:w-72
+     h-[calc(100vh-64px)] md:h-screen            /* висота = екран - висота хедера */
+     md:h-auto
+     transition-transform duration-300
+     z-20 md:z-auto                               /* нижче за хедер (який z-30) */
+     border-b md:border-b-0 md:border-r
+     backdrop-blur-xl
+     ${menuOpen ? "translate-y-0" : "-translate-y-full md:translate-y-0"}
+     ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"}
+     pt-0 md:pt-0
+   `}
+ >
         {/* Кнопка закриття в самому меню (моб) */}
         <button
           onClick={() => setMenuOpen(false)}
