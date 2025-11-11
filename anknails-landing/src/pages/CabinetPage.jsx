@@ -799,7 +799,7 @@ const markWelcomeSeen = () => {
         />
       )}
 
-      {/* SIDEBAR — мобілка: випадає згори; десктоп: ліворуч як завжди */}
+{/* SIDEBAR — мобілка: випадає згори; десктоп: ліворуч як завжди */}
 <aside
   className={`
     fixed md:static inset-x-0 top-0
@@ -999,43 +999,44 @@ const markWelcomeSeen = () => {
           ))}
         </div>
       )}
-      
-    {/* ПІДТРИМКА + ГОЛОВНА — поруч */}
-<div className="mt-6">
-  <div className="grid grid-cols-2 gap-2">
-    <a
-      href="https://t.me/m/cE5yXCdSZTAy"
-      className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition ${
-        darkMode
-          ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
-          : "border-pink-200 bg-white/70 hover:bg-white"
-      }`}
-      title={t("Звернутися у підтримку", "Обратиться в поддержку")}
-    >
-      <HelpCircle className="w-4 h-4 text-pink-600" />
-      <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
-    </a>
 
-    <button
-      onClick={() => {
-        setSelectedLesson(null);
-        setView("dashboard");
-        localStorage.setItem("last_view", "dashboard");
-        setMenuOpen(false);
-        try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {}
-      }}
-      className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition ${
-        darkMode
-          ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
-          : "border-pink-200 bg-white/70 hover:bg-white"
-      }`}
-      title={t("Перейти на головну", "Перейти на главную")}
-    >
-      <Home className="w-4 h-4 text-pink-600" />
-      <span className="text-pink-600 font-medium">{t("Головна", "Главная")}</span>
-    </button>
-  </div>
-</div>
+      {/* ПІДТРИМКА + ГОЛОВНА — поруч (дві кнопки у ряд) */}
+      <div className="mt-6">
+        <div className="grid grid-cols-2 gap-2">
+          <a
+            href="https://t.me/m/cE5yXCdSZTAy"
+            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition ${
+              darkMode
+                ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+                : "border-pink-200 bg-white/70 hover:bg-white"
+            }`}
+            title={t("Звернутися у підтримку", "Обратиться в поддержку")}
+          >
+            <HelpCircle className="w-4 h-4 text-pink-600" />
+            <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
+          </a>
+
+          <button
+            onClick={() => {
+              setSelectedLesson(null);
+              setView("dashboard");
+              localStorage.setItem("last_view", "dashboard");
+              setMenuOpen(false);
+              try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {}
+            }}
+            className={`flex items-center justify-center gap-2 px-3 py-2 rounded-lg border transition ${
+              darkMode
+                ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+                : "border-pink-200 bg-white/70 hover:bg-white"
+            }`}
+            title={t("Перейти на головну", "Перейти на главную")}
+          >
+            <Home className="w-4 h-4 text-pink-600" />
+            <span className="text-pink-600 font-medium">{t("Головна", "Главная")}</span>
+          </button>
+        </div>
+      </div>
+    </div>
 
     {/* Нижній футер сайдбару */}
     <div className="p-6 border-t border-pink-200/30 space-y-6">
