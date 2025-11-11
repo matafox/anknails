@@ -31,21 +31,22 @@ function ConsentBanner({ show, onDecide }) {
       const g = typeof window !== "undefined" ? window.gtag : null;
       const val = granted ? "granted" : "denied";
 
-      g && g("consent", "update", {
-        ad_storage: "denied",
-        ad_user_data: "denied",
-        ad_personalization: "denied",
-        analytics_storage: val,
-        functionality_storage: "granted",
-        security_storage: "granted",
-      });
+      g &&
+        g("consent", "update", {
+          ad_storage: "denied",
+          ad_user_data: "denied",
+          ad_personalization: "denied",
+          analytics_storage: val,
+          functionality_storage: "granted",
+          security_storage: "granted",
+        });
 
       localStorage.setItem("ga_consent", val);
 
       if (granted && g) {
         g("event", "page_view", {
           page_location: location.href,
-          page_path: location.pathname + location.search,
+          page_path: location.hash || location.pathname + location.search,
           page_title: document.title,
         });
       }
@@ -55,9 +56,11 @@ function ConsentBanner({ show, onDecide }) {
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-[10000] px-3 pb-3 sm:px-6 sm:pb-6 pointer-events-none">
-      <div className="pointer-events-auto max-w-5xl mx-auto rounded-2xl border shadow-xl 
-                      bg-white/90 dark:bg-[#141017]/90 backdrop-blur-md 
-                      border-pink-200/60 dark:border-fuchsia-900/40 p-4 sm:p-5">
+      <div
+        className="pointer-events-auto max-w-5xl mx-auto rounded-2xl border shadow-xl 
+        bg-white/90 dark:bg-[#141017]/90 backdrop-blur-md 
+        border-pink-200/60 dark:border-fuchsia-900/40 p-4 sm:p-5"
+      >
         <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
           <div className="text-left flex-1">
             <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
@@ -68,7 +71,6 @@ function ConsentBanner({ show, onDecide }) {
                 "Ми використовуємо Google Analytics для покращення платформи. Прийми або відхили аналітичні файли cookie.",
                 "Мы используем Google Analytics для улучшения платформы. Примите или отклоните аналитические файлы cookie."
               )}{" "}
-              {/* 👇 відкриваємо hash-маршрут, щоб не було 404 */}
               <a
                 href="#/privacy"
                 className="underline decoration-pink-400/70 hover:decoration-pink-500 text-pink-600 dark:text-fuchsia-300"
@@ -110,37 +112,44 @@ export default function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
   const [needConsent, setNeedConsent] = useState(false);
-
-  // стейт, щоб реагувати на зміну хешу
   const [hash, setHash] = useState(
-    typeof window !== "undefined" ? window.location.hash : ""
+    typeof window !== "undefined" ? window.location.hash || "" : ""
   );
 
+  // Авторедірект із прямого /privacy → #/privacy (уникає білого екрану)
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (window.location.pathname.startsWith("/privacy") && !window.location.hash) {
+        window.location.replace("/#/privacy");
+      }
+    }
+  }, []);
+
+  // Слухаємо hash-навігацію
   useEffect(() => {
     const onHash = () => setHash(window.location.hash || "");
     window.addEventListener("hashchange", onHash);
     return () => window.removeEventListener("hashchange", onHash);
   }, []);
 
-  // ✅ ранній рендер privacy для:
-  // 1) прямих переходів /privacy (якщо є редірект на index.html)
-  // 2) hash-маршруту #/privacy (працює завжди, без налаштувань сервера)
-  const path = typeof window !== "undefined" ? window.location.pathname : "/";
-  const search = typeof window !== "undefined" ? window.location.search : "";
-  const isPrivacy =
-    path.startsWith("/privacy") ||
-    hash.startsWith("#/privacy") ||
-    new URLSearchParams(search).get("page") === "privacy";
+  // GA page_view на зміну хешу (коли є згода)
+  useEffect(() => {
+    try {
+      const g = window.gtag;
+      const consent = localStorage.getItem("ga_consent");
+      if (g && consent === "granted") {
+        g("event", "page_view", {
+          page_location: location.href,
+          page_path: location.hash || location.pathname + location.search,
+          page_title: document.title,
+        });
+      }
+    } catch {}
+  }, [hash]);
 
-  if (isPrivacy) {
-    return (
-      <div className="min-h-screen flex flex-col">
-        <Header onMenuToggle={(open) => setMenuOpen(open)} />
-        <PrivacyPage />
-        <Footer />
-      </div>
-    );
-  }
+  const isPrivacy =
+    (typeof window !== "undefined" && window.location.pathname.startsWith("/privacy")) ||
+    hash.startsWith("#/privacy");
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -161,14 +170,15 @@ export default function App() {
       const g = typeof window !== "undefined" ? window.gtag : null;
 
       if (saved === "granted" || saved === "denied") {
-        g && g("consent", "update", {
-          ad_storage: "denied",
-          ad_user_data: "denied",
-          ad_personalization: "denied",
-          analytics_storage: saved,
-          functionality_storage: "granted",
-          security_storage: "granted",
-        });
+        g &&
+          g("consent", "update", {
+            ad_storage: "denied",
+            ad_user_data: "denied",
+            ad_personalization: "denied",
+            analytics_storage: saved,
+            functionality_storage: "granted",
+            security_storage: "granted",
+          });
         setNeedConsent(false);
       } else {
         setNeedConsent(true);
@@ -180,6 +190,25 @@ export default function App() {
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
 
+  // Окремий рендер сторінки політики
+  if (isPrivacy) {
+    return (
+      <div
+        className="relative min-h-screen flex flex-col 
+        bg-gradient-to-b from-[#f6f0ff] via-[#fff] to-[#fdf9ff] 
+        dark:from-[#100d16] dark:via-[#18141f] dark:to-[#100d16]"
+      >
+        <Header onMenuToggle={(open) => setMenuOpen(open)} />
+        <main className="flex-grow w-full px-4 sm:px-6 z-10 pt-24 sm:pt-28">
+          <PrivacyPage />
+        </main>
+        <Footer />
+        <ConsentBanner show={needConsent} onDecide={() => setNeedConsent(false)} />
+      </div>
+    );
+  }
+
+  // Головна
   return (
     <div
       className="relative min-h-screen flex flex-col justify-between items-center 
@@ -247,6 +276,7 @@ export default function App() {
 
       <Footer />
 
+      {/* Банер згоди */}
       <ConsentBanner show={needConsent} onDecide={() => setNeedConsent(false)} />
 
       {showScrollTop && !menuOpen && !popupVisible && (
