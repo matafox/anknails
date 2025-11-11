@@ -210,10 +210,6 @@ export default function TrafficTab({ darkMode, i18n }) {
 
         {isGaId(gaId) && (
           <div className="mt-4 flex flex-wrap items-center gap-2">
-            <span className="text-xs opacity-80">
-              {t("GA підключено у проєкті. Нічого більше вставляти не треба.",
-                 "GA подключён в проекте. Ничего вставлять не нужно.")}
-            </span>
             <button
               onClick={sendTestEvent}
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-semibold bg-gradient-to-r from-pink-500 to-rose-500 text-white hover:scale-[1.02] transition"
