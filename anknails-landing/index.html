@@ -19,41 +19,71 @@
     </script>
 
     <!-- GA4 -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-QNZ703T3ZD"></script>
-<script>
-  window.dataLayer = window.dataLayer || [];
-  function gtag(){ dataLayer.push(arguments); }
+    <script>
+      // DataLayer + Consent default (нічого аналітичного до згоди)
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){ dataLayer.push(arguments); }
 
-  gtag('js', new Date());
-  
-  gtag('config', 'G-QNZ703T3ZD', { send_page_view: false });
-
-  (function () {
-    let lastPath = null;
-    const sendPV = () => {
-      const path = location.pathname + location.search;
-      if (path === lastPath) return;      // анти-дубль
-      lastPath = path;
-      gtag('event', 'page_view', {
-        page_location: location.href,
-        page_path: path,
-        page_title: document.title
+      gtag('consent', 'default', {
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        analytics_storage: 'denied',
+        functionality_storage: 'granted',
+        security_storage: 'granted'
       });
-    };
+    </script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-QNZ703T3ZD"></script>
+    <script>
+      gtag('js', new Date());
 
-    if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      sendPV();
-    } else {
-      addEventListener('DOMContentLoaded', sendPV);
-    }
-    
-    const _ps = history.pushState, _rs = history.replaceState;
-    history.pushState = function () { _ps.apply(this, arguments); setTimeout(sendPV, 0); };
-    history.replaceState = function () { _rs.apply(this, arguments); setTimeout(sendPV, 0); };
-    addEventListener('popstate', sendPV);
-  })();
-</script>
+      
+      gtag('config', 'G-QNZ703T3ZD', {
+        send_page_view: false,
+        anonymize_ip: true
+      });
+
+      (function () {
+        let lastPath = null;
+
+        const canSend = () => {
+          try { return localStorage.getItem('ga_consent') === 'granted'; }
+          catch { return false; }
+        };
+
+        const sendPV = () => {
+          
+          if (!canSend()) return;
+
+          const path = location.pathname + location.search;
+          if (path === lastPath) return; // анти-дубль
+          lastPath = path;
+
+          gtag('event', 'page_view', {
+            page_location: location.href,
+            page_path: path,
+            page_title: document.title
+          });
+        };
+
+        
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          sendPV();
+        } else {
+          addEventListener('DOMContentLoaded', sendPV);
+        }
+
+       
+        const _ps = history.pushState, _rs = history.replaceState;
+        history.pushState = function () { _ps.apply(this, arguments); setTimeout(sendPV, 0); };
+        history.replaceState = function () { _rs.apply(this, arguments); setTimeout(sendPV, 0); };
+        addEventListener('popstate', sendPV);
+
+       
+      })();
+    </script>
   </head>
+
   <body class="bg-white dark:bg-neutral-900 transition-colors">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
