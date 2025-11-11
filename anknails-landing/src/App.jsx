@@ -17,11 +17,106 @@ import PreEnrollPopup from "./components/PreEnrollPopup";
 import FaqSection from "./components/FaqSection";
 import CourseStart from "./components/CourseStart";
 
+/* =========================
+   Consent Banner (GA4, EU)
+   ========================= */
+function ConsentBanner({ show, onDecide }) {
+  const { i18n } = useTranslation();
+  const T = (ua, ru) => (i18n.language === "ru" ? ru : ua);
+
+  if (!show) return null;
+
+  const applyConsent = (granted) => {
+    try {
+      const g = typeof window !== "undefined" ? window.gtag : null;
+      const val = granted ? "granted" : "denied";
+
+      // Оновлюємо Consent Mode (ми керуємо лише аналітикою; реклама = denied)
+      g && g("consent", "update", {
+        ad_storage: "denied",
+        ad_user_data: "denied",
+        ad_personalization: "denied",
+        analytics_storage: val,
+        functionality_storage: "granted",
+        security_storage: "granted",
+      });
+
+      // Зберігаємо вибір
+      localStorage.setItem("ga_consent", val);
+
+      // Після "Прийняти" — одразу відправимо page_view
+      if (granted && g) {
+        g("event", "page_view", {
+          page_location: location.href,
+          page_path: location.pathname + location.search,
+          page_title: document.title,
+        });
+      }
+    } catch {}
+    onDecide?.();
+  };
+
+  return (
+    <div className="fixed inset-x-0 bottom-0 z-[10000] px-3 pb-3 sm:px-6 sm:pb-6 pointer-events-none">
+      <div
+        className="pointer-events-auto max-w-5xl mx-auto rounded-2xl border shadow-xl 
+        bg-white/90 dark:bg-[#141017]/90 backdrop-blur-md 
+        border-pink-200/60 dark:border-fuchsia-900/40 p-4 sm:p-5"
+      >
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4">
+          <div className="text-left flex-1">
+            <h3 className="text-base sm:text-lg font-semibold text-gray-900 dark:text-white">
+              {T("Аналітичні cookies", "Аналитические cookies")}
+            </h3>
+            <p className="text-sm sm:text-[15px] text-gray-600 dark:text-gray-300 mt-1">
+              {T(
+                "Ми використовуємо Google Analytics для покращення платформи. Прийми або відхили аналітичні файли cookie.",
+                "Мы используем Google Analytics для улучшения платформы. Примите или отклоните аналитические файлы cookie."
+              )}{" "}
+              <a
+                href="/privacy"
+                className="underline decoration-pink-400/70 hover:decoration-pink-500 text-pink-600 dark:text-fuchsia-300"
+                target="_blank" rel="noreferrer"
+              >
+                {T("Детальніше про приватність", "Подробнее о приватности")}
+              </a>
+              .
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2 sm:gap-3">
+            <button
+              onClick={() => applyConsent(false)}
+              className="px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold
+                         border border-pink-300/70 dark:border-fuchsia-800/60
+                         text-pink-700 dark:text-fuchsia-200
+                         hover:bg-pink-50 dark:hover:bg-white/5 transition"
+            >
+              {T("Відхилити", "Отклонить")}
+            </button>
+            <button
+              onClick={() => applyConsent(true)}
+              className="px-3 sm:px-4 py-2 rounded-lg text-sm font-semibold text-white
+                         bg-gradient-to-r from-fuchsia-500 to-pink-500
+                         hover:scale-[1.02] active:scale-[0.99] transition shadow"
+            >
+              {T("Прийняти", "Принять")}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export default function App() {
   const { t, i18n } = useTranslation();
   const [showScrollTop, setShowScrollTop] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [popupVisible, setPopupVisible] = useState(false);
+
+  // Чи потрібно показати банер згоди
+  const [needConsent, setNeedConsent] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setShowScrollTop(window.scrollY > 400);
@@ -33,6 +128,30 @@ export default function App() {
     const handleMenuToggle = (e) => setMenuOpen(e.detail);
     window.addEventListener("menu-toggle", handleMenuToggle);
     return () => window.removeEventListener("menu-toggle", handleMenuToggle);
+  }, []);
+
+  // Ініціалізація Consent Mode з localStorage
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem("ga_consent");
+      const g = typeof window !== "undefined" ? window.gtag : null;
+
+      if (saved === "granted" || saved === "denied") {
+        g && g("consent", "update", {
+          ad_storage: "denied",
+          ad_user_data: "denied",
+          ad_personalization: "denied",
+          analytics_storage: saved,
+          functionality_storage: "granted",
+          security_storage: "granted",
+        });
+        setNeedConsent(false);
+      } else {
+        setNeedConsent(true);
+      }
+    } catch {
+      setNeedConsent(true);
+    }
   }, []);
 
   const scrollToTop = () => window.scrollTo({ top: 0, behavior: "smooth" });
@@ -103,6 +222,9 @@ export default function App() {
       </main>
 
       <Footer />
+
+      {/* Банер згоди — завжди зверху всіх елементів */}
+      <ConsentBanner show={needConsent} onDecide={() => setNeedConsent(false)} />
 
       {showScrollTop && !menuOpen && !popupVisible && (
         <button
