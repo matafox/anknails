@@ -154,11 +154,18 @@ export default function Header({ onMenuToggle }) {
       {menuOpen && (
         <div className="fixed top-16 md:top-20 inset-x-0 z-[9998] bg-white/95 dark:bg-[#0c0016]/95 backdrop-blur-xl border-b border-pink-200/40">
           <div className="max-w-7xl mx-auto px-4 py-4 grid gap-2">
-            <a href="#modules" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">Модулі</a>
-            <a href="#forwhom" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">Для кого курс</a>
-            <a href="#tariffs"  onClick={() => setMenuOpen(false)} className="py-3 font-semibold">Тарифи</a>
-            <a href="#faq"      onClick={() => setMenuOpen(false)} className="py-3 font-semibold">FAQ</a>
-
+                  <a href="#modules" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
+        {T("Модулі", "Модули")}
+      </a>
+      <a href="#forwhom" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
+        {T("Для кого курс", "Для кого курс")}
+      </a>
+      <a href="#tariffs" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
+        {T("Тарифи", "Тарифы")}
+      </a>
+      <a href="#faq" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
+        {T("FAQ", "FAQ")}
+      </a>
             {/* RU / UK по центру без текстів та іконок */}
             <div className="mt-2 pt-3 border-t border-pink-200/40 dark:border-fuchsia-900/30">
               <div className="flex items-center justify-center gap-3">
