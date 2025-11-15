@@ -35,6 +35,10 @@ export default function TrafficTab({ darkMode, i18n }) {
   const [monthlySeries, setMonthlySeries] = useState([]); // [{month:'2025-01', users: 123}, ...]
   const [loadingHistory, setLoadingHistory] = useState(false);
 
+  // ⚡ Швидкі періоди (24h / 3d / 7d / 30d)
+  const [quick, setQuick] = useState({ d1: null, d3: null, d7: null, d30: null });
+  const [loadingQuick, setLoadingQuick] = useState(false);
+
   const isGaId = (s = "") => /^G-[A-Z0-9]+$/i.test((s || "").trim());
 
   // 1) Підтягуємо конфіг із бекенду
@@ -142,7 +146,7 @@ export default function TrafficTab({ darkMode, i18n }) {
       const r = await fetch(`${BACKEND}/api/admin/ga/history?months=12`);
       if (!r.ok) throw new Error(`status ${r.status}`);
       const j = await r.json();
-      // Очікуваний формат бекенду: [{month:'2025-01', users: 123}, ...]
+      // Очікуваний формат бекенду: [{month:'2025-01', users: 123}, ...] або {months:[...]}
       const arr = Array.isArray(j?.months) ? j.months : Array.isArray(j) ? j : [];
       // відсортуємо по часу
       arr.sort((a, b) => (a.month > b.month ? 1 : -1));
@@ -156,6 +160,49 @@ export default function TrafficTab({ darkMode, i18n }) {
 
   useEffect(() => {
     fetchHistory();
+  }, []);
+
+  // 6) Швидкі періоди (1 / 3 / 7 / 30 днів)
+  const fetchQuick = async () => {
+    try {
+      setLoadingQuick(true);
+      const r = await fetch(`${BACKEND}/api/admin/ga/summary?windows=1,3,7,30`);
+      if (!r.ok) throw new Error(`status ${r.status}`);
+      const j = await r.json();
+
+      // Нормалізація різних форматів:
+      // варіант А: { "1": 123, "3": 456, "7": 789, "30": 1011 }
+      // варіант Б: { windows: { "1": 123, "3": 456, ... } }
+      // варіант В: [ {days:1, users:123}, ... ]
+      let d1, d3, d7, d30;
+
+      if (Array.isArray(j)) {
+        const byDays = Object.fromEntries(
+          j.map((x) => [String(x.days), Number(x.users) || 0])
+        );
+        d1 = byDays["1"]; d3 = byDays["3"]; d7 = byDays["7"]; d30 = byDays["30"];
+      } else if (j?.windows && typeof j.windows === "object") {
+        d1 = Number(j.windows["1"] ?? j.windows["d1"]) || 0;
+        d3 = Number(j.windows["3"] ?? j.windows["d3"]) || 0;
+        d7 = Number(j.windows["7"] ?? j.windows["d7"]) || 0;
+        d30 = Number(j.windows["30"] ?? j.windows["d30"]) || 0;
+      } else {
+        d1 = Number(j["1"] ?? j.d1) || 0;
+        d3 = Number(j["3"] ?? j.d3) || 0;
+        d7 = Number(j["7"] ?? j.d7) || 0;
+        d30 = Number(j["30"] ?? j.d30) || 0;
+      }
+
+      setQuick({ d1, d3, d7, d30 });
+    } catch (e) {
+      setQuick({ d1: null, d3: null, d7: null, d30: null });
+    } finally {
+      setLoadingQuick(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchQuick();
   }, []);
 
   const cardClass = `rounded-xl p-5 border ${
@@ -347,6 +394,43 @@ export default function TrafficTab({ darkMode, i18n }) {
               )}
             </tbody>
           </table>
+        </div>
+      </div>
+
+      {/* ⚡ Швидкі періоди: 24 год / 3 дні / 7 днів / 30 днів */}
+      <div className={`mt-6 ${cardClass}`}>
+        <div className="flex items-center justify-between mb-3">
+          <p className="text-sm font-semibold flex items-center gap-2">
+            <Activity className="w-4 h-4 text-pink-500" />
+            {t("Перегляди за періоди", "Просмотры за периоды")}
+          </p>
+          <button
+            onClick={fetchQuick}
+            className="text-xs px-3 py-1 rounded-lg border border-pink-300 hover:bg-pink-50 dark:border-fuchsia-800"
+          >
+            {t("Оновити", "Обновить")}
+          </button>
+        </div>
+
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[
+            { labelUa: "24 години", labelRu: "24 часа", val: quick.d1 },
+            { labelUa: "3 дні", labelRu: "3 дня", val: quick.d3 },
+            { labelUa: "7 днів", labelRu: "7 дней", val: quick.d7 },
+            { labelUa: "30 днів", labelRu: "30 дней", val: quick.d30 },
+          ].map((item, idx) => (
+            <div
+              key={idx}
+              className={`rounded-lg p-4 border ${
+                darkMode ? "border-fuchsia-900/30 bg-[#120a16]" : "border-pink-200 bg-pink-50"
+              }`}
+            >
+              <p className="text-xs opacity-70 mb-1">{t(item.labelUa, item.labelRu)}</p>
+              <p className="text-2xl font-extrabold text-pink-500">
+                {loadingQuick ? "…" : (item.val ?? "—")}
+              </p>
+            </div>
+          ))}
         </div>
       </div>
 
