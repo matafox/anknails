@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import Header from "../components/Header"; // ⬅️ підключили новий хедер
 
+const BACKEND = "https://anknails-backend-production.up.railway.app";
+
 export default function LoginPage() {
   const { i18n } = useTranslation();
   const [email, setEmail] = useState("");
@@ -17,15 +19,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      // Швидкий адмін-вхід
-      if (email === "annaivanovna1802@gmail.com" && password === "anka12341") {
-        localStorage.setItem("admin_token", "true");
-        localStorage.removeItem("user_token");
-        window.location.href = "/admin";
-        return;
-      }
-
-      const res = await fetch("https://anknails-backend-production.up.railway.app/api/login", {
+      const res = await fetch(`${BACKEND}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ email, password, lang: i18n.language }),
@@ -43,13 +37,24 @@ export default function LoginPage() {
         );
       }
 
+      // ✅ Звичайний токен юзера
       localStorage.setItem("user_token", "true");
       localStorage.setItem("user_email", data.user.email);
-      localStorage.setItem("expires_at", data.user.expires_at);
-      localStorage.removeItem("admin_token");
-      if (data.session_token) localStorage.setItem("session_token", data.session_token);
+      if (data.user.expires_at) {
+        localStorage.setItem("expires_at", data.user.expires_at);
+      }
+      if (data.session_token) {
+        localStorage.setItem("session_token", data.session_token);
+      }
 
-      window.location.href = "/profile";
+      // ✅ Логіка ролей: адмін / звичайний
+      if (data.user.is_admin || data.user.role === "admin") {
+        localStorage.setItem("admin_token", "true");
+        window.location.href = "/admin";
+      } else {
+        localStorage.removeItem("admin_token");
+        window.location.href = "/profile";
+      }
     } catch (err) {
       setLoading(false);
       setError(err.message);
@@ -109,9 +114,10 @@ export default function LoginPage() {
                 type="submit"
                 disabled={loading}
                 className={`w-full py-3.5 rounded-2xl font-semibold text-white transition transform
-                  ${loading
-                    ? "bg-gray-400 cursor-not-allowed"
-                    : "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 hover:shadow-[0_0_25px_rgba(255,0,128,0.35)] hover:scale-[1.02] active:scale-[0.99]"
+                  ${
+                    loading
+                      ? "bg-gray-400 cursor-not-allowed"
+                      : "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 hover:shadow-[0_0_25px_rgba(255,0,128,0.35)] hover:scale-[1.02] active:scale-[0.99]"
                   }`}
               >
                 {loading ? t("Завантаження...", "Загрузка...") : t("Увійти", "Войти")}
@@ -134,7 +140,8 @@ export default function LoginPage() {
       {/* Футер сторінки логіну */}
       <footer className="text-center py-6 text-sm border-t border-pink-200/60 dark:border-fuchsia-900/30 text-gray-600 dark:text-fuchsia-200">
         <p className="font-medium">
-          © {new Date().getFullYear()} <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
+          © {new Date().getFullYear()}{" "}
+          <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
           {t("Усі права захищені.", "Все права защищены.")}
         </p>
       </footer>
