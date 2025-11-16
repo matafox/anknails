@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import WelcomeModal from "./WelcomeModal";
 import DashboardSection from "./DashboardSection";
 import ModulesPage from "./ModulesPage";
+import VideoWatermark from "@/components/VideoWatermark";
 import { useTranslation } from "react-i18next";
 import {
   LogOut,
@@ -23,7 +24,7 @@ import {
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
 /* ================= SAFEVIDEO (BUNNY + дебаг + “живучий” парсер) ================= */
-const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onCompleted }) => {
+const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onCompleted, wmText }) => {
   const [videoUrl, setVideoUrl] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -356,6 +357,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
             } catch {}
           }}
         />
+      <VideoWatermark text={wmText} />
       </div>
 
       {getNextLesson && showNext && (
@@ -1190,6 +1192,7 @@ const markWelcomeSeen = () => {
               userId={user?.id}
               onProgressTick={handleProgressTick}
               onCompleted={refreshAfterLessonComplete}
+              wmText={`${user?.name || user?.email?.split("@")[0] || "User"} · ${user?.email || ""}`}
               getNextLesson={(id) => {
                 const allLessons = Object.values(lessons).flat();
                 const idx = allLessons.findIndex((l) => l.id === id);
