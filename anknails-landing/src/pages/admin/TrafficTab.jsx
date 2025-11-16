@@ -29,18 +29,13 @@ export default function TrafficTab({ darkMode, i18n }) {
   const [topCities, setTopCities] = useState([]);
   const [topDevices, setTopDevices] = useState([]);
 
-  // ⚡ Перегляди за 1/3/7/30 днів
+  // ⚡ Швидкі періоди (24h / 3d / 7d / 30d)
   const [quick, setQuick] = useState({ d1: null, d3: null, d7: null, d30: null });
   const [loadingQuick, setLoadingQuick] = useState(false);
 
-  // 🆕 Топ країн за весь час
-  const [allTimeCountries, setAllTimeCountries] = useState([]);
-  const [loadingAllTime, setLoadingAllTime] = useState(false);
-  const [errorAllTime, setErrorAllTime] = useState("");
-
   const isGaId = (s = "") => /^G-[A-Z0-9]+$/i.test((s || "").trim());
 
-  // 1) Конфіг GA
+  // 1) Підтягуємо конфіг із бекенду
   useEffect(() => {
     let ignore = false;
     (async () => {
@@ -54,13 +49,20 @@ export default function TrafficTab({ darkMode, i18n }) {
         }
       } catch {}
     })();
-    return () => { ignore = true; };
+    return () => {
+      ignore = true;
+    };
   }, []);
 
-  // 2) Зберегти GA ID
+  // 2) Зберігаємо GA ID на бекенд
   const saveGa = async () => {
     if (!isGaId(inputGa)) {
-      alert(t("Введіть валідний GA4 Measurement ID у форматі G-XXXXXXX","Введите валидный GA4 Measurement ID в формате G-XXXXXXX"));
+      alert(
+        t(
+          "Введіть валідний GA4 Measurement ID у форматі G-XXXXXXX",
+          "Введите валидный GA4 Measurement ID в формате G-XXXXXXX"
+        )
+      );
       return;
     }
     try {
@@ -74,24 +76,28 @@ export default function TrafficTab({ darkMode, i18n }) {
       });
       if (!r.ok) throw new Error(`status ${r.status}`);
       setGaId(inputGa.trim().toUpperCase());
-    } catch {
-      alert(t("Не вдалося зберегти GA ID","Не удалось сохранить GA ID"));
+    } catch (e) {
+      alert(t("Не вдалося зберегти GA ID", "Не удалось сохранить GA ID"));
     }
   };
 
-  // 3) Тестова подія
+  // 3) Відправити тест-подію (через MP)
   const sendTestEvent = async () => {
     if (!isGaId(gaId)) {
-      alert(t("Спершу збережіть коректний GA ID","Сначала сохраните корректный GA ID"));
+      alert(t("Спершу збережіть коректний GA ID", "Сначала сохраните корректный GA ID"));
       return;
     }
     try {
-      const r = await fetch(`${BACKEND}/api/admin/ga/send-test`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) });
+      const r = await fetch(`${BACKEND}/api/admin/ga/send-test`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({}),
+      });
       if (!r.ok) throw new Error(`status ${r.status}`);
       setTestSent(true);
       setTimeout(() => setTestSent(false), 1500);
-      alert(t("Тестова подія відправлена. Перевір Realtime у GA4.","Тестовое событие отправлено. Проверь Realtime в GA4."));
-    } catch {
+      alert(t("Тестова подія відправлена. Перевір Realtime у GA4.", "Тестовое событие отправлено. Проверь Realtime в GA4."));
+    } catch (e) {
       alert(t("Не вдалося надіслати подію (перевір API Secret на бекенді).", "Не удалось отправить событие (проверь API Secret на бэкенде)."));
     }
   };
@@ -118,13 +124,14 @@ export default function TrafficTab({ darkMode, i18n }) {
       setLoadingRealtime(false);
     }
   };
+
   useEffect(() => {
     fetchOverview();
     const id = setInterval(fetchOverview, 10000);
     return () => clearInterval(id);
   }, []);
 
-  // 5) Швидкі періоди
+  // 5) Швидкі періоди (1 / 3 / 7 / 30 днів)
   const fetchQuick = async () => {
     try {
       setLoadingQuick(true);
@@ -132,9 +139,13 @@ export default function TrafficTab({ darkMode, i18n }) {
       if (!r.ok) throw new Error(`status ${r.status}`);
       const j = await r.json();
 
+      // Нормалізація різних форматів
       let d1, d3, d7, d30;
+
       if (Array.isArray(j)) {
-        const byDays = Object.fromEntries(j.map((x) => [String(x.days), Number(x.users) || 0]));
+        const byDays = Object.fromEntries(
+          j.map((x) => [String(x.days), Number(x.users) || 0])
+        );
         d1 = byDays["1"]; d3 = byDays["3"]; d7 = byDays["7"]; d30 = byDays["30"];
       } else if (j?.windows && typeof j.windows === "object") {
         d1 = Number(j.windows["1"] ?? j.windows["d1"]) || 0;
@@ -147,41 +158,23 @@ export default function TrafficTab({ darkMode, i18n }) {
         d7 = Number(j["7"] ?? j.d7) || 0;
         d30 = Number(j["30"] ?? j.d30) || 0;
       }
+
       setQuick({ d1, d3, d7, d30 });
-    } catch {
+    } catch (e) {
       setQuick({ d1: null, d3: null, d7: null, d30: null });
     } finally {
       setLoadingQuick(false);
     }
   };
-  useEffect(() => { fetchQuick(); }, []);
 
-  // 🆕 6) Топ країн за весь час
-  const fetchAllTimeCountries = async () => {
-    try {
-      setLoadingAllTime(true);
-      setErrorAllTime("");
-      const r = await fetch(`${BACKEND}/api/admin/ga/top-countries?days=0&limit=20`);
-      if (!r.ok) throw new Error(`status ${r.status}`);
-      const j = await r.json();
-      // Очікуємо {countries:[{name, users}...]} або масив напряму
-      const arr = Array.isArray(j?.countries) ? j.countries : Array.isArray(j) ? j : [];
-      setAllTimeCountries(
-        arr.map((x) => ({
-          name: x.name || x.country || "(unknown)",
-          users: Number(x.users ?? x.totalUsers ?? x.count ?? 0),
-        }))
-      );
-    } catch (e) {
-      setAllTimeCountries([]);
-      setErrorAllTime(e.message || "Failed");
-    } finally {
-      setLoadingAllTime(false);
-    }
-  };
-  useEffect(() => { fetchAllTimeCountries(); }, []);
+  useEffect(() => {
+    fetchQuick();
+  }, []);
 
-  const cardClass = `rounded-xl p-5 border ${darkMode ? "border-fuchsia-900/40 bg-[#1a0a1f]/70" : "border-pink-200 bg-white"}`;
+  const cardClass = `rounded-xl p-5 border ${
+    darkMode ? "border-fuchsia-900/40 bg-[#1a0a1f]/70" : "border-pink-200 bg-white"
+  }`;
+
   const tableClass = "w-full text-sm border-separate border-spacing-y-2";
   const headerCell = "text-xs uppercase opacity-60 pb-1";
   const rowCell = "py-2 px-0";
@@ -235,7 +228,7 @@ export default function TrafficTab({ darkMode, i18n }) {
         )}
       </div>
 
-      {/* Realtime + розкладки */}
+      {/* Realtime + розкладки (без "Топ джерел") */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Active users */}
         <div className={cardClass}>
@@ -282,11 +275,11 @@ export default function TrafficTab({ darkMode, i18n }) {
           </table>
         </div>
 
-        {/* Топ країн (Realtime) */}
+        {/* Топ країн */}
         <div className={cardClass}>
           <div className="flex items-center gap-2 mb-3">
             <Globe2 className="w-5 h-5 text-pink-500" />
-            <p className="text-sm font-semibold">{t("Топ країн (наживо)", "Топ стран (в реальном времени)")}</p>
+            <p className="text-sm font-semibold">{t("Топ країн", "Топ стран")}</p>
           </div>
           <table className={tableClass}>
             <thead>
@@ -309,7 +302,7 @@ export default function TrafficTab({ darkMode, i18n }) {
           </table>
         </div>
 
-        {/* Топ міст (Realtime) */}
+        {/* Топ міст */}
         <div className={cardClass}>
           <div className="flex items-center gap-2 mb-3">
             <Building2 className="w-5 h-5 text-pink-500" />
@@ -337,7 +330,7 @@ export default function TrafficTab({ darkMode, i18n }) {
         </div>
       </div>
 
-      {/* ⚡ Періоди */}
+      {/* ⚡ Швидкі періоди: 24 год / 3 дні / 7 днів / 30 днів */}
       <div className={`mt-6 ${cardClass}`}>
         <div className="flex items-center justify-between mb-3">
           <p className="text-sm font-semibold flex items-center gap-2">
@@ -372,39 +365,6 @@ export default function TrafficTab({ darkMode, i18n }) {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* 🆕 Топ країн (за весь час) */}
-      <div className={`mt-6 ${cardClass}`}>
-        <div className="flex items-center justify-between mb-3">
-          <p className="text-sm font-semibold flex items-center gap-2">
-            <Globe2 className="w-4 h-4 text-pink-500" />
-            {t("Топ країн (за весь час)", "Топ стран (за всё время)")}
-          </p>
-          <button
-            onClick={fetchAllTimeCountries}
-            className="text-xs px-3 py-1 rounded-lg border border-pink-300 hover:bg-pink-50 dark:border-fuchsia-800"
-          >
-            {t("Оновити", "Обновить")}
-          </button>
-        </div>
-
-        {loadingAllTime ? (
-          <p className="text-sm opacity-70">{t("Завантаження…", "Загрузка…")}</p>
-        ) : allTimeCountries.length ? (
-          <ul className="divide-y divide-pink-200/60 dark:divide-fuchsia-900/30">
-            {allTimeCountries.map((r, i) => (
-              <li key={i} className="py-2 flex items-center justify-between">
-                <span className="font-medium">{r.users}</span>
-                <span className="opacity-80">{r.name}</span>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm opacity-70">
-            {errorAllTime ? `${t("Помилка","Ошибка")}: ${errorAllTime}` : t("Немає даних", "Нет данных")}
-          </p>
-        )}
       </div>
     </div>
   );
