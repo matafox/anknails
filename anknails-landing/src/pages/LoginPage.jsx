@@ -191,16 +191,6 @@ export default function LoginPage() {
                     ? t("Завантаження...", "Загрузка...")
                     : t("Увійти", "Войти")}
                 </button>
-
-                <div className="text-center">
-                  <button
-                    type="button"
-                    onClick={() => (window.location.href = "/")}
-                    className="text-sm font-medium text-pink-600 hover:text-rose-600"
-                  >
-                    {t("Повернутися на сайт", "Назад на сайт")}
-                  </button>
-                </div>
               </form>
             </div>
           </main>
