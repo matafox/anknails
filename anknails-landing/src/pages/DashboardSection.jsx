@@ -10,6 +10,7 @@ import {
   Send,
   GraduationCap,
   Loader2,
+  PlayCircle, // ⬅️ додали іконку
 } from "lucide-react";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
@@ -49,6 +50,10 @@ export default function DashboardSection({
 
   /* === Привітальна модалка (1 раз) === */
   const [welcomeOpen, setWelcomeOpen] = useState(false);
+
+  // ⬇️ СТЕЙТ ДЛЯ "ПРОДОВЖИТИ ПЕРЕГЛЯД"
+  const [lastLesson, setLastLesson] = useState(null);
+  const [lastLessonNumber, setLastLessonNumber] = useState(null);
 
   // стабільний ключ для fallback у localStorage
   const welcomeKey = useMemo(
@@ -283,6 +288,65 @@ export default function DashboardSection({
     window.open(`${BACKEND}/api/cert/open?user_id=${user.id}`, "_blank");
   };
 
+  /* === ЛОГІКА "ВІДНОВИТИ ПЕРЕГЛЯД" === */
+
+  // 1) Зчитуємо last_lesson з localStorage
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem("last_lesson");
+      if (!raw) return;
+      const parsed = JSON.parse(raw);
+      if (parsed && parsed.id) {
+        setLastLesson(parsed);
+      }
+    } catch (e) {
+      console.warn("cannot parse last_lesson", e);
+    }
+  }, []);
+
+  // 2) Рахуємо номер уроку у курсі (по всіх модулях)
+  useEffect(() => {
+    if (!lastLesson) {
+      setLastLessonNumber(null);
+      return;
+    }
+
+    // беремо або локально підвантажені уроки, або те, що прийшло в props
+    const map = Object.keys(localLessons || {}).length
+      ? localLessons
+      : lessons || {};
+
+    let counter = 0;
+    let foundNumber = null;
+
+    if (modules && modules.length) {
+      for (const mod of modules) {
+        const list = map[mod.id] || [];
+        for (const l of list) {
+          counter += 1;
+          if (l.id === lastLesson.id) {
+            foundNumber = counter;
+            break;
+          }
+        }
+        if (foundNumber !== null) break;
+      }
+    }
+
+    setLastLessonNumber(foundNumber);
+  }, [lastLesson, localLessons, lessons, modules]);
+
+  const handleResumeLastLesson = () => {
+    if (!lastLesson) return;
+    // на всякий випадок — перезаписуємо в localStorage і явно ставимо last_view="lesson"
+    try {
+      localStorage.setItem("last_lesson", JSON.stringify(lastLesson));
+      localStorage.setItem("last_view", "lesson");
+    } catch {}
+    // перезавантажуємо, щоб CabinetPage при mount відкрив урок
+    window.location.reload();
+  };
+
   /* === Рендер === */
   return (
     <div
@@ -333,6 +397,49 @@ export default function DashboardSection({
       {/* ====== Контент дашборду ====== */}
       <div className="flex-1">
         <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* 🔁 ВІДНОВИТИ ПЕРЕГЛЯД (якщо є last_lesson) */}
+          {lastLesson && (
+            <div
+              onClick={handleResumeLastLesson}
+              className={`md:col-span-2 cursor-pointer group p-4 md:p-5 rounded-2xl border shadow-md flex items-center justify-between gap-3 transition hover:scale-[1.01] ${
+                darkMode
+                  ? "bg-[#1a0a1f]/80 border-fuchsia-900/40 hover:border-pink-500/60"
+                  : "bg-gradient-to-r from-pink-50 to-rose-50 border-pink-200 hover:border-pink-400/80"
+              }`}
+            >
+              <div className="flex items-center gap-3 md:gap-4">
+                <div
+                  className={`flex items-center justify-center rounded-full p-2.5 md:p-3 shadow-md transition-transform group-hover:scale-110 ${
+                    darkMode
+                      ? "bg-pink-500/20 text-pink-300"
+                      : "bg-pink-500 text-white"
+                  }`}
+                >
+                  <PlayCircle className="w-6 h-6 md:w-7 md:h-7" />
+                </div>
+                <div className="flex flex-col">
+                  <span className="text-xs md:text-sm uppercase tracking-wide font-semibold text-pink-500">
+                    {t("Відновити перегляд", "Возобновить просмотр")}
+                  </span>
+                  <span className="text-sm md:text-base font-medium">
+                    {lastLessonNumber
+                      ? t(
+                          `Урок №${lastLessonNumber}: ${lastLesson.title || ""}`,
+                          `Урок №${lastLessonNumber}: ${lastLesson.title || ""}`
+                        )
+                      : lastLesson.title ||
+                        t("Останній переглянутий урок", "Последний просмотренный урок")}
+                  </span>
+                </div>
+              </div>
+
+              <div className="hidden md:flex items-center text-xs text-pink-400 group-hover:text-pink-500 transition">
+                {t("Продовжити", "Продолжить")}
+                <ChevronRight className="w-4 h-4 ml-1" />
+              </div>
+            </div>
+          )}
+
           {/* 📦 Модулі */}
           <div
             onClick={() => onOpenModules && onOpenModules()}
@@ -516,22 +623,22 @@ export default function DashboardSection({
                 certInfoOpen ? "opacity-100 scale-100 pointer-events-auto" : "opacity-0 scale-95 pointer-events-none"
               }`}
             >
-<div
-  className={`absolute inset-0 rounded-2xl border backdrop-blur-2xl saturate-150 contrast-125 ${
-    darkMode
-      ? "bg-black/65 border-fuchsia-900/40"
-      : "bg-white/90 border-pink-200"
-  }`}
-/>
+              <div
+                className={`absolute inset-0 rounded-2xl border backdrop-blur-2xl saturate-150 contrast-125 ${
+                  darkMode
+                    ? "bg-black/65 border-fuchsia-900/40"
+                    : "bg-white/90 border-pink-200"
+                }`}
+              />
 
-{/* Мʼяка віньєтка для ще кращого читання тексту */}
-<div
-  className="
+              {/* Мʼяка віньєтка для ще кращого читання тексту */}
+              <div
+                className="
     absolute inset-0 rounded-2xl pointer-events-none
     bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.18),transparent_60%)]
     dark:bg-[radial-gradient(ellipse_at_center,rgba(0,0,0,0.28),transparent_60%)]
   "
-/>
+              />
               <button
                 onClick={() => setCertInfoOpen(false)}
                 className="absolute top-3 right-3 z-9 p-2 rounded-full hover:bg-black/5 dark:hover:bg-white/10 transition"
