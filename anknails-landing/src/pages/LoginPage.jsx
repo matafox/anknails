@@ -4,12 +4,77 @@ import Header from "../components/Header"; // ⬅️ хедер
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
+// 🎨 варіанти бензинових градієнтів
+const RADIAL_OVERLAY_PART = `
+  radial-gradient(circle at 15% 20%, rgba(255,255,255,0.35) 0, transparent 55%),
+  radial-gradient(circle at 85% 80%, rgba(255,255,255,0.18) 0, transparent 55%)
+`;
+
+const GASOLINE_GRADIENTS = [
+  // 0 — синьо-помаранчевий
+  `
+    linear-gradient(120deg,
+      rgba(37,99,235,0.95),
+      rgba(59,130,246,0.95),
+      rgba(56,189,248,0.95),
+      rgba(252,211,77,0.9),
+      rgba(249,115,22,0.95),
+      rgba(244,63,94,0.9),
+      rgba(129,140,248,0.95)
+    ),
+    ${RADIAL_OVERLAY_PART}
+  `,
+  // 1 — фіолетово-бірюзовий
+  `
+    linear-gradient(130deg,
+      rgba(76,29,149,0.95),
+      rgba(124,58,237,0.95),
+      rgba(45,212,191,0.95),
+      rgba(34,197,94,0.9),
+      rgba(249,115,22,0.95),
+      rgba(236,72,153,0.95)
+    ),
+    ${RADIAL_OVERLAY_PART}
+  `,
+  // 2 — рожево-золотий з цианом
+  `
+    linear-gradient(140deg,
+      rgba(236,72,153,0.95),
+      rgba(251,113,133,0.95),
+      rgba(250,204,21,0.95),
+      rgba(56,189,248,0.95),
+      rgba(129,140,248,0.95),
+      rgba(168,85,247,0.95)
+    ),
+    ${RADIAL_OVERLAY_PART}
+  `,
+];
+
 export default function LoginPage() {
   const { i18n } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  // 🎨 індекс обраного градієнта (запамʼятовується в localStorage)
+  const [paletteIndex] = useState(() => {
+    if (typeof window === "undefined") return 0;
+    try {
+      const saved = localStorage.getItem("ank_login_sidebar_palette");
+      if (saved !== null) {
+        const n = parseInt(saved, 10);
+        if (!Number.isNaN(n) && n >= 0 && n < GASOLINE_GRADIENTS.length) {
+          return n;
+        }
+      }
+      const randomIdx = Math.floor(Math.random() * GASOLINE_GRADIENTS.length);
+      localStorage.setItem("ank_login_sidebar_palette", String(randomIdx));
+      return randomIdx;
+    } catch {
+      return 0;
+    }
+  });
 
   const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
 
@@ -59,9 +124,12 @@ export default function LoginPage() {
     }
   };
 
+  const sidebarBg =
+    GASOLINE_GRADIENTS[paletteIndex] || GASOLINE_GRADIENTS[0];
+
   return (
     <>
-      {/* 🔁 Анімація бензинового фону для сайдбара */}
+      {/* 🔁 Анімації бензину + плаваючого тексту */}
       <style>{`
         @keyframes gasolineShift {
           0% {
@@ -76,6 +144,21 @@ export default function LoginPage() {
             background-position: 0% 100%;
             filter: hue-rotate(-25deg);
           }
+        }
+
+        @keyframes floatingText {
+          0%, 100% {
+            transform: translateY(0);
+            opacity: 0.9;
+          }
+          50% {
+            transform: translateY(-8px);
+            opacity: 1;
+          }
+        }
+
+        .ank-login-floating-text {
+          animation: floatingText 9s ease-in-out infinite;
         }
       `}</style>
 
@@ -92,7 +175,7 @@ export default function LoginPage() {
         <Header />
 
         <div className="flex-1 w-full flex">
-          {/* 🛢 Сайдбар з переливом «бензину» */}
+          {/* 🛢 Сайдбар з «бензином» + плаваючий текст */}
           <aside
             className="
               hidden md:block md:w-72 
@@ -104,19 +187,7 @@ export default function LoginPage() {
             <div
               className="absolute inset-0"
               style={{
-                backgroundImage: `
-                  linear-gradient(120deg,
-                    rgba(37,99,235,0.95),
-                    rgba(59,130,246,0.95),
-                    rgba(56,189,248,0.95),
-                    rgba(252,211,77,0.9),
-                    rgba(249,115,22,0.95),
-                    rgba(244,63,94,0.9),
-                    rgba(129,140,248,0.95)
-                  ),
-                  radial-gradient(circle at 15% 20%, rgba(255,255,255,0.35) 0, transparent 55%),
-                  radial-gradient(circle at 85% 80%, rgba(255,255,255,0.18) 0, transparent 55%)
-                `,
+                backgroundImage: sidebarBg,
                 backgroundSize: "280% 280%",
                 backgroundPosition: "0% 0%",
                 animation: "gasolineShift 26s ease-in-out infinite alternate",
@@ -124,6 +195,28 @@ export default function LoginPage() {
             />
             {/* мʼякий overlay, щоб не було надто кислотно */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-rose-50/88 to-amber-50/85 dark:from-[#050008]/90 dark:via-[#05000d]/94 dark:to-[#010006]/96 mix-blend-soft-light" />
+
+            {/* 🌊 Плаваючий текст для учениць */}
+            <div className="relative z-20 h-full flex flex-col justify-between px-6 py-8 text-slate-900 dark:text-fuchsia-50">
+              <p className="text-[11px] uppercase tracking-[0.25em] opacity-75">
+                {t("онлайн-курс з нігтьової естетики", "онлайн-курс по ногтевой эстетике")}
+              </p>
+
+              <div className="mt-auto mb-4">
+                <p className="ank-login-floating-text text-lg font-semibold leading-snug">
+                  {t(
+                    "Кожен урок — крок до твоєї студії мрії 💅",
+                    "Каждый урок — шаг к твоей студии мечты 💅"
+                  )}
+                </p>
+                <p className="mt-3 text-xs opacity-80 max-w-xs">
+                  {t(
+                    "Увійди в кабінет, продовжуй з останнього уроку й не бійся повертатися до відео стільки, скільки потрібно.",
+                    "Заходи в кабинет, продолжай с последнего урока и не бойся пересматривать видео столько, сколько нужно."
+                  )}
+                </p>
+              </div>
+            </div>
           </aside>
 
           {/* Центрований блок логіну */}
