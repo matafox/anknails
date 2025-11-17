@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { X, MessageCircle, Send } from "lucide-react";
+import { X, MessageCircle } from "lucide-react";
 
 const DEFAULT_BACKEND = "https://anknails-backend-production.up.railway.app";
 
@@ -25,24 +25,24 @@ export default function AiAssistantWidget({
   userId,
   lang = "uk",
   backendUrl = DEFAULT_BACKEND,
+  darkMode = false, // ⬅️ режим темної/світлої теми
 }) {
   const [open, setOpen] = useState(false);
-  const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
   const [messages, setMessages] = useState([
     {
       from: "bot",
       text:
         lang === "ru"
-          ? "Привет! Я ассистент ANK Studio. Задай вопрос по курсу, урокам или доступу 😊"
-          : "Привіт! Я асистент ANK Studio. Напиши питання по курсу, урокам або доступу 😊",
+          ? "Привет! Выбери подходящий вопрос ниже — и я подскажу 😊"
+          : "Привіт! Обери питання нижче — і я підкажу 😊",
     },
   ]);
 
-  const suggestions =
-    lang === "ru" ? SUGGESTED_QUESTIONS.ru : SUGGESTED_QUESTIONS.uk;
+  const isRu = lang === "ru";
+  const suggestions = isRu ? SUGGESTED_QUESTIONS.ru : SUGGESTED_QUESTIONS.uk;
 
-  // 🔹 універсальна функція відправки тексту
+  // 🔹 універсальна функція відправки тексту (тільки з готових кнопок)
   const sendMessageWith = async (rawText) => {
     const trimmed = rawText.trim();
     if (!trimmed || loading) return;
@@ -70,12 +70,12 @@ export default function AiAssistantWidget({
         const data = await res.json();
         answerText =
           data?.answer ||
-          (lang === "ru"
-            ? "Произошла ошибка. Попробуй еще раз позже 🙏"
+          (isRu
+            ? "Произошла ошибка. Попробуй ещё раз позже 🙏"
             : "Сталася помилка. Спробуй ще раз пізніше 🙏");
       } catch {
         answerText =
-          lang === "ru"
+          isRu
             ? "Произошла ошибка при разборе ответа сервера 🙏"
             : "Сталася помилка під час обробки відповіді сервера 🙏";
       }
@@ -87,29 +87,13 @@ export default function AiAssistantWidget({
         ...prev,
         {
           from: "bot",
-          text:
-            lang === "ru"
-              ? "Сервер сейчас недоступен. Попробуй позже 🙏"
-              : "Сервер зараз недоступний. Спробуй пізніше 🙏",
+          text: isRu
+            ? "Сервер сейчас недоступен. Попробуй позже 🙏"
+            : "Сервер зараз недоступний. Спробуй пізніше 🙏",
         },
       ]);
     } finally {
       setLoading(false);
-    }
-  };
-
-  // відправка з інпута
-  const sendMessage = async () => {
-    const trimmed = input.trim();
-    if (!trimmed || loading) return;
-    setInput("");
-    await sendMessageWith(trimmed);
-  };
-
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      sendMessage();
     }
   };
 
@@ -127,33 +111,41 @@ export default function AiAssistantWidget({
       {/* Вікно чату */}
       {open && (
         <div
-          className="
+          className={`
             fixed z-40 
             inset-x-0 bottom-0
             md:bottom-20 md:right-4 md:left-auto
             w-full md:w-80
             max-w-full md:max-w-[90vw]
-            h-[70vh] md:h-auto
+            h-[60vh] md:h-auto
             rounded-t-3xl md:rounded-2xl
             shadow-xl
-            border border-fuchsia-800/70
-            bg-[#050011]/95
             backdrop-blur-xl
             flex flex-col overflow-hidden
-          "
+            ${
+              darkMode
+                ? "border-fuchsia-800/70 bg-[#050011]/95"
+                : "border-pink-200 bg-white/95"
+            }
+          `}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white">
+          <div
+            className={`
+              flex items-center justify-between px-3 py-2
+              ${darkMode
+                ? "bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white"
+                : "bg-gradient-to-r from-pink-500 to-rose-400 text-white"}
+            `}
+          >
             <div className="flex flex-col">
               <span className="font-semibold text-sm">
-                {lang === "ru"
-                  ? "AI-помощник ANK Studio"
-                  : "AI-помічник ANK Studio"}
+                {isRu ? "Помощник ANK Studio" : "Помічник ANK Studio"}
               </span>
               <span className="text-[11px] opacity-85">
-                {lang === "ru"
-                  ? "Отвечаю только по курсу и платформе"
-                  : "Відповідаю тільки по курсу та платформі"}
+                {isRu
+                  ? "Выбирай вопрос из списка ниже"
+                  : "Обирай питання зі списку нижче"}
               </span>
             </div>
             <button onClick={() => setOpen(false)}>
@@ -162,14 +154,29 @@ export default function AiAssistantWidget({
           </div>
 
           {/* 🔹 Популярні питання */}
-          <div className="px-3 pt-2 pb-1 border-b border-fuchsia-800/60 flex flex-wrap gap-1 bg-[#090018]">
+          <div
+            className={`
+              px-3 pt-2 pb-1 border-b flex flex-wrap gap-1
+              ${
+                darkMode
+                  ? "border-fuchsia-800/60 bg-[#090018]"
+                  : "border-pink-100 bg-pink-50"
+              }
+            `}
+          >
             {suggestions.map((q, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => sendMessageWith(q)}
-                className="text-[11px] px-2.5 py-1 rounded-full border border-fuchsia-700/70 
-                           bg-fuchsia-900/40 text-fuchsia-100 hover:bg-fuchsia-800/60 transition"
+                className={`
+                  text-[11px] px-2.5 py-1 rounded-full transition
+                  ${
+                    darkMode
+                      ? "border border-fuchsia-700/70 bg-fuchsia-900/40 text-fuchsia-100 hover:bg-fuchsia-800/60"
+                      : "border border-pink-200 bg-white text-pink-700 hover:bg-pink-50"
+                  }
+                `}
               >
                 {q}
               </button>
@@ -177,7 +184,12 @@ export default function AiAssistantWidget({
           </div>
 
           {/* Повідомлення */}
-          <div className="flex-1 min-h-0 px-3 py-2 space-y-2 overflow-y-auto text-sm text-fuchsia-50">
+          <div
+            className={`
+              flex-1 min-h-0 px-3 py-2 space-y-2 overflow-y-auto text-sm
+              ${darkMode ? "text-fuchsia-50" : "text-gray-800"}
+            `}
+          >
             {messages.map((m, idx) => (
               <div
                 key={idx}
@@ -186,61 +198,33 @@ export default function AiAssistantWidget({
                 }`}
               >
                 <div
-                  className={`px-3 py-2 rounded-2xl max-w-[85%] text-sm leading-snug ${
-                    m.from === "user"
-                      ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-br-sm"
-                      : "bg-[#130022] text-fuchsia-100 rounded-bl-sm"
-                  }`}
+                  className={`
+                    px-3 py-2 rounded-2xl max-w-[85%] text-sm leading-snug
+                    ${
+                      m.from === "user"
+                        ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-br-sm"
+                        : darkMode
+                        ? "bg-[#130022] text-fuchsia-100 rounded-bl-sm"
+                        : "bg-pink-50 text-pink-900 rounded-bl-sm"
+                    }
+                  `}
                 >
                   {m.text}
                 </div>
               </div>
             ))}
             {loading && (
-              <div className="text-xs opacity-60 text-fuchsia-200">
-                {lang === "ru"
-                  ? "Ассистент печатает..."
-                  : "Помічник набирає відповідь..."}
+              <div
+                className={`text-xs opacity-60 ${
+                  darkMode ? "text-fuchsia-200" : "text-gray-500"
+                }`}
+              >
+                {isRu ? "Помощник пишет..." : "Помічник набирає відповідь..."}
               </div>
             )}
           </div>
 
-          {/* Інпут */}
-          <div className="border-t border-fuchsia-800/60 bg-[#050011] flex items-center gap-2 px-2 py-2">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={handleKeyDown}
-              rows={1}
-              className="
-                flex-1 text-sm resize-none outline-none 
-                rounded-xl px-2 py-1
-                border border-fuchsia-700/70
-                bg-[#0b0018]
-                text-fuchsia-50
-                placeholder:text-fuchsia-400
-                focus:border-pink-400
-              "
-              placeholder={
-                lang === "ru"
-                  ? "Напиши вопрос по курсу..."
-                  : "Напиши питання по курсу..."
-              }
-            />
-            <button
-              onClick={sendMessage}
-              disabled={loading || !input.trim()}
-              className="
-                p-2 rounded-full 
-                bg-gradient-to-tr from-pink-500 to-fuchsia-500 
-                text-white 
-                disabled:opacity-40 
-                flex items-center justify-center
-              "
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </div>
+          {/* 🔒 Без інпута — тільки готові питання, тому тут нічого немає */}
         </div>
       )}
     </>
