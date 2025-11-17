@@ -269,10 +269,6 @@ export default function App() {
             </div>
           </div>
 
-          <div id="coursestart" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
-            <CourseStart />
-          </div>
-
           <div id="works" className="mt-10 sm:mt-16 mb-10 sm:mb-20">
             <StudentsWorksCarousel />
           </div>
