@@ -196,24 +196,11 @@ export default function LoginPage() {
             {/* мʼякий overlay, щоб не було надто кислотно */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-rose-50/88 to-amber-50/85 dark:from-[#050008]/90 dark:via-[#05000d]/94 dark:to-[#010006]/96 mix-blend-soft-light" />
 
-{/* 🌊 Плаваючий текст для учениць */}
+            {/* 🌊 Плаваючий текст для учениць */}
 <div className="relative z-20 h-full flex flex-col justify-between px-6 py-8 text-slate-900 dark:text-fuchsia-50">
   <p className="text-[11px] uppercase tracking-[0.25em] opacity-75">
-    {t(
-      "професійна онлайн-платформа ANK Studio",
-      "профессиональная онлайн-платформа ANK Studio"
-    )}
+    {t("професійна онлайн-платформа ANK Studio", "профессиональная онлайн-платформа ANK Studio")}
   </p>
-
-  {/* центрований блок про Pro-тариф */}
-  <div className="mt-6 flex justify-center">
-    <div className="px-4 py-2 rounded-full text-[11px] font-medium bg-white/80 text-pink-700 shadow-sm border border-pink-100 dark:bg-black/30 dark:text-pink-200 dark:border-pink-500/30 backdrop-blur">
-      {t(
-        "Доступ до тарифу Pro всього за 235 €",
-        "Доступ к тарифу Pro всего за 235 €"
-      )}
-    </div>
-  </div>
 
   <div className="mt-auto mb-4">
     <p className="ank-login-floating-text text-lg font-semibold leading-snug">
