@@ -62,7 +62,15 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800 dark:from-[#100d16] dark:via-[#18141f] dark:to-[#100d16]">
+    <div
+      className="
+        min-h-screen flex flex-col 
+        text-gray-800 
+        bg-gradient-to-br from-pink-50 via-rose-50 to-white
+        dark:text-fuchsia-50
+        dark:bg-[radial-gradient(circle_at_top,_#2b0f3d_0,_#12051f_42%,_#05000b_85%)]
+      "
+    >
       {/* ✅ Фіксований хедер зверху */}
       <Header />
 
@@ -73,11 +81,24 @@ export default function LoginPage() {
 
         {/* Центрований блок логіну */}
         <main className="flex-1 flex items-center justify-center px-5">
-          <div className="w-full max-w-md rounded-[2rem] p-8 md:p-10 bg-white/80 dark:bg-white/10 backdrop-blur border border-pink-200/60 dark:border-fuchsia-900/40 shadow-[0_0_40px_rgba(255,182,193,0.35)]">
+          <div
+            className="
+              w-full max-w-md rounded-[2rem] p-8 md:p-10
+              bg-white/80 
+              dark:bg-[#15061f]/85
+              backdrop-blur
+              border border-pink-200/60 dark:border-fuchsia-900/40
+              shadow-[0_0_22px_rgba(236,72,153,0.18)]
+              dark:shadow-[0_0_22px_rgba(236,72,153,0.22)]
+            "
+          >
             {/* 🔹 Привітання над формою */}
             <div className="mb-8 text-center">
               <p className="mt-2 text-sm opacity-75">
-                {t("Увійдіть, щоб почати навчання", "Войдите, чтобы начать обучение")}
+                {t(
+                  "Увійдіть, щоб почати навчання",
+                  "Войдите, чтобы начать обучение"
+                )}
               </p>
             </div>
 
@@ -106,7 +127,9 @@ export default function LoginPage() {
               </div>
 
               {error && (
-                <p className="text-sm text-rose-500 text-center font-medium">{error}</p>
+                <p className="text-sm text-rose-500 text-center font-medium">
+                  {error}
+                </p>
               )}
 
               {/* 🌈 Яскрава градієнтна кнопка */}
@@ -120,7 +143,9 @@ export default function LoginPage() {
                       : "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 hover:shadow-[0_0_25px_rgba(255,0,128,0.35)] hover:scale-[1.02] active:scale-[0.99]"
                   }`}
               >
-                {loading ? t("Завантаження...", "Загрузка...") : t("Увійти", "Войти")}
+                {loading
+                  ? t("Завантаження...", "Загрузка...")
+                  : t("Увійти", "Войти")}
               </button>
 
               <div className="text-center">
