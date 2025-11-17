@@ -135,7 +135,12 @@ export default function Header({ onMenuToggle }) {
                 className="p-2 rounded-xl bg-white/50 dark:bg-white/10 border border-white/30"
                 aria-label="theme"
               >
-                {darkMode ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+                {/* 🔥 FIX: яскравіші іконки в dark / light */}
+                {darkMode ? (
+                  <Sun className="w-5 h-5 text-amber-300" />
+                ) : (
+                  <Moon className="w-5 h-5 text-pink-500" />
+                )}
               </button>
 
               {/* 🌐 Мова — ДЕСКТОП: іконка Globe + випадайка */}
@@ -147,7 +152,8 @@ export default function Header({ onMenuToggle }) {
                   aria-expanded={langOpen}
                   aria-label="language"
                 >
-                  <Globe className="w-5 h-5" />
+                  {/* 🔥 FIX: підсвітив Globe в dark mode */}
+                  <Globe className="w-5 h-5 text-pink-500 dark:text-pink-200" />
                 </button>
 
                 {langOpen && (
