@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import WelcomeModal from "./WelcomeModal";
 import DashboardSection from "./DashboardSection";
 import ModulesPage from "./ModulesPage";
+import AiAssistantWidget from "./components/AiAssistantWidget";
 import VideoWatermark from "../components/VideoWatermark";
 import { useTranslation } from "react-i18next";
 import {
