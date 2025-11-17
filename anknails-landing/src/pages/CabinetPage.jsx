@@ -1099,6 +1099,8 @@ const markWelcomeSeen = () => {
   </div>
 </aside>
 
+      <AiAssistantWidget backendUrl={BACKEND} />
+
       {/* Контент */}
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
         {banner && banner.active && (
@@ -1281,6 +1283,5 @@ const markWelcomeSeen = () => {
         )}
       </main>
     </div>
-    <AiAssistantWidget backendUrl={BACKEND} />
   );
 }
