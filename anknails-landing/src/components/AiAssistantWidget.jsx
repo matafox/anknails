@@ -117,7 +117,7 @@ export default function AiAssistantWidget({
             md:bottom-20 md:right-4 md:left-auto
             w-full md:w-80
             max-w-full md:max-w-[90vw]
-            h-[60vh] md:h-auto
+            h-[60vh] md:h-[70vh] md:max-h-[520px]
             rounded-t-3xl md:rounded-2xl
             shadow-xl
             backdrop-blur-xl
@@ -133,9 +133,11 @@ export default function AiAssistantWidget({
           <div
             className={`
               flex items-center justify-between px-3 py-2
-              ${darkMode
-                ? "bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white"
-                : "bg-gradient-to-r from-pink-500 to-rose-400 text-white"}
+              ${
+                darkMode
+                  ? "bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white"
+                  : "bg-gradient-to-r from-pink-500 to-rose-400 text-white"
+              }
             `}
           >
             <div className="flex flex-col">
@@ -143,20 +145,22 @@ export default function AiAssistantWidget({
                 {isRu ? "Помощник ANK Studio" : "Помічник ANK Studio"}
               </span>
               <span className="text-[11px] opacity-85">
-  {isRu
-    ? "Нажми на кнопку с вопросом, который тебе подходит"
-    : "Натисни на кнопку з питанням, яке тобі підходить"}
-</span>
+                {isRu
+                  ? "Нажми на кнопку с вопросом, который тебе подходит"
+                  : "Натисни на кнопку з питанням, яке тобі підходить"}
+              </span>
             </div>
             <button onClick={() => setOpen(false)}>
               <X className="w-4 h-4" />
             </button>
           </div>
 
-          {/* 🔹 Популярні питання */}
+          {/* 🔹 Популярні питання (з прокруткою списку) */}
           <div
             className={`
-              px-3 pt-2 pb-1 border-b flex flex-wrap gap-1
+              px-3 pt-2 pb-1 border-b
+              flex flex-wrap gap-1
+              max-h-24 overflow-y-auto
               ${
                 darkMode
                   ? "border-fuchsia-800/60 bg-[#090018]"
@@ -224,7 +228,7 @@ export default function AiAssistantWidget({
             )}
           </div>
 
-          {/* 🔒 Без інпута — тільки готові питання, тому тут нічого немає */}
+          {/* 🔒 Без інпута — тільки готові питання */}
         </div>
       )}
     </>
