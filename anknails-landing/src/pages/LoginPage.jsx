@@ -62,114 +62,163 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      className="
-        min-h-screen flex flex-col 
-        text-gray-800 
-        bg-gradient-to-br from-pink-50 via-rose-50 to-white
-        dark:text-fuchsia-50
-        dark:bg-[radial-gradient(circle_at_top,_#2b0f3d_0,_#12051f_42%,_#05000b_85%)]
-      "
-    >
-      {/* ✅ Фіксований хедер зверху */}
-      <Header />
+    <>
+      {/* 🔁 Анімація бензинового фону для сайдбара */}
+      <style>{`
+        @keyframes gasolineShift {
+          0% {
+            background-position: 0% 0%;
+            filter: hue-rotate(0deg);
+          }
+          50% {
+            background-position: 100% 50%;
+            filter: hue-rotate(35deg);
+          }
+          100% {
+            background-position: 0% 100%;
+            filter: hue-rotate(-25deg);
+          }
+        }
+      `}</style>
 
-      {/* Контентна частина (з урахуванням фіксованого хедера вже є spacer у Header) */}
-      <div className="flex-1 w-full flex">
-        {/* Порожній сайдбар (як у кабінеті) */}
-        <aside className="hidden md:block md:w-72 border-r border-pink-200/60 dark:border-fuchsia-900/30 bg-gradient-to-b from-white to-rose-50 dark:from-[#120c18] dark:to-[#0f0a14]" />
+      <div
+        className="
+          min-h-screen flex flex-col 
+          text-gray-800 
+          bg-gradient-to-br from-pink-50 via-rose-50 to-white
+          dark:text-fuchsia-50
+          dark:bg-[radial-gradient(circle_at_top,_#2b0f3d_0,_#12051f_42%,_#05000b_85%)]
+        "
+      >
+        {/* ✅ Фіксований хедер зверху */}
+        <Header />
 
-        {/* Центрований блок логіну */}
-        <main className="flex-1 flex items-center justify-center px-5">
-          <div
+        {/* Контентна частина (з урахуванням фіксованого хедера вже є spacer у Header) */}
+        <div className="flex-1 w-full flex">
+          {/* 🛢 Порожній сайдбар з «розлитим бензином» */}
+          <aside
             className="
-              w-full max-w-md rounded-[2rem] p-8 md:p-10
-              bg-white/80 
-              dark:bg-[#15061f]/85
-              backdrop-blur
-              border border-pink-200/60 dark:border-fuchsia-900/40
-              shadow-[0_0_22px_rgba(236,72,153,0.18)]
-              dark:shadow-[0_0_22px_rgba(236,72,153,0.22)]
+              hidden md:block md:w-72 
+              border-r border-pink-200/40 dark:border-fuchsia-900/40
+              relative overflow-hidden
             "
           >
-            {/* 🔹 Привітання над формою */}
-            <div className="mb-8 text-center">
-              <p className="mt-2 text-sm opacity-75">
-                {t(
-                  "Увійдіть, щоб почати навчання",
-                  "Войдите, чтобы начать обучение"
-                )}
-              </p>
-            </div>
+            {/* Шар з бензиновим переливом */}
+            <div
+              className="absolute inset-0"
+              style={{
+                backgroundImage: `
+                  radial-gradient(circle at 0% 0%, rgba(255,255,255,0.85) 0, transparent 45%),
+                  radial-gradient(circle at 0% 100%, rgba(59,130,246,0.45) 0, transparent 55%),
+                  radial-gradient(circle at 100% 0%, rgba(244,63,94,0.65) 0, transparent 55%),
+                  radial-gradient(circle at 100% 100%, rgba(16,185,129,0.55) 0, transparent 55%),
+                  radial-gradient(circle at 50% 30%, rgba(244,114,182,0.45) 0, transparent 60%),
+                  radial-gradient(circle at 30% 80%, rgba(129,140,248,0.5) 0, transparent 60%)
+                `,
+                backgroundSize: "230% 230%",
+                backgroundPosition: "0% 0%",
+                animation: "gasolineShift 22s ease-in-out infinite alternate",
+              }}
+            />
 
-            {/* Форма логіну */}
-            <form onSubmit={handleSubmit} className="space-y-6">
-              <div>
-                <input
-                  type="email"
-                  placeholder={t("Електронна пошта", "Email")}
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white dark:bg-white/5 dark:text-fuchsia-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
-                />
-              </div>
+            {/* Легкий затемнений слой зверху, щоб не було кислотно */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/90 to-rose-50/96 dark:from-[#06000b]/92 dark:via-[#090013]/94 dark:to-[#020008]/98 mix-blend-overlay" />
+          </aside>
 
-              <div>
-                <input
-                  type="password"
-                  placeholder={t("Пароль", "Пароль")}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white dark:bg-white/5 dark:text-fuchsia-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
-                />
-              </div>
-
-              {error && (
-                <p className="text-sm text-rose-500 text-center font-medium">
-                  {error}
+          {/* Центрований блок логіну */}
+          <main className="flex-1 flex items-center justify-center px-5">
+            <div
+              className="
+                w-full max-w-md rounded-[2rem] p-8 md:p-10
+                bg-white/80 
+                dark:bg-[#15061f]/85
+                backdrop-blur
+                border border-pink-200/60 dark:border-fuchsia-900/40
+                shadow-[0_0_22px_rgba(236,72,153,0.18)]
+                dark:shadow-[0_0_22px_rgba(236,72,153,0.22)]
+              "
+            >
+              {/* 🔹 Привітання над формою */}
+              <div className="mb-8 text-center">
+                <p className="mt-2 text-sm opacity-75">
+                  {t(
+                    "Увійдіть, щоб почати навчання",
+                    "Войдите, чтобы начать обучение"
+                  )}
                 </p>
-              )}
-
-              {/* 🌈 Яскрава градієнтна кнопка */}
-              <button
-                type="submit"
-                disabled={loading}
-                className={`w-full py-3.5 rounded-2xl font-semibold text-white transition transform
-                  ${
-                    loading
-                      ? "bg-gray-400 cursor-not-allowed"
-                      : "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 hover:shadow-[0_0_25px_rgba(255,0,128,0.35)] hover:scale-[1.02] active:scale-[0.99]"
-                  }`}
-              >
-                {loading
-                  ? t("Завантаження...", "Загрузка...")
-                  : t("Увійти", "Войти")}
-              </button>
-
-              <div className="text-center">
-                <button
-                  type="button"
-                  onClick={() => (window.location.href = "/")}
-                  className="text-sm font-medium text-pink-600 hover:text-rose-600"
-                >
-                  {t("Повернутися на сайт", "Назад на сайт")}
-                </button>
               </div>
-            </form>
-          </div>
-        </main>
-      </div>
 
-      {/* Футер сторінки логіну */}
-      <footer className="text-center py-6 text-sm border-t border-pink-200/60 dark:border-fuchsia-900/30 text-gray-600 dark:text-fuchsia-200">
-        <p className="font-medium">
-          © {new Date().getFullYear()}{" "}
-          <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
-          {t("Усі права захищені.", "Все права защищены.")}
-        </p>
-      </footer>
-    </div>
+              {/* Форма логіну */}
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div>
+                  <input
+                    type="email"
+                    placeholder={t("Електронна пошта", "Email")}
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white dark:bg-white/5 dark:text-fuchsia-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  />
+                </div>
+
+                <div>
+                  <input
+                    type="password"
+                    placeholder={t("Пароль", "Пароль")}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white dark:bg-white/5 dark:text-fuchsia-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                  />
+                </div>
+
+                {error && (
+                  <p className="text-sm text-rose-500 text-center font-medium">
+                    {error}
+                  </p>
+                )}
+
+                {/* 🌈 Яскрава градієнтна кнопка */}
+                <button
+                  type="submit"
+                  disabled={loading}
+                  className={`w-full py-3.5 rounded-2xl font-semibold text-white transition transform
+                    ${
+                      loading
+                        ? "bg-gray-400 cursor-not-allowed"
+                        : "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 hover:shadow-[0_0_25px_rgba(255,0,128,0.35)] hover:scale-[1.02] active:scale-[0.99]"
+                    }`}
+                >
+                  {loading
+                    ? t("Завантаження...", "Загрузка...")
+                    : t("Увійти", "Войти")}
+                </button>
+
+                <div className="text-center">
+                  <button
+                    type="button"
+                    onClick={() => (window.location.href = "/")}
+                    className="text-sm font-medium text-pink-600 hover:text-rose-600"
+                  >
+                    {t("Повернутися на сайт", "Назад на сайт")}
+                  </button>
+                </div>
+              </form>
+            </div>
+          </main>
+        </div>
+
+        {/* Футер сторінки логіну */}
+        <footer className="text-center py-6 text-sm border-t border-pink-200/60 dark:border-fuchsia-900/30 text-gray-600 dark:text-fuchsia-200">
+          <p className="font-medium">
+            © {new Date().getFullYear()}{" "}
+            <span className="text-pink-500 font-semibold">
+              ANK Studio LMS
+            </span>{" "}
+            • {t("Усі права захищені.", "Все права защищены.")}
+          </p>
+        </footer>
+      </div>
+    </>
   );
 }
