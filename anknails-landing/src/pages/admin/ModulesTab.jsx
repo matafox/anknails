@@ -594,63 +594,66 @@ export default function ModulesTab({ darkMode, i18n }) {
                           >
                             {!isEditingLesson ? (
                               <>
-                                <div className="flex justify-between">
-                                  <div className="w-full">
-                                    <div className="flex items-center gap-2">
-                                      <b className="truncate" title={l.title}>{l.title}</b>
-                                      {l.type && (
-                                        <span
-                                          className={`text-xs px-2 py-[2px] rounded-full whitespace-nowrap ${
-                                            l.type === "practice"
-                                              ? "bg-purple-200 text-purple-700"
-                                              : "bg-pink-200 text-pink-700"
-                                          }`}
-                                        >
-                                          {l.type === "practice"
-                                            ? t("Практика", "Практика")
-                                            : t("Теорія", "Теория")}
-                                        </span>
-                                      )}
-                                    </div>
+                                <div className="flex justify-between gap-2">
+  {/* Ліва частина: заголовок + бейдж, може стискатися */}
+  <div className="flex-1 min-w-0">
+    <div className="flex items-center gap-2 min-w-0">
+      <b
+        className="truncate block"
+        title={l.title}
+      >
+        {l.title}
+      </b>
 
-                                    {l.description && (
-                                      <p className="mt-1 line-clamp-3">{l.description}</p>
-                                    )}
+      {l.type && (
+        <span
+          className={`text-xs px-2 py-[2px] rounded-full whitespace-nowrap ${
+            l.type === "practice"
+              ? "bg-purple-200 text-purple-700"
+              : "bg-pink-200 text-pink-700"
+          }`}
+        >
+          {l.type === "practice"
+            ? t("Практика", "Практика")
+            : t("Теорія", "Теория")}
+        </span>
+      )}
+    </div>
 
-                                    {/* Превʼю для існуючого GUID */}
-                                    {isBunnyGuid(l.youtube_id) && (
-                                      <PreviewBunny guid={l.youtube_id} />
-                                    )}
+    {l.description && (
+      <p className="mt-1 line-clamp-3">{l.description}</p>
+    )}
 
-                                    {l.homework && (
-                                      <p className="mt-2 text-xs opacity-80">
-                                        📝 <b>{t("Завдання", "Задание")}:</b>{" "}
-                                        {l.homework}
-                                      </p>
-                                    )}
-                                    {l.materials && (
-                                      <p className="mt-1 text-xs opacity-80">
-                                        📁 <b>{t("Матеріали", "Материалы")}:</b>{" "}
-                                        {l.materials}
-                                      </p>
-                                    )}
-                                  </div>
+    {isBunnyGuid(l.youtube_id) && <PreviewBunny guid={l.youtube_id} />}
 
-                                  <div className="flex flex-col gap-1 ml-2 shrink-0">
-                                    <button
-                                      onClick={() => startEditLesson(l)}
-                                      className="text-blue-500 text-xs flex items-center gap-1"
-                                    >
-                                      <Edit3 className="w-3 h-3" /> {t("ред.", "ред.")}
-                                    </button>
-                                    <button
-                                      onClick={() => deleteLesson(l.id, mod.id)}
-                                      className="text-red-500 text-xs flex items-center gap-1"
-                                    >
-                                      <Trash2 className="w-3 h-3" /> {t("вид.", "удал.")}
-                                    </button>
-                                  </div>
-                                </div>
+    {l.homework && (
+      <p className="mt-2 text-xs opacity-80">
+        📝 <b>{t("Завдання", "Задание")}:</b> {l.homework}
+      </p>
+    )}
+    {l.materials && (
+      <p className="mt-1 text-xs opacity-80">
+        📁 <b>{t("Матеріали", "Материалы")}:</b> {l.materials}
+      </p>
+    )}
+  </div>
+
+  {/* Права частина: кнопки, ширина фіксована, не розтягується */}
+  <div className="flex flex-col gap-1 ml-2 shrink-0 items-end">
+    <button
+      onClick={() => startEditLesson(l)}
+      className="text-blue-500 text-xs flex items-center gap-1"
+    >
+      <Edit3 className="w-3 h-3" /> {t("ред.", "ред.")}
+    </button>
+    <button
+      onClick={() => deleteLesson(l.id, mod.id)}
+      className="text-red-500 text-xs flex items-center gap-1"
+    >
+      <Trash2 className="w-3 h-3" /> {t("вид.", "удал.")}
+    </button>
+  </div>
+</div>
                               </>
                             ) : (
                               // ІНЛАЙН-РЕДАГУВАННЯ УРОКУ
