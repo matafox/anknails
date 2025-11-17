@@ -1099,7 +1099,11 @@ const markWelcomeSeen = () => {
   </div>
 </aside>
 
-      <AiAssistantWidget backendUrl={BACKEND} />
+      <AiAssistantWidget
+  backendUrl={BACKEND}
+  userId={user?.id}
+  lang={i18n.language}
+/>
 
       {/* Контент */}
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
