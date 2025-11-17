@@ -3,6 +3,24 @@ import { X, MessageCircle, Send } from "lucide-react";
 
 const DEFAULT_BACKEND = "https://anknails-backend-production.up.railway.app";
 
+// 🔹 Заготовлені питання
+const SUGGESTED_QUESTIONS = {
+  uk: [
+    "Не можу зайти в кабінет, пише що немає доступу",
+    "Відео не завантажується / чорний екран",
+    "Як продовжити доступ до курсу?",
+    "Де знайти домашнє завдання до уроку?",
+    "Коли і як я отримаю сертифікат ANK Studio?",
+  ],
+  ru: [
+    "Не могу зайти в кабинет, пишет что нет доступа",
+    "Видео не загружается / чёрный экран",
+    "Как продлить доступ к курсу?",
+    "Где найти домашнее задание к уроку?",
+    "Когда и как я получу сертификат ANK Studio?",
+  ],
+};
+
 export default function AiAssistantWidget({
   userId,
   lang = "uk",
@@ -21,13 +39,16 @@ export default function AiAssistantWidget({
     },
   ]);
 
-  const sendMessage = async () => {
-    const trimmed = input.trim();
+  const suggestions =
+    lang === "ru" ? SUGGESTED_QUESTIONS.ru : SUGGESTED_QUESTIONS.uk;
+
+  // 🔹 універсальна функція відправки тексту (і з інпута, і з кнопок)
+  const sendMessageWith = async (rawText) => {
+    const trimmed = rawText.trim();
     if (!trimmed || loading) return;
 
     // додаємо повідомлення юзера
     setMessages((prev) => [...prev, { from: "user", text: trimmed }]);
-    setInput("");
     setLoading(true);
 
     try {
@@ -35,8 +56,6 @@ export default function AiAssistantWidget({
         message: trimmed,
         lang,
       };
-
-      // додаємо user_id тільки якщо він є (щоб не слати "anon")
       if (userId) {
         payload.user_id = userId;
       }
@@ -48,7 +67,6 @@ export default function AiAssistantWidget({
       });
 
       let answerText;
-
       try {
         const data = await res.json();
         answerText =
@@ -81,6 +99,14 @@ export default function AiAssistantWidget({
     }
   };
 
+  // відправка саме з інпута
+  const sendMessage = async () => {
+    const trimmed = input.trim();
+    if (!trimmed || loading) return;
+    setInput(""); // чистимо поле
+    await sendMessageWith(trimmed);
+  };
+
   const handleKeyDown = (e) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault();
@@ -107,7 +133,9 @@ export default function AiAssistantWidget({
           <div className="flex items-center justify-between px-3 py-2 bg-pink-500 text-white">
             <div className="flex flex-col">
               <span className="font-semibold text-sm">
-                {lang === "ru" ? "AI-помощник ANK Studio" : "AI-помічник ANK Studio"}
+                {lang === "ru"
+                  ? "AI-помощник ANK Studio"
+                  : "AI-помічник ANK Studio"}
               </span>
               <span className="text-[11px] opacity-85">
                 {lang === "ru"
@@ -118,6 +146,20 @@ export default function AiAssistantWidget({
             <button onClick={() => setOpen(false)}>
               <X className="w-4 h-4" />
             </button>
+          </div>
+
+          {/* 🔹 Популярні питання */}
+          <div className="px-3 pt-2 pb-1 border-b border-pink-100 flex flex-wrap gap-1">
+            {suggestions.map((q, i) => (
+              <button
+                key={i}
+                type="button"
+                onClick={() => sendMessageWith(q)}
+                className="text-[11px] px-2.5 py-1 rounded-full border border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 transition"
+              >
+                {q}
+              </button>
+            ))}
           </div>
 
           {/* Повідомлення */}
@@ -142,7 +184,9 @@ export default function AiAssistantWidget({
             ))}
             {loading && (
               <div className="text-xs opacity-60">
-                {lang === "ru" ? "Ассистент печатает..." : "Помічник набирає відповідь..."}
+                {lang === "ru"
+                  ? "Ассистент печатает..."
+                  : "Помічник набирає відповідь..."}
               </div>
             )}
           </div>
