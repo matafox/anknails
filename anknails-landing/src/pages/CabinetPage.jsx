@@ -1101,8 +1101,8 @@ const markWelcomeSeen = () => {
 
       <AiAssistantWidget
   backendUrl={BACKEND}
-  userId={user?.id}
   lang={i18n.language}
+  darkMode={darkMode}
 />
 
       {/* Контент */}
