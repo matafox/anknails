@@ -424,8 +424,8 @@ export default function DashboardSection({
                   <span className="text-sm md:text-base font-medium">
                     {lastLessonNumber
                       ? t(
-                          `Урок №${lastLessonNumber}: ${lastLesson.title || ""}`,
-                          `Урок №${lastLessonNumber}: ${lastLesson.title || ""}`
+                          `• ${lastLesson.title || ""}`,
+                          `• ${lastLesson.title || ""}`
                         )
                       : lastLesson.title ||
                         t("Останній переглянутий урок", "Последний просмотренный урок")}
