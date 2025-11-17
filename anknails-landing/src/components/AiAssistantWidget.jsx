@@ -42,12 +42,11 @@ export default function AiAssistantWidget({
   const suggestions =
     lang === "ru" ? SUGGESTED_QUESTIONS.ru : SUGGESTED_QUESTIONS.uk;
 
-  // 🔹 універсальна функція відправки тексту (і з інпута, і з кнопок)
+  // 🔹 універсальна функція відправки тексту
   const sendMessageWith = async (rawText) => {
     const trimmed = rawText.trim();
     if (!trimmed || loading) return;
 
-    // додаємо повідомлення юзера
     setMessages((prev) => [...prev, { from: "user", text: trimmed }]);
     setLoading(true);
 
@@ -99,11 +98,11 @@ export default function AiAssistantWidget({
     }
   };
 
-  // відправка саме з інпута
+  // відправка з інпута
   const sendMessage = async () => {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
-    setInput(""); // чистимо поле
+    setInput("");
     await sendMessageWith(trimmed);
   };
 
@@ -127,10 +126,24 @@ export default function AiAssistantWidget({
 
       {/* Вікно чату */}
       {open && (
-        <div className="fixed bottom-20 right-4 z-40 w-80 max-w-[90vw] rounded-2xl shadow-xl border border-pink-200
-                        bg-white/95 backdrop-blur-md flex flex-col overflow-hidden">
+        <div
+          className="
+            fixed z-40 
+            inset-x-0 bottom-0
+            md:bottom-20 md:right-4 md:left-auto
+            w-full md:w-80
+            max-w-full md:max-w-[90vw]
+            h-[70vh] md:h-auto
+            rounded-t-3xl md:rounded-2xl
+            shadow-xl
+            border border-fuchsia-800/70
+            bg-[#050011]/95
+            backdrop-blur-xl
+            flex flex-col overflow-hidden
+          "
+        >
           {/* Header */}
-          <div className="flex items-center justify-between px-3 py-2 bg-pink-500 text-white">
+          <div className="flex items-center justify-between px-3 py-2 bg-gradient-to-r from-fuchsia-600 to-pink-500 text-white">
             <div className="flex flex-col">
               <span className="font-semibold text-sm">
                 {lang === "ru"
@@ -149,13 +162,14 @@ export default function AiAssistantWidget({
           </div>
 
           {/* 🔹 Популярні питання */}
-          <div className="px-3 pt-2 pb-1 border-b border-pink-100 flex flex-wrap gap-1">
+          <div className="px-3 pt-2 pb-1 border-b border-fuchsia-800/60 flex flex-wrap gap-1 bg-[#090018]">
             {suggestions.map((q, i) => (
               <button
                 key={i}
                 type="button"
                 onClick={() => sendMessageWith(q)}
-                className="text-[11px] px-2.5 py-1 rounded-full border border-pink-200 bg-pink-50 text-pink-700 hover:bg-pink-100 transition"
+                className="text-[11px] px-2.5 py-1 rounded-full border border-fuchsia-700/70 
+                           bg-fuchsia-900/40 text-fuchsia-100 hover:bg-fuchsia-800/60 transition"
               >
                 {q}
               </button>
@@ -163,7 +177,7 @@ export default function AiAssistantWidget({
           </div>
 
           {/* Повідомлення */}
-          <div className="flex-1 px-3 py-2 space-y-2 overflow-y-auto text-sm max-h-80">
+          <div className="flex-1 min-h-0 px-3 py-2 space-y-2 overflow-y-auto text-sm text-fuchsia-50">
             {messages.map((m, idx) => (
               <div
                 key={idx}
@@ -172,10 +186,10 @@ export default function AiAssistantWidget({
                 }`}
               >
                 <div
-                  className={`px-3 py-2 rounded-2xl max-w-[85%] ${
+                  className={`px-3 py-2 rounded-2xl max-w-[85%] text-sm leading-snug ${
                     m.from === "user"
-                      ? "bg-pink-500 text-white rounded-br-sm"
-                      : "bg-pink-100 text-pink-900 rounded-bl-sm"
+                      ? "bg-gradient-to-r from-pink-500 to-fuchsia-500 text-white rounded-br-sm"
+                      : "bg-[#130022] text-fuchsia-100 rounded-bl-sm"
                   }`}
                 >
                   {m.text}
@@ -183,7 +197,7 @@ export default function AiAssistantWidget({
               </div>
             ))}
             {loading && (
-              <div className="text-xs opacity-60">
+              <div className="text-xs opacity-60 text-fuchsia-200">
                 {lang === "ru"
                   ? "Ассистент печатает..."
                   : "Помічник набирає відповідь..."}
@@ -192,14 +206,21 @@ export default function AiAssistantWidget({
           </div>
 
           {/* Інпут */}
-          <div className="border-t border-pink-200 flex items-center gap-2 px-2 py-2">
+          <div className="border-t border-fuchsia-800/60 bg-[#050011] flex items-center gap-2 px-2 py-2">
             <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={handleKeyDown}
               rows={1}
-              className="flex-1 text-sm resize-none outline-none border border-pink-200 rounded-xl px-2 py-1
-                         focus:border-pink-400"
+              className="
+                flex-1 text-sm resize-none outline-none 
+                rounded-xl px-2 py-1
+                border border-fuchsia-700/70
+                bg-[#0b0018]
+                text-fuchsia-50
+                placeholder:text-fuchsia-400
+                focus:border-pink-400
+              "
               placeholder={
                 lang === "ru"
                   ? "Напиши вопрос по курсу..."
@@ -209,7 +230,13 @@ export default function AiAssistantWidget({
             <button
               onClick={sendMessage}
               disabled={loading || !input.trim()}
-              className="p-2 rounded-full bg-pink-500 text-white disabled:opacity-40 flex items-center justify-center"
+              className="
+                p-2 rounded-full 
+                bg-gradient-to-tr from-pink-500 to-fuchsia-500 
+                text-white 
+                disabled:opacity-40 
+                flex items-center justify-center
+              "
             >
               <Send className="w-4 h-4" />
             </button>
