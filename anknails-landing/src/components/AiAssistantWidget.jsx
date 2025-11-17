@@ -130,7 +130,8 @@ export default function AiAssistantWidget({
             md:bottom-20 md:right-4 md:left-auto
             w-full md:w-80
             max-w-full md:max-w-[90vw]
-            h-[60vh] md:h-auto
+            h-[75vh] max-h-[80vh]
+            md:h-auto md:max-h-[70vh]
             rounded-t-3xl md:rounded-2xl
             shadow-xl
             backdrop-blur-xl
@@ -198,11 +199,10 @@ export default function AiAssistantWidget({
             ))}
           </div>
 
-          {/* Повідомлення (зі скролом) */}
+          {/* Повідомлення (повноцінний скрол усередині) */}
           <div
             className={`
               flex-1 min-h-0 px-3 py-2 space-y-2 overflow-y-auto text-sm
-              max-h-[45vh] md:max-h-80
               ${darkMode ? "text-fuchsia-50" : "text-gray-800"}
             `}
           >
