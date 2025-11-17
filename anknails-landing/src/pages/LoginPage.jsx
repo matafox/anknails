@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import Header from "../components/Header"; // ⬅️ підключили новий хедер
+import Header from "../components/Header"; // ⬅️ хедер
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
@@ -37,7 +37,6 @@ export default function LoginPage() {
         );
       }
 
-      // ✅ Звичайний токен юзера
       localStorage.setItem("user_token", "true");
       localStorage.setItem("user_email", data.user.email);
       if (data.user.expires_at) {
@@ -47,7 +46,6 @@ export default function LoginPage() {
         localStorage.setItem("session_token", data.session_token);
       }
 
-      // ✅ Логіка ролей: адмін / звичайний
       if (data.user.is_admin || data.user.role === "admin") {
         localStorage.setItem("admin_token", "true");
         window.location.href = "/admin";
@@ -72,7 +70,7 @@ export default function LoginPage() {
           }
           50% {
             background-position: 100% 50%;
-            filter: hue-rotate(35deg);
+            filter: hue-rotate(25deg);
           }
           100% {
             background-position: 0% 100%;
@@ -90,12 +88,11 @@ export default function LoginPage() {
           dark:bg-[radial-gradient(circle_at_top,_#2b0f3d_0,_#12051f_42%,_#05000b_85%)]
         "
       >
-        {/* ✅ Фіксований хедер зверху */}
+        {/* ✅ Фіксований хедер */}
         <Header />
 
-        {/* Контентна частина (з урахуванням фіксованого хедера вже є spacer у Header) */}
         <div className="flex-1 w-full flex">
-          {/* 🛢 Порожній сайдбар з «розлитим бензином» */}
+          {/* 🛢 Сайдбар з переливом «бензину» */}
           <aside
             className="
               hidden md:block md:w-72 
@@ -103,26 +100,30 @@ export default function LoginPage() {
               relative overflow-hidden
             "
           >
-            {/* Шар з бензиновим переливом */}
+            {/* бензиновий шар */}
             <div
               className="absolute inset-0"
               style={{
                 backgroundImage: `
-                  radial-gradient(circle at 0% 0%, rgba(255,255,255,0.85) 0, transparent 45%),
-                  radial-gradient(circle at 0% 100%, rgba(59,130,246,0.45) 0, transparent 55%),
-                  radial-gradient(circle at 100% 0%, rgba(244,63,94,0.65) 0, transparent 55%),
-                  radial-gradient(circle at 100% 100%, rgba(16,185,129,0.55) 0, transparent 55%),
-                  radial-gradient(circle at 50% 30%, rgba(244,114,182,0.45) 0, transparent 60%),
-                  radial-gradient(circle at 30% 80%, rgba(129,140,248,0.5) 0, transparent 60%)
+                  linear-gradient(120deg,
+                    rgba(37,99,235,0.95),
+                    rgba(59,130,246,0.95),
+                    rgba(56,189,248,0.95),
+                    rgba(252,211,77,0.9),
+                    rgba(249,115,22,0.95),
+                    rgba(244,63,94,0.9),
+                    rgba(129,140,248,0.95)
+                  ),
+                  radial-gradient(circle at 15% 20%, rgba(255,255,255,0.35) 0, transparent 55%),
+                  radial-gradient(circle at 85% 80%, rgba(255,255,255,0.18) 0, transparent 55%)
                 `,
-                backgroundSize: "230% 230%",
+                backgroundSize: "280% 280%",
                 backgroundPosition: "0% 0%",
-                animation: "gasolineShift 22s ease-in-out infinite alternate",
+                animation: "gasolineShift 26s ease-in-out infinite alternate",
               }}
             />
-
-            {/* Легкий затемнений слой зверху, щоб не було кислотно */}
-            <div className="absolute inset-0 bg-gradient-to-b from-white/90 to-rose-50/96 dark:from-[#06000b]/92 dark:via-[#090013]/94 dark:to-[#020008]/98 mix-blend-overlay" />
+            {/* мʼякий overlay, щоб не було надто кислотно */}
+            <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-rose-50/88 to-amber-50/85 dark:from-[#050008]/90 dark:via-[#05000d]/94 dark:to-[#010006]/96 mix-blend-soft-light" />
           </aside>
 
           {/* Центрований блок логіну */}
@@ -138,7 +139,6 @@ export default function LoginPage() {
                 dark:shadow-[0_0_22px_rgba(236,72,153,0.22)]
               "
             >
-              {/* 🔹 Привітання над формою */}
               <div className="mb-8 text-center">
                 <p className="mt-2 text-sm opacity-75">
                   {t(
@@ -148,7 +148,6 @@ export default function LoginPage() {
                 </p>
               </div>
 
-              {/* Форма логіну */}
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
                   <input
@@ -178,7 +177,6 @@ export default function LoginPage() {
                   </p>
                 )}
 
-                {/* 🌈 Яскрава градієнтна кнопка */}
                 <button
                   type="submit"
                   disabled={loading}
@@ -208,13 +206,10 @@ export default function LoginPage() {
           </main>
         </div>
 
-        {/* Футер сторінки логіну */}
         <footer className="text-center py-6 text-sm border-t border-pink-200/60 dark:border-fuchsia-900/30 text-gray-600 dark:text-fuchsia-200">
           <p className="font-medium">
             © {new Date().getFullYear()}{" "}
-            <span className="text-pink-500 font-semibold">
-              ANK Studio LMS
-            </span>{" "}
+            <span className="text-pink-500 font-semibold">ANK Studio LMS</span>{" "}
             • {t("Усі права захищені.", "Все права защищены.")}
           </p>
         </footer>
