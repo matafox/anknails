@@ -117,7 +117,7 @@ export default function AiAssistantWidget({
             md:bottom-20 md:right-4 md:left-auto
             w-full md:w-80
             max-w-full md:max-w-[90vw]
-            h-[60vh] md:h-[70vh] md:max-h-[520px]
+            h-[60vh] md:h-auto
             rounded-t-3xl md:rounded-2xl
             shadow-xl
             backdrop-blur-xl
@@ -155,12 +155,10 @@ export default function AiAssistantWidget({
             </button>
           </div>
 
-          {/* 🔹 Популярні питання (з прокруткою списку) */}
+          {/* 🔹 Популярні питання */}
           <div
             className={`
-              px-3 pt-2 pb-1 border-b
-              flex flex-wrap gap-1
-              max-h-24 overflow-y-auto
+              px-3 pt-2 pb-1 border-b flex flex-wrap gap-1
               ${
                 darkMode
                   ? "border-fuchsia-800/60 bg-[#090018]"
@@ -187,10 +185,11 @@ export default function AiAssistantWidget({
             ))}
           </div>
 
-          {/* Повідомлення */}
+          {/* Повідомлення (додав max-h для реального скролу) */}
           <div
             className={`
               flex-1 min-h-0 px-3 py-2 space-y-2 overflow-y-auto text-sm
+              max-h-[45vh] md:max-h-80
               ${darkMode ? "text-fuchsia-50" : "text-gray-800"}
             `}
           >
