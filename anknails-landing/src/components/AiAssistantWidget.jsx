@@ -1,9 +1,13 @@
 import { useState } from "react";
 import { X, MessageCircle, Send } from "lucide-react";
 
-const BACKEND = "https://anknails-backend-production.up.railway.app";
+const DEFAULT_BACKEND = "https://anknails-backend-production.up.railway.app";
 
-export default function AiAssistantWidget({ userId, lang = "uk" }) {
+export default function AiAssistantWidget({
+  userId,
+  lang = "uk",
+  backendUrl = DEFAULT_BACKEND,
+}) {
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -21,31 +25,47 @@ export default function AiAssistantWidget({ userId, lang = "uk" }) {
     const trimmed = input.trim();
     if (!trimmed || loading) return;
 
-    const userMsg = { from: "user", text: trimmed };
-    setMessages((prev) => [...prev, userMsg]);
+    // додаємо повідомлення юзера
+    setMessages((prev) => [...prev, { from: "user", text: trimmed }]);
     setInput("");
     setLoading(true);
 
     try {
-      const res = await fetch(`${BACKEND}/api/ai-assistant`, {
+      const payload = {
+        message: trimmed,
+        lang,
+      };
+
+      // додаємо user_id тільки якщо він є (щоб не слати "anon")
+      if (userId) {
+        payload.user_id = userId;
+      }
+
+      const res = await fetch(`${backendUrl}/api/ai-assistant`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          message: trimmed,
-          user_id: userId || "anon",
-          lang,
-        }),
+        body: JSON.stringify(payload),
       });
 
-      const data = await res.json();
-      const answer = data?.answer || 
-        (lang === "ru"
-          ? "Произошла ошибка. Попробуй еще раз позже 🙏"
-          : "Сталася помилка. Спробуй ще раз пізніше 🙏");
+      let answerText;
 
-      setMessages((prev) => [...prev, { from: "bot", text: answer }]);
+      try {
+        const data = await res.json();
+        answerText =
+          data?.answer ||
+          (lang === "ru"
+            ? "Произошла ошибка. Попробуй еще раз позже 🙏"
+            : "Сталася помилка. Спробуй ще раз пізніше 🙏");
+      } catch {
+        answerText =
+          lang === "ru"
+            ? "Произошла ошибка при разборе ответа сервера 🙏"
+            : "Сталася помилка під час обробки відповіді сервера 🙏";
+      }
+
+      setMessages((prev) => [...prev, { from: "bot", text: answerText }]);
     } catch (e) {
-      console.error(e);
+      console.error("AI assistant error:", e);
       setMessages((prev) => [
         ...prev,
         {
