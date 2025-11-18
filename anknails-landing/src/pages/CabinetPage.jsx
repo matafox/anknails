@@ -22,7 +22,7 @@ import {
   Home,
 } from "lucide-react";
 
-import usePlatformConfig from "../hooks/usePlatformConfig"; // 🆕 хук платформи
+import usePlatformConfig from "../hooks/usePlatform";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
