@@ -19,7 +19,10 @@ export default function PrivacyPage() {
   // ⬇️ Скидання скролу при завантаженні сторінки
   useEffect(() => {
     window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    document.title = T("Політика конфіденційності — ANK Studio", "Политика конфиденциальности — ANK Studio");
+    document.title = T(
+      "Політика конфіденційності — ANK Studio",
+      "Политика конфиденциальности — ANK Studio"
+    );
   }, [i18n.language]);
 
   const [consent, setConsent] = useState("unknown");
@@ -73,31 +76,41 @@ export default function PrivacyPage() {
 
   return (
     <div
-      className="min-h-screen w-full px-4 sm:px-6 py-6 sm:py-10
-                 bg-gradient-to-b from-[#f6f0ff] via-[#fff] to-[#fdf9ff]
-                 dark:from-[#100d16] dark:via-[#18141f] dark:to-[#100d16]
-                 text-gray-800 dark:text-fuchsia-100"
+      className="
+        min-h-screen w-full px-4 sm:px-6 
+        pt-3 sm:pt-4 pb-10 sm:pb-14
+        mt-[-1.5rem] sm:mt-[-2rem]
+        bg-gradient-to-b from-[#f6f0ff] via-[#fff] to-[#fdf9ff]
+        dark:from-[#100d16] dark:via-[#18141f] dark:to-[#100d16]
+        text-gray-800 dark:text-fuchsia-100
+      "
     >
       <div className="max-w-3xl mx-auto">
         {/* Back */}
         <button
           onClick={backHome}
-          className="inline-flex items-center gap-2 text-sm mb-6 text-pink-600 dark:text-fuchsia-200 hover:opacity-90"
+          className="inline-flex items-center gap-2 text-sm mb-4 text-pink-600 dark:text-fuchsia-200 hover:opacity-90"
         >
           <ChevronLeft className="w-4 h-4" />
           {T("Назад", "Назад")}
         </button>
 
         {/* Title */}
-        <h1 className="text-3xl sm:text-4xl font-extrabold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
+        <h1 className="text-3xl sm:text-4xl font-extrabold mb-1 bg-clip-text text-transparent bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400">
           {T("Політика конфіденційності", "Политика конфиденциальности")}
         </h1>
-        <p className="text-sm opacity-70 mb-6">
+        <p className="text-sm opacity-70 mb-5">
           {T("Останнє оновлення:", "Последнее обновление:")} 11.11.2025
         </p>
 
         {/* Consent status / controls */}
-        <Section icon={Cookie} title={T("Керування згодою на cookies", "Управление согласием на cookies")}>
+        <Section
+          icon={Cookie}
+          title={T(
+            "Керування згодою на cookies",
+            "Управление согласием на cookies"
+          )}
+        >
           <p className="mb-3">
             {T(
               "Ми використовуємо аналітичні cookies лише за твоєї згоди. Ти можеш змінити вибір нижче:",
@@ -141,7 +154,10 @@ export default function PrivacyPage() {
         </Section>
 
         {/* What we collect */}
-        <Section icon={Database} title={T("Які дані ми збираємо", "Какие данные мы собираем")}>
+        <Section
+          icon={Database}
+          title={T("Які дані ми збираємо", "Какие данные мы собираем")}
+        >
           <ul className="list-disc pl-5 space-y-1">
             <li>
               {T(
@@ -211,7 +227,10 @@ export default function PrivacyPage() {
         </Section>
 
         {/* Sharing */}
-        <Section icon={Globe2} title={T("Передача третім сторонам", "Передача третьим сторонам")}>
+        <Section
+          icon={Globe2}
+          title={T("Передача третім сторонам", "Передача третьим сторонам")}
+        >
           <p className="mb-2">
             {T(
               "Ми не продаємо персональні дані. Дані можуть оброблятись постачальниками сервісів (хостинг, аналітика, email).",
