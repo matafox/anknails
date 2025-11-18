@@ -350,7 +350,7 @@ export default function DashboardSection({
   /* === Рендер === */
   return (
     <div
-      className={`min-h-[calc(100vh-8rem)] flex flex-col justify-between ${
+      className={`min-h-[calc(100vh-8rem)] flex flex-col ${
         darkMode ? "text-fuchsia-100" : "text-gray-800"
       }`}
     >
@@ -741,7 +741,7 @@ export default function DashboardSection({
 
       {/* ====== Футер дашборду ====== */}
       <footer
-        className={`mt-8 text-center py-6 text-sm border-t ${
+        className={`pt-8 text-center py-6 text-sm border-t mt-auto ${
           darkMode ? "border-fuchsia-900/30 text-fuchsia-100/80" : "border-pink-200 text-gray-600"
         }`}
       >
