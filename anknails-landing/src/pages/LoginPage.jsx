@@ -1,9 +1,26 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
-import { Eye, EyeOff } from "lucide-react"; // 👈 додаємо іконки
-import Header from "../components/Header"; // ⬅️ хедер
+import { Eye, EyeOff } from "lucide-react";
+import Header from "../components/Header";
 
-const BACKEND = "https://anknails-backend-production.up.railway.app";
+// 🔗 Бекенд беремо з env, з запасним дефолтом
+const BACKEND =
+  import.meta.env.VITE_BACKEND_URL ||
+  "https://anknails-backend-production.up.railway.app";
+
+// Витягуємо slug платформи з URL: /ankstudio/login -> "ankstudio"
+function getPlatformSlug() {
+  if (typeof window === "undefined") return "";
+  const segments = window.location.pathname.split("/").filter(Boolean);
+  // 0: "ankstudio", 1: "login"
+  return segments[0] || "";
+}
+
+// Базовий path для редіректів: "" або "/ankstudio"
+function getBasePath() {
+  const slug = getPlatformSlug();
+  return slug ? `/${slug}` : "";
+}
 
 // 🎨 варіанти бензинових градієнтів
 const RADIAL_OVERLAY_PART = `
@@ -12,7 +29,6 @@ const RADIAL_OVERLAY_PART = `
 `;
 
 const GASOLINE_GRADIENTS = [
-  // 0 — синьо-помаранчевий
   `
     linear-gradient(120deg,
       rgba(37,99,235,0.95),
@@ -25,7 +41,6 @@ const GASOLINE_GRADIENTS = [
     ),
     ${RADIAL_OVERLAY_PART}
   `,
-  // 1 — фіолетово-бірюзовий
   `
     linear-gradient(130deg,
       rgba(76,29,149,0.95),
@@ -37,7 +52,6 @@ const GASOLINE_GRADIENTS = [
     ),
     ${RADIAL_OVERLAY_PART}
   `,
-  // 2 — рожево-золотий з цианом
   `
     linear-gradient(140deg,
       rgba(236,72,153,0.95),
@@ -53,13 +67,14 @@ const GASOLINE_GRADIENTS = [
 
 export default function LoginPage() {
   const { i18n } = useTranslation();
+  const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false); // 👈 стейт для ока
+  const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // 🎨 індекс обраного градієнта (запамʼятовується в localStorage)
   const [paletteIndex] = useState(() => {
     if (typeof window === "undefined") return 0;
     try {
@@ -78,18 +93,26 @@ export default function LoginPage() {
     }
   });
 
-  const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
+  const sidebarBg = GASOLINE_GRADIENTS[paletteIndex] || GASOLINE_GRADIENTS[0];
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
     setLoading(true);
 
+    const platformSlug = getPlatformSlug();
+    const basePath = getBasePath();
+
     try {
       const res = await fetch(`${BACKEND}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, lang: i18n.language }),
+        body: JSON.stringify({
+          email,
+          password,
+          lang: i18n.language,
+          platform_slug: platformSlug || null, // 👈 нова логіка
+        }),
       });
 
       const data = await res.json();
@@ -104,6 +127,7 @@ export default function LoginPage() {
         );
       }
 
+      // зберігаємо юзера
       localStorage.setItem("user_token", "true");
       localStorage.setItem("user_email", data.user.email);
       if (data.user.expires_at) {
@@ -113,12 +137,14 @@ export default function LoginPage() {
         localStorage.setItem("session_token", data.session_token);
       }
 
+      // admin / student
       if (data.user.is_admin || data.user.role === "admin") {
         localStorage.setItem("admin_token", "true");
-        window.location.href = "/admin";
+        // 👉 редірект всередину платформи
+        window.location.href = `${basePath}/admin`;
       } else {
         localStorage.removeItem("admin_token");
-        window.location.href = "/profile";
+        window.location.href = `${basePath}/profile`;
       }
     } catch (err) {
       setLoading(false);
@@ -126,12 +152,8 @@ export default function LoginPage() {
     }
   };
 
-  const sidebarBg =
-    GASOLINE_GRADIENTS[paletteIndex] || GASOLINE_GRADIENTS[0];
-
   return (
     <>
-      {/* 🔁 Анімації бензину + плаваючого тексту */}
       <style>{`
         @keyframes gasolineShift {
           0% {
@@ -173,11 +195,9 @@ export default function LoginPage() {
           dark:bg-[radial-gradient(circle_at_top,_#2b0f3d_0,_#12051f_42%,_#05000b_85%)]
         "
       >
-        {/* ✅ Фіксований хедер */}
         <Header />
 
         <div className="flex-1 w-full flex">
-          {/* 🛢 Сайдбар з «бензином» + плаваючий текст */}
           <aside
             className="
               hidden md:block md:w-72 
@@ -185,7 +205,6 @@ export default function LoginPage() {
               relative overflow-hidden
             "
           >
-            {/* бензиновий шар */}
             <div
               className="absolute inset-0"
               style={{
@@ -195,10 +214,8 @@ export default function LoginPage() {
                 animation: "gasolineShift 26s ease-in-out infinite alternate",
               }}
             />
-            {/* мʼякий overlay, щоб не було надто кислотно */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-rose-50/88 to-amber-50/85 dark:from-[#050008]/90 dark:via-[#05000d]/94 dark:to-[#010006]/96 mix-blend-soft-light" />
 
-            {/* 🌊 Плаваючий текст для учениць */}
             <div className="relative z-20 h-full flex flex-col justify-between px-6 py-8 text-slate-9 dark:text-fuchsia-50">
               <p className="text-[11px] uppercase tracking-[0.25em] opacity-75">
                 {t(
@@ -224,7 +241,6 @@ export default function LoginPage() {
             </div>
           </aside>
 
-          {/* Центрований, більш стриманий блок логіну */}
           <main className="flex-1 flex items-center justify-center px-5">
             <div
               className="
