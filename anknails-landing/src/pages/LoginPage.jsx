@@ -3,24 +3,39 @@ import { useTranslation } from "react-i18next";
 import { Eye, EyeOff } from "lucide-react";
 import Header from "../components/Header";
 
-// 🔗 Бекенд беремо з env, з запасним дефолтом
+// 🔗 Бекенд
 const BACKEND =
   import.meta.env.VITE_BACKEND_URL ||
   "https://anknails-backend-production.up.railway.app";
 
-// Витягуємо slug платформи з URL: /ankstudio/login -> "ankstudio"
-function getPlatformSlug() {
+/**
+ * ПЛАТФОРМА / БАЗОВИЙ PATH
+ * 1) Якщо є env:
+ *    VITE_PLATFORM_SLUG=ankstudio
+ *    VITE_BASE_PATH=/ankstudio
+ *    — використовуємо їх.
+ * 2) Якщо немає — беремо перший сегмент з поточного URL.
+ */
+
+// slug платформи (ankstudio)
+const PLATFORM_SLUG = (() => {
+  if (import.meta.env.VITE_PLATFORM_SLUG) {
+    return import.meta.env.VITE_PLATFORM_SLUG.replace(/\//g, "");
+  }
   if (typeof window === "undefined") return "";
   const segments = window.location.pathname.split("/").filter(Boolean);
-  // 0: "ankstudio", 1: "login"
   return segments[0] || "";
-}
+})();
 
-// Базовий path для редіректів: "" або "/ankstudio"
-function getBasePath() {
-  const slug = getPlatformSlug();
-  return slug ? `/${slug}` : "";
-}
+// базовий path для редіректів (/ankstudio або "")
+const BASE_PATH = (() => {
+  if (import.meta.env.VITE_BASE_PATH) {
+    // гарантуємо, що починається з /
+    const v = import.meta.env.VITE_BASE_PATH;
+    return v.startsWith("/") ? v : `/${v}`;
+  }
+  return PLATFORM_SLUG ? `/${PLATFORM_SLUG}` : "";
+})();
 
 // 🎨 варіанти бензинових градієнтів
 const RADIAL_OVERLAY_PART = `
@@ -100,9 +115,6 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const platformSlug = getPlatformSlug();
-    const basePath = getBasePath();
-
     try {
       const res = await fetch(`${BACKEND}/api/login`, {
         method: "POST",
@@ -111,7 +123,7 @@ export default function LoginPage() {
           email,
           password,
           lang: i18n.language,
-          platform_slug: platformSlug || null, // 👈 нова логіка
+          platform_slug: PLATFORM_SLUG || null,
         }),
       });
 
@@ -140,11 +152,10 @@ export default function LoginPage() {
       // admin / student
       if (data.user.is_admin || data.user.role === "admin") {
         localStorage.setItem("admin_token", "true");
-        // 👉 редірект всередину платформи
-        window.location.href = `${basePath}/admin`;
+        window.location.href = `${BASE_PATH}/admin`;
       } else {
         localStorage.removeItem("admin_token");
-        window.location.href = `${basePath}/profile`;
+        window.location.href = `${BASE_PATH}/profile`;
       }
     } catch (err) {
       setLoading(false);
