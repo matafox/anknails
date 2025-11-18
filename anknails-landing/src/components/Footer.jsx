@@ -7,16 +7,29 @@ export default function Footer() {
   const isAboutPage =
     typeof window !== "undefined" && window.location.hostname.includes("about.");
 
-  const PRIV = i18n.language === "ru" ? "Политика конфиденциальности" : "Політика конфіденційності";
-  const TERMS = i18n.language === "ru" ? "Условия пользования" : "Умови користування";
+  const PRIV =
+    i18n.language === "ru"
+      ? "Политика конфиденциальности"
+      : "Політика конфіденційності";
+  const TERMS =
+    i18n.language === "ru"
+      ? "Условия пользования"
+      : "Умови користування";
 
   return (
-    <footer className="relative w-full z-10 py-8 px-4 flex flex-col items-center justify-center text-center text-xs sm:text-sm">
-      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-pink-300/40 to-transparent dark:via-pink-700/30" />
+    <footer
+      className="
+        relative w-full z-10 py-8 px-4 
+        flex flex-col items-center justify-center text-center 
+        text-xs sm:text-sm
+      "
+    >
+      {/* верхня тонка лінія */}
+      <div className="absolute top-0 left-0 w-full h-[1px] bg-gradient-to-r from-transparent via-[color:#96A4C5]/50 to-transparent dark:via-[color:#6C5E82]/50" />
 
       {!isAboutPage && (
         <div className="flex items-center justify-center gap-4 mb-4">
-          <span className="text-gray-700 dark:text-gray-200 font-medium text-sm sm:text-base">
+          <span className="font-medium text-sm sm:text-base text-[color:#2E365A] dark:text-[color:#E2E6FF]">
             {acceptedText}:
           </span>
           <div className="flex items-center gap-3 opacity-90">
@@ -27,40 +40,68 @@ export default function Footer() {
         </div>
       )}
 
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 text-gray-600 dark:text-gray-400 leading-relaxed">
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-1.5 sm:gap-2 text-[color:#4b5478] dark:text-[color:#BFC8F2] leading-relaxed">
         <span className="font-medium tracking-wide">
           © {new Date().getFullYear()} ANK Studio
         </span>
 
-        <span className="hidden sm:inline text-gray-400 dark:text-gray-600">•</span>
+        <span className="hidden sm:inline text-[color:#96A4C5] dark:text-[color:#3F5B8B]">
+          •
+        </span>
 
         <span className="flex items-center gap-1.5">
-          <span className="text-gray-500 dark:text-gray-400">Made with</span>
-          <Heart className="w-4 h-4 text-rose-500 drop-shadow-[0_0_6px_rgba(244,63,94,0.4)] animate-pulse" fill="currentColor" />
-          <span className="text-gray-500 dark:text-gray-400">by</span>
+          <span className="text-[color:#6C5E82] dark:text-[color:#96A4C5]">
+            Made with
+          </span>
+          <Heart
+            className="w-4 h-4 text-[color:#D8737F] drop-shadow-[0_0_6px_rgba(216,115,127,0.55)] animate-pulse"
+            fill="currentColor"
+          />
+          <span className="text-[color:#6C5E82] dark:text-[color:#96A4C5]">
+            by
+          </span>
           <a
             href="https://t.me/mosaert"
             target="_blank"
             rel="noopener noreferrer"
-            className="font-semibold text-pink-500 hover:text-rose-600 transition-colors hover:underline underline-offset-2"
+            className="
+              font-semibold 
+              text-[color:#D8737F] hover:text-[color:#3F5B8B] 
+              transition-colors 
+              hover:underline underline-offset-2
+            "
           >
             @mosaert
           </a>
         </span>
       </div>
 
-      {/* 👇 лінки на hash-маршрути, щоб не ловити 404 */}
-      <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-gray-600 dark:text-gray-400">
-        <a href="#/privacy" className="underline decoration-pink-400/60 hover:decoration-pink-500">
+      {/* лінки на hash-маршрути */}
+      <div className="mt-3 flex flex-wrap items-center justify-center gap-3 text-[color:#4b5478] dark:text-[color:#BFC8F2]">
+        <a
+          href="#/privacy"
+          className="underline decoration-[color:#D8737F]/70 hover:decoration-[color:#3F5B8B]"
+        >
           {PRIV}
         </a>
         <span className="hidden sm:inline">•</span>
-        <a href="#/terms" className="underline decoration-pink-400/60 hover:decoration-pink-500">
+        <a
+          href="#/terms"
+          className="underline decoration-[color:#D8737F]/70 hover:decoration-[color:#3F5B8B]"
+        >
           {TERMS}
         </a>
       </div>
 
-      <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-[2px] bg-gradient-to-r from-transparent via-rose-300/40 to-transparent blur-sm dark:via-rose-600/30" />
+      {/* нижнє мʼяке сяйво */}
+      <div
+        className="
+          absolute bottom-0 left-1/2 -translate-x-1/2 
+          w-1/2 h-[2px] 
+          bg-gradient-to-r from-transparent via-[color:#3F5B8B]/45 to-transparent 
+          blur-sm dark:via-[color:#96A4C5]/40
+        "
+      />
     </footer>
   );
 }
