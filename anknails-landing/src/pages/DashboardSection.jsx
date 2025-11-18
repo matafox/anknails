@@ -350,7 +350,7 @@ export default function DashboardSection({
   /* === Рендер === */
   return (
     <div
-      className={`min-h-[calc(100vh-8rem)] flex flex-col ${
+      className={`min-h-screen flex flex-col ${
         darkMode ? "text-fuchsia-100" : "text-gray-800"
       }`}
     >
