@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { Eye, EyeOff } from "lucide-react"; // 👈 додаємо іконки
 import Header from "../components/Header"; // ⬅️ хедер
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
@@ -54,6 +55,7 @@ export default function LoginPage() {
   const { i18n } = useTranslation();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false); // 👈 стейт для ока
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -196,73 +198,106 @@ export default function LoginPage() {
             {/* мʼякий overlay, щоб не було надто кислотно */}
             <div className="absolute inset-0 bg-gradient-to-b from-white/85 via-rose-50/88 to-amber-50/85 dark:from-[#050008]/90 dark:via-[#05000d]/94 dark:to-[#010006]/96 mix-blend-soft-light" />
 
-           {/* 🌊 Плаваючий текст для учениць */}
-<div className="relative z-20 h-full flex flex-col justify-between px-6 py-8 text-slate-900 dark:text-fuchsia-50">
-  <p className="text-[11px] uppercase tracking-[0.25em] opacity-75">
-    {t(
-      "професійна онлайн-платформа ANK Studio",
-      "профессиональная онлайн-платформа ANK Studio"
-    )}
-  </p>
+            {/* 🌊 Плаваючий текст для учениць */}
+            <div className="relative z-20 h-full flex flex-col justify-between px-6 py-8 text-slate-9 dark:text-fuchsia-50">
+              <p className="text-[11px] uppercase tracking-[0.25em] opacity-75">
+                {t(
+                  "професійна онлайн-платформа ANK Studio",
+                  "профессиональная онлайн-платформа ANK Studio"
+                )}
+              </p>
 
-  <div className="mt-auto mb-4">
-    <p className="ank-login-floating-text text-lg font-semibold leading-snug">
-      {t(
-        "Курс уже в процесі: модулі вибудувані від основ до впевненої роботи з клієнтами.",
-        "Курс уже в процессе: модули выстроены от базы до уверенной работы с клиентами."
-      )}
-    </p>
-    <p className="mt-3 text-xs opacity-80 max-w-xs">
-      {t(
-        "Якщо ви вже на курсі — просто продовжуйте навчання у своєму кабінеті. Якщо ще ні — встигніть приєднатися до поточного потоку: записи, оновлення та матеріали залишаються з вами.",
-        "Если вы уже на курсе — просто продолжайте обучение в личном кабинете. Если ещё нет — успейте присоединиться к текущему потоку: записи, обновления и материалы остаются с вами."
-      )}
-    </p>
-  </div>
-</div>
+              <div className="mt-auto mb-4">
+                <p className="ank-login-floating-text text-lg font-semibold leading-snug">
+                  {t(
+                    "Курс уже в процесі: модулі вибудувані від основ до впевненої роботи з клієнтами.",
+                    "Курс уже в процессе: модули выстроены от базы до уверенной работы с клиентами."
+                  )}
+                </p>
+                <p className="mt-3 text-xs opacity-80 max-w-xs">
+                  {t(
+                    "Якщо ви вже на курсі — просто продовжуйте навчання у своєму кабінеті. Якщо ще ні — встигніть приєднатися до поточного потоку: записи, оновлення та матеріали залишаються з вами.",
+                    "Если вы уже на курсе — просто продолжайте обучение в личном кабинете. Если ещё нет — успейте присоединиться к текущему потоку: записи, обновления и материалы остаются с вами."
+                  )}
+                </p>
+              </div>
+            </div>
           </aside>
 
-          {/* Центрований блок логіну */}
+          {/* Центрований, більш стриманий блок логіну */}
           <main className="flex-1 flex items-center justify-center px-5">
             <div
               className="
-                w-full max-w-md rounded-[2rem] p-8 md:p-10
-                bg-white/80 
-                dark:bg-[#15061f]/85
-                backdrop-blur
-                border border-pink-200/60 dark:border-fuchsia-900/40
+                w-full max-w-md rounded-2xl p-8 md:p-10
+                bg-white/90 
+                dark:bg-[#15061f]/90
+                backdrop-blur-sm
+                border border-pink-100/70 dark:border-fuchsia-900/40
+                shadow-sm
               "
             >
-<div className="mb-8 text-center">
-  <p className="mt-2 text-sm opacity-75">
-    {t(
-      "Увійдіть до особистого кабінету, щоб продовжити навчання.",
-      "Войдите в личный кабинет, чтобы продолжить обучение."
-    )}
-  </p>
-</div>
+              <div className="mb-7 text-center">
+                <p className="text-sm opacity-80">
+                  {t(
+                    "Увійдіть до особистого кабінету, щоб продовжити навчання.",
+                    "Войдите в личный кабинет, чтобы продолжить обучение."
+                  )}
+                </p>
+              </div>
 
-              <form onSubmit={handleSubmit} className="space-y-6">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
+                  <label className="block text-xs font-medium mb-1.5 opacity-70">
+                    {t("Електронна пошта", "Email")}
+                  </label>
                   <input
                     type="email"
-                    placeholder={t("Електронна пошта", "Email")}
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white dark:bg-white/5 dark:text-fuchsia-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
+                    className="
+                      w-full px-4 py-2.5 rounded-xl border border-pink-100
+                      bg-white dark:bg-white/5 dark:text-fuchsia-100
+                      focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300
+                      text-sm
+                    "
                   />
                 </div>
 
                 <div>
-                  <input
-                    type="password"
-                    placeholder={t("Пароль", "Пароль")}
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    required
-                    className="w-full px-4 py-3 rounded-2xl border border-pink-200 bg-white dark:bg-white/5 dark:text-fuchsia-100 focus:outline-none focus:ring-2 focus:ring-pink-400"
-                  />
+                  <label className="block text-xs font-medium mb-1.5 opacity-70">
+                    {t("Пароль", "Пароль")}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      className="
+                        w-full px-4 py-2.5 pr-11 rounded-xl border border-pink-100
+                        bg-white dark:bg-white/5 dark:text-fuchsia-100
+                        focus:outline-none focus:ring-2 focus:ring-pink-300 focus:border-pink-300
+                        text-sm
+                      "
+                      placeholder={t("Введіть пароль", "Введите пароль")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword((v) => !v)}
+                      className="
+                        absolute inset-y-0 right-3 flex items-center
+                        text-pink-400 hover:text-pink-500 dark:text-pink-300 dark:hover:text-pink-200
+                      "
+                      aria-label={t("Показати пароль", "Показать пароль")}
+                    >
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
+                    </button>
+                  </div>
                 </div>
 
                 {error && (
@@ -274,11 +309,11 @@ export default function LoginPage() {
                 <button
                   type="submit"
                   disabled={loading}
-                  className={`w-full py-3.5 rounded-2xl font-semibold text-white transition transform
+                  className={`w-full py-3 rounded-xl text-sm font-semibold text-white transition
                     ${
                       loading
                         ? "bg-gray-400 cursor-not-allowed"
-                        : "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 hover:shadow-[0_0_25px_rgba(255,0,128,0.35)] hover:scale-[1.02] active:scale-[0.99]"
+                        : "bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-500 hover:opacity-95 active:scale-[0.99]"
                     }`}
                 >
                   {loading
