@@ -15,8 +15,8 @@ import {
   ChevronRight,
   DollarSign,
   Grid,
-  BarChart3, // іконка для Traffic
-  Eye, // превʼю
+  BarChart3,
+  Eye,
 } from "lucide-react";
 
 import ModulesTab from "./admin/ModulesTab";
@@ -28,6 +28,8 @@ import DashboardTab from "./admin/DashboardTab";
 import TrafficTab from "./admin/TrafficTab";
 import PreviewTab from "./admin/PreviewTab";
 
+import { usePlatform, getCurrentSlug } from "../hooks/usePlatform";
+
 export default function AdminPage() {
   const { i18n } = useTranslation();
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -35,11 +37,28 @@ export default function AdminPage() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [collapsed, setCollapsed] = useState(false);
 
+  // 🔹 платформа зі slug (ankstudio / english / ...)
+  const {
+    platform,
+    slug,
+    loading: platformLoading,
+    error: platformError,
+  } = usePlatform();
+
+  // 🔐 перевірка адмін-токена
   useEffect(() => {
     const token = localStorage.getItem("admin_token");
-    if (token !== "true") window.location.href = "/login";
+    if (token !== "true") {
+      const s = getCurrentSlug();
+      if (s) {
+        window.location.href = `/${s}/login`;
+      } else {
+        window.location.href = "/login";
+      }
+    }
   }, []);
 
+  // 🎨 тема
   useEffect(() => {
     const saved = localStorage.getItem("theme");
     const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
@@ -48,6 +67,7 @@ export default function AdminPage() {
     document.documentElement.classList.toggle("dark", isDark);
   }, []);
 
+  // 📌 активна вкладка + стан меню
   useEffect(() => {
     const savedTab = localStorage.getItem("admin_active_tab");
     const savedCollapsed = localStorage.getItem("admin_menu_collapsed");
@@ -81,10 +101,15 @@ export default function AdminPage() {
   const handleLogout = () => {
     localStorage.removeItem("admin_token");
     localStorage.removeItem("admin_active_tab");
-    window.location.href = "/";
+    const s = getCurrentSlug();
+    if (s) {
+      window.location.href = `/${s}/login`;
+    } else {
+      window.location.href = "/login";
+    }
   };
 
-  // 🧭 Навігація (preview + traffic з NEW)
+  // 🧭 Навігація
   const tabs = [
     { id: "dashboard", label: "Dashboard", icon: Grid },
     {
@@ -97,9 +122,49 @@ export default function AdminPage() {
     { id: "modules", label: i18n.language === "ru" ? "Модули" : "Модулі", icon: BookOpen },
     { id: "banner", label: i18n.language === "ru" ? "Баннер" : "Банер", icon: Image },
     { id: "earnings", label: i18n.language === "ru" ? "Заработок" : "Заробіток", icon: DollarSign },
-    { id: "traffic", label: i18n.language === "ru" ? "Трафик" : "Трафік", icon: BarChart3, badge: "NEW" },
+    {
+      id: "traffic",
+      label: i18n.language === "ru" ? "Трафик" : "Трафік",
+      icon: BarChart3,
+      badge: "NEW",
+    },
     { id: "settings", label: i18n.language === "ru" ? "Настройки" : "Налаштування", icon: Settings },
   ];
+
+  const brandName = platform?.name || "ANK Studio LMS";
+  const brandAccent = platform?.color || (darkMode ? "#f97316" : "#ec4899");
+  const brandLogo = platform?.logo || null;
+
+  // ⏳ якщо є slug – чекаємо платформу
+  if (slug && platformLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#080810] text-white">
+        <div className="text-center space-y-2">
+          <div className="text-xs uppercase tracking-[0.2em] opacity-60">
+            pltfrm.life
+          </div>
+          <div className="text-lg font-semibold">
+            Завантаження платформи <span className="opacity-70">({slug})</span>…
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ❌ помилка платформи
+  if (slug && platformError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#080810] text-white px-4">
+        <div className="max-w-md text-center space-y-3">
+          <h1 className="text-2xl font-bold">Платформа недоступна</h1>
+          <p>{platformError}</p>
+          <p className="text-sm opacity-70">
+            Перевір, що платформа зі slug <strong>{slug}</strong> існує та активна в адмінці pltfrm.life.
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div
@@ -132,9 +197,28 @@ export default function AdminPage() {
             </button>
 
             {!collapsed && (
-              <h2 className="text-2xl font-bold bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400 text-transparent bg-clip-text mb-6 text-center md:text-left">
-                ANK Studio LMS
-              </h2>
+              <div className="flex items-center gap-3 mb-6">
+                {brandLogo && (
+                  <img
+                    src={brandLogo}
+                    alt={brandName}
+                    className="w-9 h-9 rounded-xl object-cover border border-pink-200/60 dark:border-fuchsia-700/60"
+                  />
+                )}
+                <div>
+                  <h2
+                    className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-500 via-pink-500 to-rose-400"
+                    style={brandLogo ? {} : { backgroundImage: `linear-gradient(90deg, ${brandAccent}, #ec4899)` }}
+                  >
+                    {brandName}
+                  </h2>
+                  {slug && (
+                    <p className="text-xs uppercase tracking-[0.2em] opacity-60">
+                      slug: {slug}
+                    </p>
+                  )}
+                </div>
+              </div>
             )}
 
             <nav className="space-y-2 mb-6">
@@ -145,7 +229,9 @@ export default function AdminPage() {
                     setActiveTab(id);
                     setMenuOpen(false);
                   }}
-                  className={`relative flex items-center ${collapsed ? "justify-center" : "gap-3"} w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${
+                  className={`relative flex items-center ${
+                    collapsed ? "justify-center" : "gap-3"
+                  } w-full px-4 py-3 rounded-xl text-sm font-medium transition-all ${
                     activeTab === id
                       ? darkMode
                         ? "bg-pink-500/30 text-fuchsia-100 border border-pink-400/40"
@@ -198,7 +284,6 @@ export default function AdminPage() {
               {!collapsed && (i18n.language === "ru" ? "Українська" : "Русский")}
             </button>
 
-            {/* Нижній блок */}
             <div className="mt-8 flex flex-col items-center gap-3">
               <button
                 onClick={toggleCollapse}
@@ -225,15 +310,15 @@ export default function AdminPage() {
       <main className="flex-1 flex flex-col min-h-screen p-4 sm:p-6 md:p-8">
         <div className="flex-1 overflow-y-auto">
           {activeTab === "dashboard" && (
-            <DashboardTab darkMode={darkMode} i18n={i18n} setActiveTab={setActiveTab} />
+            <DashboardTab darkMode={darkMode} i18n={i18n} setActiveTab={setActiveTab} platform={platform} />
           )}
-          {activeTab === "preview" && <PreviewTab darkMode={darkMode} />}
-          {activeTab === "traffic" && <TrafficTab darkMode={darkMode} i18n={i18n} />}
-          {activeTab === "courses" && <CoursesTab darkMode={darkMode} i18n={i18n} />}
-          {activeTab === "modules" && <ModulesTab darkMode={darkMode} i18n={i18n} />}
-          {activeTab === "banner" && <BannerTab darkMode={darkMode} i18n={i18n} />}
-          {activeTab === "earnings" && <EarningsTab darkMode={darkMode} i18n={i18n} />}
-          {activeTab === "settings" && <SettingsTab darkMode={darkMode} i18n={i18n} />}
+          {activeTab === "preview" && <PreviewTab darkMode={darkMode} platform={platform} />}
+          {activeTab === "traffic" && <TrafficTab darkMode={darkMode} i18n={i18n} platform={platform} />}
+          {activeTab === "courses" && <CoursesTab darkMode={darkMode} i18n={i18n} platform={platform} />}
+          {activeTab === "modules" && <ModulesTab darkMode={darkMode} i18n={i18n} platform={platform} />}
+          {activeTab === "banner" && <BannerTab darkMode={darkMode} i18n={i18n} platform={platform} />}
+          {activeTab === "earnings" && <EarningsTab darkMode={darkMode} i18n={i18n} platform={platform} />}
+          {activeTab === "settings" && <SettingsTab darkMode={darkMode} i18n={i18n} platform={platform} />}
         </div>
 
         <footer
@@ -243,7 +328,7 @@ export default function AdminPage() {
         >
           <p className="font-medium">
             © {new Date().getFullYear()}{" "}
-            <span className="text-pink-500 font-semibold">ANK Studio LMS</span> •{" "}
+            <span className="text-pink-500 font-semibold">{brandName}</span> •{" "}
             {i18n.language === "ru" ? "Все права защищены." : "Усі права захищені."}
           </p>
         </footer>
