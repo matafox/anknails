@@ -11,6 +11,7 @@ export default function Header({ onMenuToggle }) {
   const [darkMode, setDarkMode] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [isLoginPage, setIsLoginPage] = useState(false); // ⬅️
 
   // 🌐 dropdown state
   const [langOpen, setLangOpen] = useState(false);
@@ -22,6 +23,15 @@ export default function Header({ onMenuToggle }) {
   useEffect(() => {
     try {
       setIsAdmin(localStorage.getItem("admin_token") === "true");
+    } catch {}
+  }, []);
+
+  // визначаємо, чи це /login
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    try {
+      const path = window.location.pathname || "";
+      setIsLoginPage(path.startsWith("/login"));
     } catch {}
   }, []);
 
@@ -114,18 +124,20 @@ export default function Header({ onMenuToggle }) {
             </button>
 
             {/* Центр — навігація (десктоп) */}
-            <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-700 dark:text-fuchsia-100">
-              <a href="#modules" className="hover:text-pink-500">
-                {T("Модулі", "Модули")}
-              </a>
-              <a href="#forwhom" className="hover:text-pink-500">
-                {T("Для кого курс", "Для кого курс")}
-              </a>
-              <a href="#tariffs" className="hover:text-pink-500">
-                {T("Тарифи", "Тарифы")}
-              </a>
-              <a href="#faq" className="hover:text-pink-500">FAQ</a>
-            </nav>
+            {!isLoginPage && (
+              <nav className="hidden md:flex items-center gap-6 text-sm font-semibold text-gray-700 dark:text-fuchsia-100">
+                <a href="#modules" className="hover:text-pink-500">
+                  {T("Модулі", "Модули")}
+                </a>
+                <a href="#forwhom" className="hover:text-pink-500">
+                  {T("Для кого курс", "Для кого курс")}
+                </a>
+                <a href="#tariffs" className="hover:text-pink-500">
+                  {T("Тарифи", "Тарифы")}
+                </a>
+                <a href="#faq" className="hover:text-pink-500">FAQ</a>
+              </nav>
+            )}
 
             {/* Праворуч */}
             <div className="flex items-center gap-2">
@@ -135,7 +147,6 @@ export default function Header({ onMenuToggle }) {
                 className="p-2 rounded-xl bg-white/50 dark:bg-white/10 border border-white/30"
                 aria-label="theme"
               >
-                {/* 🔥 FIX: яскравіші іконки в dark / light */}
                 {darkMode ? (
                   <Sun className="w-5 h-5 text-amber-300" />
                 ) : (
@@ -152,7 +163,6 @@ export default function Header({ onMenuToggle }) {
                   aria-expanded={langOpen}
                   aria-label="language"
                 >
-                  {/* 🔥 FIX: підсвітив Globe в dark mode */}
                   <Globe className="w-5 h-5 text-pink-500 dark:text-pink-200" />
                 </button>
 
@@ -181,7 +191,7 @@ export default function Header({ onMenuToggle }) {
                 )}
               </div>
 
-              {/* Доступ / Адмін — тільки десктоп */}
+              {/* Доступ / Адмін — тільки десктоп (залишаємо навіть на /login, як ти й мав) */}
               {isAdmin ? (
                 <>
                   <a
@@ -208,18 +218,20 @@ export default function Header({ onMenuToggle }) {
                 </a>
               )}
 
-              {/* Бургер — мобілка */}
-              <button
-                onClick={toggleMenu}
-                className="md:hidden p-2 rounded-xl bg-white/50 dark:bg-white/10 border border-white/30"
-                aria-label="menu"
-              >
-                {menuOpen ? (
-                  <X className="w-6 h-6 text-pink-500" />
-                ) : (
-                  <Menu className="w-6 h-6 text-pink-400" />
-                )}
-              </button>
+              {/* Бургер — мобілка (НЕ показуємо на /login) */}
+              {!isLoginPage && (
+                <button
+                  onClick={toggleMenu}
+                  className="md:hidden p-2 rounded-xl bg-white/50 dark:bg.white/10 border border-white/30"
+                  aria-label="menu"
+                >
+                  {menuOpen ? (
+                    <X className="w-6 h-6 text-pink-500" />
+                  ) : (
+                    <Menu className="w-6 h-6 text-pink-400" />
+                  )}
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -228,8 +240,8 @@ export default function Header({ onMenuToggle }) {
       {/* Спейсер під фіксований хедер */}
       <div className="h-16 md:h-20" aria-hidden />
 
-      {/* Мобільний дропдаун (під хедером) */}
-      {menuOpen && (
+      {/* Мобільний дропдаун (під хедером) — теж ховаємо на /login */}
+      {!isLoginPage && menuOpen && (
         <div className="fixed top-16 md:top-20 inset-x-0 z-[9998] bg-white/95 dark:bg-[#0c0016]/95 backdrop-blur-xl border-b border-pink-200/40 dark:border-fuchsia-900/30">
           <div className="max-w-7xl mx-auto px-4 py-4 grid gap-2">
             <a href="#modules" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
@@ -241,7 +253,9 @@ export default function Header({ onMenuToggle }) {
             <a href="#tariffs" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
               {T("Тарифи", "Тарифы")}
             </a>
-            <a href="#faq" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">FAQ</a>
+            <a href="#faq" onClick={() => setMenuOpen(false)} className="py-3 font-semibold">
+              FAQ
+            </a>
 
             {/* RU / UK по центру (мобільне меню) */}
             <div className="mt-2 pt-3 border-t border-pink-200/40 dark:border-fuchsia-900/30">
@@ -249,7 +263,10 @@ export default function Header({ onMenuToggle }) {
                 {["ru", "uk"].map((lng) => (
                   <button
                     key={lng}
-                    onClick={() => { changeLanguage(lng); setMenuOpen(false); }}
+                    onClick={() => {
+                      changeLanguage(lng);
+                      setMenuOpen(false);
+                    }}
                     className={`px-4 py-1.5 text-sm rounded-lg border font-semibold
                       ${
                         i18n.language === lng
@@ -276,7 +293,10 @@ export default function Header({ onMenuToggle }) {
                     {T("Адмін панель", "Админ панель")}
                   </a>
                   <button
-                    onClick={() => { setMenuOpen(false); handleLogout(); }}
+                    onClick={() => {
+                      setMenuOpen(false);
+                      handleLogout();
+                    }}
                     className="mt-2 w-full py-3 text-pink-600 font-semibold"
                   >
                     {T("Вийти", "Выйти")}
