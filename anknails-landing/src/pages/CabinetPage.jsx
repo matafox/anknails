@@ -18,11 +18,9 @@ import {
   Globe,
   Flame,
   Check,
-  HelpCircle,
+  HelpCircle, 
   Home,
 } from "lucide-react";
-
-import { usePlatform as usePlatformConfig } from "../hooks/usePlatform";
 
 const BACKEND = "https://anknails-backend-production.up.railway.app";
 
@@ -327,9 +325,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
                 total_seconds: 1000,
                 completed: true,
               });
-              try {
-                onCompleted?.();
-              } catch {}
+              try { onCompleted?.(); } catch {}
               alert("Debug: прогрес відправлено як завершений.");
             }}
             className="mt-3 px-4 py-2 rounded-lg bg-pink-500 text-white text-sm"
@@ -362,7 +358,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
             } catch {}
           }}
         />
-        <VideoWatermark text={wmText} />
+      <VideoWatermark text={wmText} />
       </div>
 
       {getNextLesson && showNext && (
@@ -379,9 +375,7 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
               completed: true,
             });
 
-            try {
-              onCompleted?.();
-            } catch {}
+            try { onCompleted?.(); } catch {}
 
             localStorage.setItem("last_lesson", JSON.stringify(n));
             localStorage.setItem("last_view", "lesson");
@@ -400,17 +394,6 @@ const SafeVideo = ({ lesson, t, getNextLesson, userId, onProgressTick, onComplet
 /* ================= CABINET PAGE ================= */
 export default function CabinetPage() {
   const { i18n } = useTranslation();
-  const { platform, loading: platformLoading, error: platformError } = usePlatformConfig(); // 🆕
-
-  const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
-
-  const platformName = platform?.name || "ANK Studio";
-  const platformLogo = platform?.logo || null;
-  const brandGradient =
-    platform?.color && platform.color.trim()
-      ? `linear-gradient(90deg, ${platform.color}, ${platform.color})`
-      : "linear-gradient(to right,#d946ef,#fb7185)";
-
   const [user, setUser] = useState(null);
   const [modules, setModules] = useState([]);
   const [lessons, setLessons] = useState({});
@@ -420,85 +403,35 @@ export default function CabinetPage() {
   const [darkMode, setDarkMode] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
-  const [showWelcome, setShowWelcome] = useState(false);
-  const WELCOME_VER = 2;
-  const welcomeKeyFor = (uid) => `welcome_seen_v${WELCOME_VER}_${uid}`;
-
-  const IMGUR_CLIENT_ID = "8f3cb6e4c248b26"; // як у BannerTab
-
-  const [progress, setProgress] = useState({});
-  const [overallProgress, setOverallProgress] = useState(0);
-
-  const [view, setView] = useState("dashboard");
-
-  const avatarInputRef = useRef(null);
-
-  /* ---------- SCREEN-SHARED LOADING / ERROR ---------- */
-
-  const loadingScreen = (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-pink-50 via-rose-50 to-white">
-      <div className="flex flex-col items-center gap-3">
-        <div className="w-10 h-10 border-2 border-pink-400 border-t-transparent rounded-full animate-spin" />
-        <p className="text-sm text-gray-700">
-          {t("Завантаження кабінету...", "Загрузка кабинета...")}
-        </p>
-      </div>
-    </div>
-  );
-
-  if (platformLoading) {
-    return loadingScreen;
-  }
-
-  if (platformError || !platform) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-gray-50 via-rose-50 to-white">
-        <div className="max-w-sm text-center px-6 py-8 rounded-2xl bg-white shadow-lg border border-rose-100">
-          <p className="text-lg font-semibold mb-2">
-            {t("Платформа не знайдена", "Платформа не найдена")}
-          </p>
-          <p className="text-sm text-gray-600 mb-4">
-            {t(
-              "Можливо, посилання застаріло або платформа ще не налаштована.",
-              "Возможно, ссылка устарела или платформа ещё не настроена."
-            )}
-          </p>
-          <a
-            href="/"
-            className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-gradient-to-r from-pink-500 to-rose-500 text-white text-sm font-semibold"
-          >
-            {t("На головну", "На главную")}
-          </a>
-        </div>
-      </div>
-    );
-  }
-
-  /* ---------- Welcome модалка ---------- */
+const [showWelcome, setShowWelcome] = useState(false);
+const WELCOME_VER = 2;
+const welcomeKeyFor = (uid) => `welcome_seen_v${WELCOME_VER}_${uid}`;
 
   useEffect(() => {
-    if (!user?.id) return;
+  if (!user?.id) return;
 
-    const key = welcomeKeyFor(user.id);
-    const seenLocal = localStorage.getItem(key) === "1";
-    const seenSession = sessionStorage.getItem(key) === "1";
+  const key = welcomeKeyFor(user.id);
+  const seenLocal = localStorage.getItem(key) === "1";
+  const seenSession = sessionStorage.getItem(key) === "1";
 
-    if (seenLocal || seenSession) return;
+  // Якщо вже бачили — не показуємо
+  if (seenLocal || seenSession) return;
 
-    sessionStorage.setItem(key, "1");
-    setShowWelcome(true);
-  }, [user?.id]);
+  // Показуємо один раз у поточній сесії навіть без кліку користувача
+  sessionStorage.setItem(key, "1");
+  setShowWelcome(true);
+}, [user?.id]);
 
-  const markWelcomeSeen = () => {
-    if (!user?.id) {
-      setShowWelcome(false);
-      return;
-    }
-    const key = welcomeKeyFor(user.id);
-    localStorage.setItem(key, "1");
-    sessionStorage.setItem(key, "1");
-    setShowWelcome(false);
-  };
+// ⬇️ ДОДАЙ універсальний маркер «побачено»
+const markWelcomeSeen = () => {
+  if (!user?.id) { setShowWelcome(false); return; }
+  const key = welcomeKeyFor(user.id);
+  localStorage.setItem(key, "1");   // назавжди для цього користувача/версії
+  sessionStorage.setItem(key, "1"); // на поточну вкладку
+  setShowWelcome(false);
+};
+  
+  const IMGUR_CLIENT_ID = "8f3cb6e4c248b26"; // як у BannerTab
 
   async function uploadToImgur(file) {
     const form = new FormData();
@@ -538,6 +471,8 @@ export default function CabinetPage() {
     }
   };
 
+  const avatarInputRef = useRef(null);
+
   const handleChooseAvatar = () => {
     avatarInputRef.current?.click();
   };
@@ -573,16 +508,18 @@ export default function CabinetPage() {
     }
   };
 
+  const [progress, setProgress] = useState({});
+  const [overallProgress, setOverallProgress] = useState(0);
+
+  const [view, setView] = useState("dashboard");
+  const t = (ua, ru) => (i18n.language === "ru" ? ru : ua);
+
   // last view / last lesson
   useEffect(() => {
     const lastView = localStorage.getItem("last_view");
     const savedLesson = localStorage.getItem("last_lesson");
     if (lastView === "lesson" && savedLesson) {
-      try {
-        setSelectedLesson(JSON.parse(savedLesson));
-      } catch {
-        setSelectedLesson(null);
-      }
+      try { setSelectedLesson(JSON.parse(savedLesson)); } catch { setSelectedLesson(null); }
     } else setSelectedLesson(null);
   }, []);
 
@@ -599,7 +536,7 @@ export default function CabinetPage() {
   useEffect(() => {
     const savedLang = localStorage.getItem("lang");
     if (savedLang && savedLang !== i18n.language) i18n.changeLanguage(savedLang);
-  }, [i18n]);
+  }, []);
 
   // auth + user
   useEffect(() => {
@@ -637,7 +574,7 @@ export default function CabinetPage() {
         });
       })
       .catch(() => (window.location.href = "/login"));
-  }, [t]);
+  }, []);
 
   // single-device session
   useEffect(() => {
@@ -652,11 +589,7 @@ export default function CabinetPage() {
       .then((r) => r.json())
       .then((res) => {
         if (!res.valid) {
-          alert(
-            i18n.language === "ru"
-              ? "Ваш аккаунт открыт в другом браузере."
-              : "Ваш акаунт відкрито в іншому браузері."
-          );
+          alert(i18n.language === "ru" ? "Ваш аккаунт открыт в другом браузере." : "Ваш акаунт відкрито в іншому браузері.");
           localStorage.clear();
           window.location.href = "/login";
         }
@@ -685,10 +618,7 @@ export default function CabinetPage() {
             try {
               const r = await fetch(`${BACKEND}/api/lessons/${m.id}`);
               const j = await r.json();
-              setLessons((prev) => ({
-                ...prev,
-                [m.id]: (j.lessons || []).map((l) => ({ ...l })),
-              }));
+              setLessons((prev) => ({ ...prev, [m.id]: (j.lessons || []).map((l) => ({ ...l })) }));
             } catch {}
           })
         );
@@ -754,7 +684,7 @@ export default function CabinetPage() {
     window.location.href = "/login";
   };
 
-  const progSelected = selectedLesson ? progress[selectedLesson.id] || {} : {};
+  const progSelected = selectedLesson ? (progress[selectedLesson.id] || {}) : {};
 
   const toggleHomeworkDone = async (done) => {
     if (!user?.id || !selectedLesson?.id) return;
@@ -782,12 +712,7 @@ export default function CabinetPage() {
       await refreshAfterLessonComplete();
     } catch (e) {
       console.warn("toggleHomeworkDone failed", e);
-      alert(
-        t(
-          "Не вдалося оновити статус домашнього завдання",
-          "Не удалось обновить статус домашнего задания"
-        )
-      );
+      alert(t("Не вдалося оновити статус домашнього завдання", "Не удалось обновить статус домашнего задания"));
     }
   };
 
@@ -826,16 +751,11 @@ export default function CabinetPage() {
       await refreshAfterLessonComplete();
     } catch (e) {
       console.warn("markLessonComplete failed", e);
-      alert(
-        t("Не вдалося позначити урок завершеним", "Не удалось отметить урок завершенным")
-      );
+      alert(t("Не вдалося позначити урок завершеним", "Не удалось отметить урок завершенным"));
     }
   };
 
-  // якщо юзер ще не завантажився — показуємо лоадер (платформа вже є)
-  if (!user) {
-    return loadingScreen;
-  }
+  if (!user) return null;
 
   return (
     <div
@@ -845,41 +765,30 @@ export default function CabinetPage() {
           : "bg-gradient-to-br from-pink-50 via-rose-50 to-white text-gray-800"
       }`}
     >
-      {showWelcome && (
-        <WelcomeModal
-          open={showWelcome}
-          onClose={markWelcomeSeen}
-          onStart={() => {
-            markWelcomeSeen();
-            setView("modules");
-          }}
-          t={t}
-          darkMode={darkMode}
-          user={user}
-        />
-      )}
 
+      {showWelcome && (
+  <WelcomeModal
+    open={showWelcome}
+    onClose={markWelcomeSeen}            
+    onStart={() => {                     
+      markWelcomeSeen();
+      setView("modules");
+    }}
+    t={t}
+    darkMode={darkMode}
+    user={user}
+  />
+)}
+      
       {/* HEADER */}
       <header
         className={`md:hidden fixed top-0 left-0 right-0 flex items-center justify-between px-5 py-4 border-b backdrop-blur-xl z-30 rounded-b-[6px] ${
           darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/70"
         }`}
       >
-        <div className="flex items-center gap-2">
-          {platformLogo && (
-            <img
-              src={platformLogo}
-              alt={platformName}
-              className="w-7 h-7 rounded-lg object-cover"
-            />
-          )}
-          <h1
-            className="font-bold bg-clip-text text-transparent"
-            style={{ backgroundImage: brandGradient }}
-          >
-            {platformName}
-          </h1>
-        </div>
+        <h1 className="font-bold bg-gradient-to-r from-fuchsia-500 to-rose-400 bg-clip-text text-transparent">
+          ANK Studio
+        </h1>
         <button onClick={() => setMenuOpen(!menuOpen)}>
           {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
         </button>
@@ -893,9 +802,9 @@ export default function CabinetPage() {
         />
       )}
 
-      {/* SIDEBAR */}
-      <aside
-        className={`
+{/* SIDEBAR — мобілка: випадає згори; десктоп: ліворуч як завжди */}
+<aside
+  className={`
     fixed md:static inset-x-0 top-0
     w-full md:w-72
     h-[85vh] md:h-screen
@@ -908,353 +817,293 @@ export default function CabinetPage() {
     ${darkMode ? "border-fuchsia-900/30 bg-[#1a0a1f]/80" : "border-pink-200 bg-white/80"}
     pt-16 md:pt-0
   `}
-      >
+>
+  {/* Кнопка закриття в самому меню (моб) */}
+  <button
+    onClick={() => setMenuOpen(false)}
+    className="md:hidden absolute top-4 right-4 p-2 rounded-full bg-white/70 text-pink-600 shadow"
+    aria-label="Close menu"
+  >
+    <X className="w-5 h-5" />
+  </button>
+
+  {/* ЄДИНА коренева обгортка всередині aside */}
+  <div className="flex flex-col h-full">
+    {/* Верхня прокручувана частина */}
+    <div className="p-6 flex-1 overflow-y-auto">
+      <div className="flex flex-col items-center text-center mb-4">
+        {/* Прихований інпут для вибору файлу */}
+        <input
+          ref={avatarInputRef}
+          type="file"
+          accept="image/*"
+          className="hidden"
+          onChange={onAvatarSelected}
+        />
+
+        {/* Кругла аватарка (клік — завантажити нову в Imgur) */}
         <button
-          onClick={() => setMenuOpen(false)}
-          className="md:hidden absolute top-4 right-4 p-2 rounded-full bg-white/70 text-pink-600 shadow"
-          aria-label="Close menu"
+          onClick={handleChooseAvatar}
+          title={t("Змінити аватар", "Сменить аватар")}
+          className="relative group"
         >
-          <X className="w-5 h-5" />
+          {user.avatar_url ? (
+            <img
+              src={user.avatar_url}
+              alt="Avatar"
+              className="w-20 h-20 rounded-full object-cover ring-2 ring-pink-300 shadow-md group-hover:scale-105 transition"
+              referrerPolicy="no-referrer"
+            />
+          ) : (
+            <div
+              className={`w-20 h-20 rounded-full flex items-center justify-center ring-2 shadow-md group-hover:scale-105 transition ${
+                darkMode ? "ring-fuchsia-800/50 bg-[#15001f]" : "ring-pink-300 bg-pink-50"
+              }`}
+            >
+              <SquareUserRound className="w-10 h-10 text-pink-500" />
+            </div>
+          )}
+
+          {/* бейдж "Змінити" при ховері */}
+          <span
+            className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none ${
+              darkMode ? "bg-fuchsia-700 text-white" : "bg-pink-500 text-white"
+            }`}
+          >
+            {t("Змінити", "Сменить")}
+          </span>
         </button>
 
-        <div className="flex flex-col h-full">
-          {/* Верхня прокручувана частина */}
-          <div className="p-6 flex-1 overflow-y-auto">
-            <div className="flex flex-col items-center text-center mb-4">
-              {/* Прихований інпут для вибору файлу */}
-              <input
-                ref={avatarInputRef}
-                type="file"
-                accept="image/*"
-                className="hidden"
-                onChange={onAvatarSelected}
-              />
+        <h2 className="mt-3 font-bold text-lg">
+          {user.name || user.email.split("@")[0]}
+        </h2>
 
-              {/* Кругла аватарка */}
+        {/* 🔖 ТАРИФ: [бейдж] */}
+        <div className="mt-1 flex items-center gap-2">
+          <span className={`text-xs font-medium ${darkMode ? "text-fuchsia-200/80" : "text-gray-600"}`}>
+            {t("Тариф:", "Тариф:")}
+          </span>
+
+          {user.package === "pro" ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
+              PRO
+            </span>
+          ) : (
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
+              {t("Самостійний", "Самостоятельный")}
+            </span>
+          )}
+        </div>
+
+        <p className="text-sm opacity-70">
+          {t("Доступ до", "Доступ до")}: {user.expires_at}
+        </p>
+      </div>
+
+      {/* Загальний прогрес курсу */}
+      <div className="mb-4 px-3">
+        <p className="text-xs text-center font-medium text-pink-600">
+          {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
+        </p>
+        <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
+          <div
+            className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
+            style={{ width: `${overallProgress}%` }}
+          />
+        </div>
+      </div>
+
+      {/* MODULES */}
+      {modules.length === 0 ? (
+        <p className="text-center text-sm opacity-70">
+          {t("Модулів ще немає або курс не призначено", "Модулей нет или курс не назначен")}
+        </p>
+      ) : (
+        <div className="space-y-2">
+          {modules.map((mod) => (
+            <div key={mod.id} className="mb-2">
               <button
-                onClick={handleChooseAvatar}
-                title={t("Змінити аватар", "Сменить аватар")}
-                className="relative group"
+                onClick={() => toggleModule(mod.id)}
+                className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
               >
-                {user.avatar_url ? (
-                  <img
-                    src={user.avatar_url}
-                    alt="Avatar"
-                    className="w-20 h-20 rounded-full object-cover ring-2 ring-pink-300 shadow-md group-hover:scale-105 transition"
-                    referrerPolicy="no-referrer"
-                  />
-                ) : (
-                  <div
-                    className={`w-20 h-20 rounded-full flex items-center justify-center ring-2 shadow-md group-hover:scale-105 transition ${
-                      darkMode ? "ring-fuchsia-800/50 bg-[#15001f]" : "ring-pink-300 bg-pink-50"
-                    }`}
-                  >
-                    <SquareUserRound className="w-10 h-10 text-pink-500" />
-                  </div>
-                )}
-
-                <span
-                  className={`absolute -bottom-2 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded-full text-[10px] font-semibold opacity-0 group-hover:opacity-100 pointer-events-none ${
-                    darkMode ? "bg-fuchsia-700 text-white" : "bg-pink-500 text-white"
-                  }`}
-                >
-                  {t("Змінити", "Сменить")}
+                <span className="flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" /> {mod.title}
                 </span>
+                <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
+                  {typeof mod.lessons === "number" ? mod.lessons : (lessons[mod.id]?.length ?? 0)}
+                </span>
+                {expanded === mod.id ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
 
-              <h2 className="mt-3 font-bold text-lg">
-                {user.name || user.email.split("@")[0]}
-              </h2>
+              {mod.description && (
+                <p className={`text-xs mt-1 ml-8 pr-4 leading-snug ${darkMode ? "text-fuchsia-200/70" : "text-gray-600"}`}>
+                  {mod.description}
+                </p>
+              )}
 
-              {/* 🔖 ТАРИФ */}
-              <div className="mt-1 flex items-center gap-2">
-                <span
-                  className={`text-xs font-medium ${
-                    darkMode ? "text-fuchsia-200/80" : "text-gray-600"
-                  }`}
-                >
-                  {t("Тариф:", "Тариф:")}
-                </span>
+              {expanded === mod.id && (
+                <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
+                  {lessons[mod.id]?.map((l) => {
+                    const prog = progress[l.id];
+                    const done = !!prog?.completed;
+                    const percent = done
+                      ? 100
+                      : (prog && prog.total_seconds > 0
+                          ? Math.min(100, Math.max(0, Math.round((prog.watched_seconds / prog.total_seconds) * 100)))
+                          : 0);
+                    const isNew = new Date(l.created_at) > new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
 
-                {user.package === "pro" ? (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-semibold rounded-full bg-gradient-to-r from-fuchsia-500 to-rose-500 text-white shadow">
-                    PRO
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1 px-2.5 py-0.5 text-[11px] font-medium rounded-full border border-pink-300 text-pink-600 bg-white/70">
-                    {t("Самостійний", "Самостоятельный")}
-                  </span>
-                )}
-              </div>
-
-              <p className="text-sm opacity-70">
-                {t("Доступ до", "Доступ до")}: {user.expires_at}
-              </p>
-            </div>
-
-            {/* Загальний прогрес */}
-            <div className="mb-4 px-3">
-              <p className="text-xs text-center font-medium text-pink-600">
-                {t("Прогрес курсу", "Прогресс курса")}: {overallProgress}%
-              </p>
-              <div className="mt-1 h-2 bg-pink-100 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-gradient-to-r from-pink-400 to-rose-500 transition-all duration-700 ease-out"
-                  style={{ width: `${overallProgress}%` }}
-                />
-              </div>
-            </div>
-
-            {/* MODULES */}
-            {modules.length === 0 ? (
-              <p className="text-center text-sm opacity-70">
-                {t(
-                  "Модулів ще немає або курс не призначено",
-                  "Модулей нет или курс не назначен"
-                )}
-              </p>
-            ) : (
-              <div className="space-y-2">
-                {modules.map((mod) => (
-                  <div key={mod.id} className="mb-2">
-                    <button
-                      onClick={() => toggleModule(mod.id)}
-                      className="w-full flex justify-between items-center px-3 py-2 rounded-lg bg-pink-500/10 hover:bg-pink-500/20 transition font-semibold text-pink-600 relative"
-                    >
-                      <span className="flex items-center gap-2">
-                        <BookOpen className="w-4 h-4" /> {mod.title}
-                      </span>
-                      <span className="absolute right-10 text-xs bg-pink-500 text-white rounded-full px-2 py-[1px]">
-                        {typeof mod.lessons === "number"
-                          ? mod.lessons
-                          : lessons[mod.id]?.length ?? 0}
-                      </span>
-                      {expanded === mod.id ? (
-                        <ChevronUp className="w-4 h-4" />
-                      ) : (
-                        <ChevronDown className="w-4 h-4" />
-                      )}
-                    </button>
-
-                    {mod.description && (
-                      <p
-                        className={`text-xs mt-1 ml-8 pr-4 leading-snug ${
-                          darkMode ? "text-fuchsia-200/70" : "text-gray-600"
+                    return (
+                      <div
+                        key={l.id}
+                        onClick={() => {
+                          setSelectedLesson(l);
+                          localStorage.setItem("last_lesson", JSON.stringify(l));
+                          localStorage.setItem("last_view", "lesson");
+                          setMenuOpen(false);
+                        }}
+                        className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
+                          selectedLesson?.id === l.id
+                            ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
+                            : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
                         }`}
                       >
-                        {mod.description}
-                      </p>
-                    )}
-
-                    {expanded === mod.id && (
-                      <div className="ml-6 mt-2 space-y-2 border-l border-pink-200/30 pl-3">
-                        {lessons[mod.id]?.map((l) => {
-                          const prog = progress[l.id];
-                          const done = !!prog?.completed;
-                          const percent = done
-                            ? 100
-                            : prog && prog.total_seconds > 0
-                            ? Math.min(
-                                100,
-                                Math.max(
-                                  0,
-                                  Math.round(
-                                    (prog.watched_seconds / prog.total_seconds) * 100
-                                  )
-                                )
-                              )
-                            : 0;
-                          const isNew =
-                            new Date(l.created_at) >
-                            new Date(Date.now() - 7 * 24 * 60 * 60 * 1000);
-
-                          return (
-                            <div
-                              key={l.id}
-                              onClick={() => {
-                                setSelectedLesson(l);
-                                localStorage.setItem("last_lesson", JSON.stringify(l));
-                                localStorage.setItem("last_view", "lesson");
-                                setMenuOpen(false);
-                              }}
-                              className={`relative text-sm px-3 py-2 rounded-lg cursor-pointer border transition-all ${
-                                selectedLesson?.id === l.id
-                                  ? "border-pink-400 bg-pink-50 dark:bg-fuchsia-950/40 text-pink-600"
-                                  : "border-transparent hover:bg-pink-100/40 dark:hover:bg-fuchsia-900/30"
-                              }`}
-                            >
-                              <div className="flex items-center gap-2">
-                                {done ? (
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-4 h-4 text-green-500"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                  >
-                                    <circle cx="12" cy="12" r="10" />
-                                    <path d="M9 12l2 2 4-4" />
-                                  </svg>
-                                ) : (
-                                  <svg
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="w-4 h-4 text-pink-400"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2"
-                                  >
-                                    <circle cx="12" cy="12" r="10" />
-                                  </svg>
-                                )}
-                                <span className="flex-1 truncate">{l.title}</span>
-                                {isNew && (
-                                  <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />
-                                )}
-                                {percent > 0 && (
-                                  <span
-                                    className={`text-[11px] ml-1 font-semibold ${
-                                      done ? "text-green-500" : "text-pink-500"
-                                    }`}
-                                  >
-                                    {percent}%
-                                  </span>
-                                )}
-                              </div>
-                              <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
-                                <div
-                                  className={`h-full ${
-                                    done
-                                      ? "bg-green-400"
-                                      : percent > 0
-                                      ? "bg-gradient-to-r from-pink-400 to-rose-500"
-                                      : "bg-transparent"
-                                  }`}
-                                  style={{
-                                    width: `${percent}%`,
-                                    transition: "width 0.7s ease-out",
-                                    willChange: "width",
-                                  }}
-                                />
-                              </div>
-                            </div>
-                          );
-                        })}
+                        <div className="flex items-center gap-2">
+                          {done ? (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-green-500" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                              <path d="M9 12l2 2 4-4" />
+                            </svg>
+                          ) : (
+                            <svg xmlns="http://www.w3.org/2000/svg" className="w-4 h-4 text-pink-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <circle cx="12" cy="12" r="10" />
+                            </svg>
+                          )}
+                          <span className="flex-1 truncate">{l.title}</span>
+                          {isNew && <Flame className="w-4 h-4 text-pink-500 ml-1 animate-pulse" />}
+                          {percent > 0 && (
+                            <span className={`text-[11px] ml-1 font-semibold ${done ? "text-green-500" : "text-pink-500"}`}>
+                              {percent}%
+                            </span>
+                          )}
+                        </div>
+                        <div className="mt-1 h-1.5 bg-pink-100 dark:bg-fuchsia-950/50 rounded-full overflow-hidden">
+                          <div
+                            className={`h-full ${done ? "bg-green-400" : percent > 0 ? "bg-gradient-to-r from-pink-400 to-rose-500" : "bg-transparent"}`}
+                            style={{ width: `${percent}%`, transition: "width 0.7s ease-out", willChange: "width" }}
+                          />
+                        </div>
                       </div>
-                    )}
-                  </div>
-                ))}
-              </div>
-            )}
-
-            {/* Підтримка + Головна */}
-            <div className="mt-6 space-y-2">
-              <a
-                href="https://t.me/m/cE5yXCdSZTAy"
-                className={`w-full flex items-center justify-start gap-2 px-3 py-2 rounded-lg border transition text-left ${
-                  darkMode
-                    ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
-                    : "border-pink-200 bg-white/70 hover:bg-white"
-                }`}
-                title={t("Звернутися у підтримку", "Обратиться в поддержку")}
-              >
-                <HelpCircle className="w-4 h-4 text-pink-600" />
-                <span className="text-pink-600 font-medium">
-                  {t("Підтримка", "Поддержка")}
-                </span>
-              </a>
-
-              <button
-                onClick={() => {
-                  setSelectedLesson(null);
-                  setView("dashboard");
-                  localStorage.setItem("last_view", "dashboard");
-                  setMenuOpen(false);
-                  try {
-                    window.scrollTo({ top: 0, behavior: "smooth" });
-                  } catch {}
-                }}
-                className={`w-full flex items-center justify-start gap-2 px-3 py-2 rounded-lg border transition text-left ${
-                  darkMode
-                    ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
-                    : "border-pink-200 bg-white/70 hover:bg-white"
-                }`}
-                title={t("Перейти на головну", "Перейти на главную")}
-              >
-                <Home className="w-4 h-4 text-pink-600" />
-                <span className="text-pink-600 font-medium">
-                  {t("Головна", "Главная")}
-                </span>
-              </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-          </div>
-
-          {/* Нижній футер сайдбару */}
-          <div className="p-6 border-t border-pink-200/30 space-y-6">
-            {/* Темна тема */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Moon className="w-4 h-4 text-pink-500" />
-              </div>
-              <button
-                onClick={() => {
-                  const newMode = !darkMode;
-                  setDarkMode(newMode);
-                  document.documentElement.classList.toggle("dark", newMode);
-                  localStorage.setItem("theme", newMode ? "dark" : "light");
-                }}
-                className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
-                  darkMode
-                    ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]"
-                    : "bg-pink-200"
-                }`}
-              >
-                <span
-                  className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${
-                    darkMode ? "translate-x-6" : "translate-x-0"
-                  }`}
-                />
-              </button>
-            </div>
-
-            {/* Мова */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Globe className="w-4 h-4 text-pink-500" />
-              </div>
-              <div className="flex gap-2">
-                {["ru", "uk"].map((lang) => (
-                  <button
-                    key={lang}
-                    onClick={() => {
-                      i18n.changeLanguage(lang);
-                      localStorage.setItem("lang", lang);
-                    }}
-                    className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
-                      i18n.language === lang
-                        ? "bg-pink-500 text-white border-pink-500"
-                        : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
-                    }`}
-                  >
-                    {lang.toUpperCase()}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Вихід */}
-            <button
-              onClick={handleLogout}
-              className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
-            >
-              <LogOut className="w-4 h-4" /> {t("Вийти", "Выйти")}
-            </button>
-          </div>
+          ))}
         </div>
-      </aside>
+      )}
 
-      <AiAssistantWidget backendUrl={BACKEND} lang={i18n.language} darkMode={darkMode} />
+{/* ПІДТРИМКА + ГОЛОВНА — по вертикалі, в два ряди (іконки й текст ліворуч) */}
+<div className="mt-6 space-y-2">
+  <a
+    href="https://t.me/m/cE5yXCdSZTAy"
+    className={`w-full flex items-center justify-start gap-2 px-3 py-2 rounded-lg border transition text-left ${
+      darkMode
+        ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+        : "border-pink-200 bg-white/70 hover:bg-white"
+    }`}
+    title={t("Звернутися у підтримку", "Обратиться в поддержку")}
+  >
+    <HelpCircle className="w-4 h-4 text-pink-600" />
+    <span className="text-pink-600 font-medium">{t("Підтримка", "Поддержка")}</span>
+  </a>
+
+  <button
+    onClick={() => {
+      setSelectedLesson(null);
+      setView("dashboard");
+      localStorage.setItem("last_view", "dashboard");
+      setMenuOpen(false);
+      try { window.scrollTo({ top: 0, behavior: "smooth" }); } catch {}
+    }}
+    className={`w-full flex items-center justify-start gap-2 px-3 py-2 rounded-lg border transition text-left ${
+      darkMode
+        ? "border-fuchsia-900/30 bg-[#1a0a1f]/60 hover:bg-[#1a0a1f]/80"
+        : "border-pink-200 bg-white/70 hover:bg-white"
+    }`}
+    title={t("Перейти на головну", "Перейти на главную")}
+  >
+    <Home className="w-4 h-4 text-pink-600" />
+    <span className="text-pink-600 font-medium">{t("Головна", "Главная")}</span>
+  </button>
+</div>
+    </div>
+
+    {/* Нижній футер сайдбару */}
+    <div className="p-6 border-t border-pink-200/30 space-y-6">
+      {/* Темна тема */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Moon className="w-4 h-4 text-pink-500" />
+        </div>
+        <button
+          onClick={() => {
+            const newMode = !darkMode;
+            setDarkMode(newMode);
+            document.documentElement.classList.toggle("dark", newMode);
+            localStorage.setItem("theme", newMode ? "dark" : "light");
+          }}
+          className={`relative w-12 h-6 rounded-full transition-all duration-500 ease-out ${
+            darkMode ? "bg-gradient-to-r from-pink-500 to-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.6)]" : "bg-pink-200"
+          }`}
+        >
+          <span
+            className={`absolute top-[2px] left-[2px] w-5 h-5 bg-white rounded-full shadow-md transform transition-all duration-500 ease-out ${
+              darkMode ? "translate-x-6" : "translate-x-0"
+            }`}
+          />
+        </button>
+      </div>
+
+      {/* Мова */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-2">
+          <Globe className="w-4 h-4 text-pink-500" />
+        </div>
+        <div className="flex gap-2">
+          {["ru", "uk"].map((lang) => (
+            <button
+              key={lang}
+              onClick={() => {
+                i18n.changeLanguage(lang);
+                localStorage.setItem("lang", lang);
+              }}
+              className={`px-3 py-1 rounded-lg font-medium border text-xs transition-all duration-300 ${
+                i18n.language === lang ? "bg-pink-500 text-white border-pink-500" : "bg-white text-pink-600 border-pink-300 hover:bg-pink-100"
+              }`}
+            >
+              {lang.toUpperCase()}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Вихід */}
+      <button
+        onClick={handleLogout}
+        className="w-full py-2 mt-2 rounded-xl font-semibold text-white bg-gradient-to-r from-pink-500 to-rose-500 hover:scale-[1.03] transition-all flex items-center justify-center gap-2"
+      >
+        <LogOut className="w-4 h-4" /> {t("Вийти", "Выйти")}
+      </button>
+    </div>
+  </div>
+</aside>
+
+      <AiAssistantWidget
+  backendUrl={BACKEND}
+  lang={i18n.language}
+  darkMode={darkMode}
+/>
 
       {/* Контент */}
       <main className="flex-1 p-5 md:p-10 mt-16 md:mt-0 overflow-y-auto">
@@ -1262,13 +1111,7 @@ export default function CabinetPage() {
           <div className="flex flex-col md:flex-row gap-4 mb-8">
             {/* 🖼 Основний банер */}
             <div className="flex-1 rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)]">
-              {banner.image_url && (
-                <img
-                  src={banner.image_url}
-                  alt="Banner"
-                  className="w-full h-48 md:h-64 object-cover"
-                />
-              )}
+              {banner.image_url && <img src={banner.image_url} alt="Banner" className="w-full h-48 md:h-64 object-cover" />}
               <div className="p-4 text-center bg-gradient-to-r from-pink-500 to-rose-500 text-white font-semibold text-base md:text-lg">
                 {banner.title}
               </div>
@@ -1281,15 +1124,10 @@ export default function CabinetPage() {
                 setMenuOpen(false);
                 localStorage.setItem("last_view", "dashboard");
               }}
-              className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
-              style={
-                platform?.color
-                  ? { background: platform.color }
-                  : { backgroundImage: "linear-gradient(to bottom right,#ec4899,#fb7185)" }
-              }
+              className="w-full md:w-1/3 cursor-pointer rounded-2xl overflow-hidden shadow-[0_0_25px_rgba(255,0,128,0.25)] bg-gradient-to-br from-pink-500 to-rose-500 flex items-center justify-center text-white font-extrabold text-xl md:text-2xl tracking-wide transition-transform hover:scale-[1.03] active:scale-[0.98]"
               title={t("Перейти до дашборду", "Перейти на главную")}
             >
-              {platformName}
+              ANK Studio Online
             </div>
           </div>
         )}
@@ -1327,18 +1165,14 @@ export default function CabinetPage() {
         ) : (
           <div
             className={`max-w-4xl mx-auto p-6 rounded-2xl shadow-lg ${
-              darkMode
-                ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40"
-                : "bg-white/80 border border-pink-200"
+              darkMode ? "bg-[#1a0a1f]/70 border border-fuchsia-900/40" : "bg-white/80 border border-pink-200"
             }`}
           >
             {/* Заголовок + тип */}
             <div className="mb-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3 flex-wrap">
-                  <h2 className="text-2xl font-bold text-pink-600">
-                    {selectedLesson.title}
-                  </h2>
+                  <h2 className="text-2xl font-bold text-pink-600">{selectedLesson.title}</h2>
                   {selectedLesson.type === "theory" && (
                     <span className="inline-flex items-center gap-1.5 px-3 py-1 text-xs font-medium rounded-full border border-pink-200 bg-pink-50 text-pink-600">
                       {t("Теорія", "Теория")}
@@ -1352,11 +1186,7 @@ export default function CabinetPage() {
                 </div>
               </div>
               {selectedLesson.description && (
-                <p
-                  className={`mt-2 text-sm leading-relaxed select-text ${
-                    darkMode ? "text-gray-300" : "text-gray-600"
-                  }`}
-                >
+                <p className={`mt-2 text-sm leading-relaxed select-text ${darkMode ? "text-gray-300" : "text-gray-600"}`}>
                   {selectedLesson.description}
                 </p>
               )}
@@ -1369,9 +1199,7 @@ export default function CabinetPage() {
               userId={user?.id}
               onProgressTick={handleProgressTick}
               onCompleted={refreshAfterLessonComplete}
-              wmText={`${user?.name || user?.email?.split("@")[0] || "User"} · ${
-                user?.email || ""
-              }`}
+              wmText={`${user?.name || user?.email?.split("@")[0] || "User"} · ${user?.email || ""}`}
               getNextLesson={(id) => {
                 const allLessons = Object.values(lessons).flat();
                 const idx = allLessons.findIndex((l) => l.id === id);
@@ -1402,6 +1230,7 @@ export default function CabinetPage() {
                       : "bg-gray-50 border-gray-200 text-gray-800"
                   }`}
                 >
+                  {/* 🔖 Бейдж у правому верхньому куті */}
                   {!progSelected.homework_done ? (
                     <button
                       onClick={() => toggleHomeworkDone(true)}
@@ -1447,11 +1276,7 @@ export default function CabinetPage() {
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`inline-block text-sm font-medium underline-offset-2 hover:underline focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded
-                      ${
-                        darkMode
-                          ? "text-emerald-300 hover:text-emerald-200"
-                          : "text-emerald-600 hover:text-emerald-700"
-                      }`}
+                      ${darkMode ? "text-emerald-300 hover:text-emerald-200" : "text-emerald-600 hover:text-emerald-700"}`}
                   >
                     {t("Відкрити посилання", "Открыть ссылку")}
                   </a>
