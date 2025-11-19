@@ -3,9 +3,10 @@ import { useTranslation } from "react-i18next";
 import { Eye, EyeOff } from "lucide-react";
 import Header from "../components/Header";
 
-// 🔗 Бекенд
-const BACKEND =
-  import.meta.env.VITE_BACKEND_URL ||
+// 🔗 LMS-бекенд (де живуть учні/курси ANK)
+// В Netlify ставимо VITE_LMS_BACKEND_URL=https://anknails-backend-production.up.railway.app
+const LMS_BACKEND =
+  import.meta.env.VITE_LMS_BACKEND_URL ||
   "https://anknails-backend-production.up.railway.app";
 
 /**
@@ -30,7 +31,6 @@ const PLATFORM_SLUG = (() => {
 // базовий path для редіректів (/ankstudio або "")
 const BASE_PATH = (() => {
   if (import.meta.env.VITE_BASE_PATH) {
-    // гарантуємо, що починається з /
     const v = import.meta.env.VITE_BASE_PATH;
     return v.startsWith("/") ? v : `/${v}`;
   }
@@ -116,7 +116,7 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const res = await fetch(`${BACKEND}/api/login`, {
+      const res = await fetch(`${LMS_BACKEND}/api/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
