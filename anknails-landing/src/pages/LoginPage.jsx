@@ -15,17 +15,30 @@ const LMS_BACKEND =
  *    VITE_PLATFORM_SLUG=ankstudio
  *    VITE_BASE_PATH=/ankstudio
  *    — використовуємо їх.
- * 2) Якщо немає — беремо перший сегмент з поточного URL.
+ * 2) Якщо немає — беремо перший сегмент з поточного URL,
+ *    але ІГНОРУЄМО службові маршрути типу /login, /profile, /admin.
  */
 
 // slug платформи (ankstudio)
 const PLATFORM_SLUG = (() => {
+  // 1) env має найвищий пріоритет
   if (import.meta.env.VITE_PLATFORM_SLUG) {
     return import.meta.env.VITE_PLATFORM_SLUG.replace(/\//g, "");
   }
+
+  // 2) на сервері window нема
   if (typeof window === "undefined") return "";
+
   const segments = window.location.pathname.split("/").filter(Boolean);
-  return segments[0] || "";
+  const first = segments[0] || "";
+
+  // 🚫 /login, /profile, /admin — це не платформи
+  if (["login", "profile", "admin"].includes(first)) {
+    return "";
+  }
+
+  // усе інше вважаємо slug'ом платформи
+  return first;
 })();
 
 // базовий path для редіректів (/ankstudio або "")
